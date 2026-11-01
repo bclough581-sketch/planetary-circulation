@@ -1,0 +1,85 @@
+{
+ "generated_utc": "2026-11-01T20:00:00Z",
+ "hubs": {
+  "GRU": {
+   "price": 6.0692,
+   "chg": null,
+   "lo": null,
+   "hi": null,
+   "asof": "2026-10-30",
+   "src": "ecb"
+  },
+  "LON": {
+   "price": 0.8338,
+   "chg": null,
+   "lo": null,
+   "hi": null,
+   "asof": "2026-10-30",
+   "src": "ecb"
+  },
+  "FRA": {
+   "price": 1.1172,
+   "chg": null,
+   "lo": null,
+   "hi": null,
+   "asof": "2026-10-30",
+   "src": "ecb"
+  },
+  "ZRH": {
+   "price": 0.9194,
+   "chg": null,
+   "lo": null,
+   "hi": null,
+   "asof": "2026-10-30",
+   "src": "ecb"
+  },
+  "JNB": {
+   "price": 18.6455,
+   "chg": null,
+   "lo": null,
+   "hi": null,
+   "asof": "2026-10-30",
+   "src": "ecb"
+  },
+  "BOM": {
+   "price": 106.084,
+   "chg": null,
+   "lo": null,
+   "hi": null,
+   "asof": "2026-10-30",
+   "src": "ecb"
+  },
+  "SHA": {
+   "price": 7.4326,
+   "chg": null,
+   "lo": null,
+   "hi": null,
+   "asof": "2026-10-30",
+   "src": "ecb"
+  },
+  "TYO": {
+   "price": 175.68,
+   "chg": null,
+   "lo": null,
+   "hi": null,
+   "asof": "2026-10-30",
+   "src": "ecb"
+  },
+  "SYD": {
+   "price": 1.5904,
+   "chg": null,
+   "lo": null,
+   "hi": null,
+   "asof": "2026-10-30",
+   "src": "ecb"
+  }
+ },
+ "chokepoints": [],
+ "status": {
+  "ecb": {
+   "ok": true,
+   "seed": true
+  },
+  "note": "seed values from the ECB daily file; the first Action run replaces them"
+ }
+}

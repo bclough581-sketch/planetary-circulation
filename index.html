@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Planetary Circulation</title>
+<meta name="description" content="A free open-data HUD of global money flows and shipping chokepoints. Information only; not investment advice.">
+<meta name="theme-color" content="#060203">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#060203;--panel:#0e0507;--line:#3a0d14;--crimson:#ff2a3d;--hot:#ff7a45;--ink:#ffd9dc;--dim:#a8626a;
+ --display:'Orbitron',system-ui,sans-serif;--mono:'Share Tech Mono',ui-monospace,Menlo,Consolas,monospace;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--mono)}
+body{padding:18px 16px 48px;max-width:1280px;margin:0 auto}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;margin-bottom:8px}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(18px,3vw,28px);letter-spacing:.14em;margin:0;color:var(--crimson);text-shadow:0 0 14px rgba(255,42,61,.55);text-wrap:balance}
+.sub{color:var(--dim);font-size:13px;letter-spacing:.06em}
+.status{margin-left:auto;font-size:12px;color:var(--dim);display:flex;align-items:center;gap:8px;text-align:right}
+.dot{width:8px;height:8px;border-radius:50%;background:#5a2a30;display:inline-block;flex:none}
+.dot.ok{background:#ff4d5f;box-shadow:0 0 10px #ff2a3d}.dot.warn{background:#ffb347;box-shadow:0 0 10px #ff9a2a}
+.disc{border:1px solid var(--line);background:#12070a;color:var(--dim);font-size:12px;line-height:1.55;padding:8px 12px;border-radius:6px;margin:0 0 10px}
+.disc b{color:var(--ink);font-weight:400}
+.banner{display:none;border:1px solid #7a4a10;background:#1f1206;color:#ffcf99;font-size:12px;padding:8px 12px;border-radius:6px;margin:0 0 10px}
+.modes{display:flex;margin:0 0 10px}
+.modes button{font-family:var(--display);font-size:11px;letter-spacing:.14em;color:var(--dim);background:var(--panel);border:1px solid var(--line);padding:9px 16px;cursor:pointer;min-height:40px}
+.modes button:first-child{border-radius:5px 0 0 5px}.modes button:last-child{border-radius:0 5px 5px 0;border-left:0}
+.modes button[aria-pressed="true"]{color:#fff1e8;background:#2a0b12;border-color:var(--crimson);box-shadow:0 0 12px rgba(255,42,61,.35) inset}
+.stage{position:relative;border:1px solid var(--line);background:radial-gradient(ellipse at 50% 40%,#12070a 0%,var(--bg) 70%);border-radius:6px;overflow:hidden}
+canvas{display:block;width:100%;height:auto}
+.tip{position:absolute;pointer-events:none;background:rgba(10,3,5,.94);border:1px solid var(--crimson);padding:8px 10px;font-size:12px;line-height:1.45;border-radius:4px;display:none;max-width:260px;box-shadow:0 0 18px rgba(255,42,61,.35)}
+.tip b{color:#fff1e8;font-family:var(--display);font-size:12px;letter-spacing:.08em}
+.legend{display:flex;flex-wrap:wrap;gap:6px 22px;margin:10px 2px 14px;font-size:12px;color:var(--dim)}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.legend i.dia{border-radius:0;transform:rotate(45deg)}
+h2{font-family:var(--display);font-weight:500;font-size:12px;letter-spacing:.16em;color:var(--dim);margin:22px 2px 8px}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:6px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;min-width:820px;font-size:13px;font-variant-numeric:tabular-nums}
+th{font-family:var(--display);font-weight:500;font-size:11px;letter-spacing:.12em;text-align:left;color:var(--dim);padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:8px 12px;border-bottom:1px solid #1d0a0e;white-space:nowrap}
+tr.on td{background:#1b0910}tr:last-child td{border-bottom:0}
+.bar{display:inline-block;width:90px;height:7px;background:#1d0a0e;border-radius:4px;vertical-align:middle;position:relative;overflow:hidden}
+.bar>span{position:absolute;left:0;top:0;bottom:0;border-radius:4px}
+.up{color:#ff8f6a}.dn{color:#ff4d5f}.in{color:#ffd9dc}.out{color:#ff7a45}.stale{color:#7a4a50}
+.tag{font-size:10px;letter-spacing:.1em;border:1px solid #7a4a50;color:#b07a82;border-radius:3px;padding:1px 5px;margin-left:6px}
+.note{margin:16px 2px 0;color:var(--dim);font-size:12px;line-height:1.7;max-width:940px}
+.note b{color:var(--ink);font-weight:400}
+.src{margin:8px 2px 0;color:var(--dim);font-size:12px;line-height:1.8;max-width:940px}
+a{color:#ff9a8a}
+.tip-jar{display:none;margin:18px 2px 0;font-size:13px}
+.tip-jar a{border:1px solid var(--crimson);border-radius:5px;padding:8px 14px;text-decoration:none;color:#fff1e8;display:inline-block}
+:focus-visible{outline:2px solid var(--hot);outline-offset:2px}
+</style>
+</head>
+<body>
+<header>
+  <h1>PLANETARY CIRCULATION</h1>
+  <span class="sub">money as blood</span>
+  <span class="status" role="status"><i class="dot" id="dot"></i><span id="stxt">loading…</span></span>
+</header>
+<p class="disc"><b>Information only.</b> A display of public data. Not investment advice, not a recommendation to buy or sell anything, and not personalized to anyone. Data is delayed and can be wrong or stale; every number carries its own as-of date. Do your own research.</p>
+<div class="banner" id="banner" role="alert"></div>
+<div class="modes" role="group" aria-label="View">
+  <button id="m-circ" aria-pressed="true">CIRCULATION</button>
+  <button id="m-flow" aria-pressed="false">TREASURY FLOWS</button>
+</div>
+<div class="stage" id="stage">
+  <canvas id="c" aria-label="Animated world map: particles flow along arteries between financial hubs; hubs far from normal pulse; diamonds mark shipping chokepoints, larger and brighter when traffic is below normal"></canvas>
+  <div class="tip" id="tip"></div>
+</div>
+<div class="legend" id="legend"></div>
+
+<h2>HUBS</h2>
+<div class="tablewrap"><table id="tbl"><thead><tr>
+  <th>HUB</th><th>SIGNAL</th><th>READING</th><th>MOVE</th><th>52-WK RANGE</th><th>HEAT</th><th>UST HELD Δ 1M</th><th>Δ 6M</th><th>AS OF</th>
+</tr></thead><tbody></tbody></table></div>
+
+<h2>SHIPPING CHOKEPOINTS</h2>
+<div class="tablewrap"><table id="ctbl" style="min-width:700px"><thead><tr>
+  <th>CHOKEPOINT</th><th>LATEST DAY</th><th>7-DAY AVG</th><th>BASELINE</th><th>% OF NORM</th><th>AS OF</th>
+</tr></thead><tbody></tbody></table></div>
+
+<p class="note">
+<b>How to read it.</b> Heat is how far a signal sits from normal: its distance from the middle of its 52-week range, or a large move in one session, whichever is bigger. The heart beats from New York. In CIRCULATION, particles lean toward the hotter end of each artery; that is a display rule, not measured capital flow.<br>
+<b>Treasury flows.</b> Lines run from a country's hub to New York. Particles move toward New York where that country's reported Treasury holdings rose over the last month, away where they fell; line weight is the six-month change. Holdings change with prices and custody, not only buying and selling. The UK, Belgium, Luxembourg and Ireland are custody centers: their rows show where assets are held, not whose money it is.<br>
+<b>Chokepoints.</b> Daily ship transit counts from satellite tracking, compared with the same chokepoint's own average. Published with a lag of days. Low traffic is a measurement, not a forecast.<br>
+<b>What this is not.</b> It describes what already happened. It does not predict prices, and nothing here tells anyone what to do with money.
+</p>
+<h2>SOURCES AND LICENSES</h2>
+<div class="src" id="sources"></div>
+<p class="tip-jar" id="tipjar"><a id="tiplink" rel="noopener" target="_blank">Free to use. If it was useful, $1 keeps it running.</a></p>
+<script>
+const TIP_URL = '';   // set only after IMF reuse permission is confirmed; empty = no payment link shown
+const HUBDEF = [
+ {id:'NYC',name:'New York',lat:40.7,lon:-74,sig:'US 10Y Treasury yield',suf:'%',dp:2,typ:6,unit:'bp',age:5,src:'U.S. Treasury'},
+ {id:'HOU',name:'Houston',lat:29.8,lon:-95.4,sig:'WTI crude, spot',pre:'$',dp:2,typ:2.5,age:12,src:'U.S. EIA'},
+ {id:'GRU',name:'São Paulo',lat:-23.5,lon:-46.6,sig:'EUR/BRL',dp:4,typ:0.5,age:5,src:'ECB'},
+ {id:'LON',name:'London',lat:51.5,lon:-0.1,sig:'EUR/GBP',dp:4,typ:0.5,age:5,src:'ECB'},
+ {id:'FRA',name:'Frankfurt',lat:50.1,lon:8.7,sig:'EUR/USD',dp:4,typ:0.5,age:5,src:'ECB'},
+ {id:'ZRH',name:'Zurich',lat:47.4,lon:8.5,sig:'EUR/CHF',dp:4,typ:0.4,age:5,src:'ECB'},
+ {id:'DXB',name:'Gulf',lat:25.2,lon:55.3,sig:'Brent crude, spot',pre:'$',dp:2,typ:2.5,age:12,src:'U.S. EIA'},
+ {id:'JNB',name:'Johannesburg',lat:-26.2,lon:28,sig:'EUR/ZAR',dp:3,typ:0.6,age:5,src:'ECB'},
+ {id:'BOM',name:'Mumbai',lat:19.1,lon:72.9,sig:'EUR/INR',dp:3,typ:0.5,age:5,src:'ECB'},
+ {id:'SIN',name:'Singapore',lat:1.3,lon:103.8,sig:'Treasury holdings only',dp:0,typ:1,age:5,relay:true},
+ {id:'SHA',name:'Shanghai',lat:31.2,lon:121.5,sig:'EUR/CNY',dp:4,typ:0.4,age:5,src:'ECB'},
+ {id:'TYO',name:'Tokyo',lat:35.7,lon:139.7,sig:'EUR/JPY',dp:2,typ:0.6,age:5,src:'ECB'},
+ {id:'SYD',name:'Sydney',lat:-33.9,lon:151.2,sig:'EUR/AUD',dp:4,typ:0.5,age:5,src:'ECB'}
+];
+const LINKS=[['NYC','LON'],['LON','FRA'],['FRA','ZRH'],['FRA','DXB'],['DXB','BOM'],['BOM','SIN'],['SIN','SHA'],['SHA','TYO'],['SIN','SYD'],['NYC','HOU'],['NYC','GRU'],['LON','JNB'],['DXB','JNB'],['HOU','GRU'],['ZRH','DXB'],['SHA','SYD']];
+const CLBL={HRM:[-14,-26,'r'],BAB:[-10,14,'r'],SUZ:[-10,-14,'r'],MAL:[-12,-16,'r'],PAN:[12,12,'l'],CAP:[12,10,'l']};
+let LAND=[], HUBS=HUBDEF.map((h,i)=>({...h,idx:i,price:null,chg:null,lo:null,hi:null,asof:null,tic:null,stale:true,missing:true})), byId={}, CH=[], DATA=null, TIC=null;
+HUBS.forEach(h=>byId[h.id]=h);
+
+const $=id=>document.getElementById(id);
+const cv=$('c'),ctx=cv.getContext('2d'),stage=$('stage'),tip=$('tip');
+const LAT_TOP=80,LAT_BOT=-58;
+let W=0,H=0,DPR=1,landDots=[],arts=[],parts=[],farts=[],fparts=[],hover=-1,mode='circ',started=false;
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const proj=(lon,lat)=>[(lon+180)/360*W,(LAT_TOP-lat)/(LAT_TOP-LAT_BOT)*H];
+const ageDays=s=>s?(Date.now()-Date.parse(s+'T00:00:00Z'))/864e5:Infinity;
+const fmtDate=s=>{if(!s)return 'n/a';const d=new Date(s+'T00:00:00Z');return d.toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'});};
+function fmtVal(h){if(h.price==null||h.relay)return '';return (h.pre||'')+h.price.toLocaleString('en-US',{minimumFractionDigits:h.dp,maximumFractionDigits:h.dp})+(h.suf||'');}
+function fmtD(x){return (x>=0?'+':'')+x.toFixed(Math.abs(x)<10?1:0);}
+
+function merge(){
+  const hs=(DATA&&DATA.hubs)||{};
+  HUBS.forEach(h=>{
+    const d=hs[h.id]; if(d&&d.price!=null){h.price=d.price;h.chg=d.chg;h.lo=d.lo;h.hi=d.hi;h.asof=d.asof;h.missing=false;}
+    h.stale = h.relay ? false : (h.missing || ageDays(h.asof)>h.age);
+    h.pos=(!h.stale&&h.lo!=null&&h.hi!=null&&h.hi>h.lo)?Math.max(0,Math.min(1,(h.price-h.lo)/(h.hi-h.lo))):null;
+    const e=h.pos==null?0:Math.abs(2*h.pos-1)*0.9, s=(h.stale||h.chg==null)?0:Math.min(1,Math.abs(h.chg)/h.typ);
+    h.heat=(h.stale||(h.pos==null&&h.chg==null))?0.15:Math.max(e,s);
+    h.tic=null;h.d1=null;h.d6=null;
+    if(TIC&&TIC.holders&&TIC.holders[h.id]&&ageDays(TIC.asof)<=TIC.max_age_days){const t=TIC.holders[h.id];h.tic=t;h.d1=t[0]-t[1];h.d6=t[0]-t[2];h.ticnote=(TIC.labels||{})[h.id]||'';}
+  });
+  CH=((DATA&&DATA.chokepoints)||[]).map(c=>{
+    const stale=ageDays(c.asof)>21; const stress=(c.ratio==null||stale)?0:Math.max(0,Math.min(1,1-c.ratio));
+    return {...c,stale,stress};
+  });
+  const sin=byId.SIN, mal=CH.find(c=>c.id==='MAL'); if(mal){sin.chokeNote=mal;}
+}
+
+function mkArc(A,B){const pa=proj(A.lon,A.lat),pb=proj(B.lon,B.lat),mx=(pa[0]+pb[0])/2,my=(pa[1]+pb[1])/2,dx=pb[0]-pa[0],dy=pb[1]-pa[1],len=Math.hypot(dx,dy)||1;
+  let nx=-dy/len,ny=dx/len;if(ny>0){nx=-nx;ny=-ny;}const k=0.2*len;return {A,B,pa,pb,cp:[mx+nx*k,my+ny*k],len};}
+function biasParts(){parts.forEach(p=>{const a=arts[p.a],b=Math.max(-1,Math.min(1,(a.B.heat-a.A.heat)*1.6));p.dir=Math.random()<0.5+0.5*b?1:-1;});}
+function seedParts(){
+  parts=[];arts.forEach((a,i)=>{const n=reduce?10:Math.max(8,Math.round(a.len/16));for(let j=0;j<n;j++)parts.push({a:i,t:Math.random(),dir:1,sp:0.05+Math.random()*0.07,sz:0.8+Math.random()*1.2});});
+  biasParts();fparts=[];farts.forEach((a,i)=>{const n=Math.min(26,Math.ceil(Math.abs(a.A.d1)/3)+3);for(let j=0;j<n;j++)fparts.push({a:i,t:Math.random(),sp:0.10+Math.random()*0.05});});
+}
+function layout(){
+  DPR=Math.min(2,window.devicePixelRatio||1);W=Math.max(320,stage.clientWidth);H=Math.round(W*(LAT_TOP-LAT_BOT)/360);
+  cv.width=W*DPR;cv.height=H*DPR;cv.style.height=H+'px';
+  const off=document.createElement('canvas');off.width=W;off.height=H;const o=off.getContext('2d');o.fillStyle='#fff';o.beginPath();
+  for(const ring of LAND){ring.forEach((c,i)=>{const p=proj(c[0],c[1]);i?o.lineTo(p[0],p[1]):o.moveTo(p[0],p[1]);});o.closePath();}
+  o.fill('evenodd');const d=o.getImageData(0,0,W,H).data,step=Math.max(4,Math.round(W/230));landDots=[];
+  for(let y=step/2;y<H;y+=step)for(let x=step/2;x<W;x+=step){if(d[((y|0)*W+(x|0))*4+3]>128)landDots.push([x,y]);}
+  landDots.step=step;arts=LINKS.map(([a,b])=>mkArc(byId[a],byId[b]));farts=HUBS.filter(h=>h.d1!=null&&h.id!=='NYC').map(h=>mkArc(h,byId.NYC));seedParts();
+}
+const bez=(a,t)=>{const u=1-t;return [u*u*a.pa[0]+2*u*t*a.cp[0]+t*t*a.pb[0],u*u*a.pa[1]+2*u*t*a.cp[1]+t*t*a.pb[1]];};
+function heatColor(h,al){const r=Math.round(122+133*h),g=Math.round(26+(h>0.7?(h-0.7)*3.3*190:0)+20*h),b=Math.round(40+(h>0.8?(h-0.8)*5*150:0));return `rgba(${r},${g},${b},${al})`;}
+function diamond(x,y,r){ctx.beginPath();ctx.moveTo(x,y-r);ctx.lineTo(x+r,y);ctx.lineTo(x,y+r);ctx.lineTo(x-r,y);ctx.closePath();}
+
+let last=performance.now(),time=0.8;
+function frame(now){
+  const dt=Math.min(0.05,(now-last)/1000);last=now;if(!reduce)time+=dt;
+  ctx.setTransform(DPR,0,0,DPR,0,0);ctx.globalCompositeOperation='source-over';ctx.clearRect(0,0,W,H);
+  const flow=mode==='flow';ctx.fillStyle=flow?'rgba(150,34,50,.55)':'rgba(176,38,56,.8)';
+  const s=landDots.step,r=Math.max(1.8,s*0.34);for(const p of landDots)ctx.fillRect(p[0]-r/2,p[1]-r/2,r,r);
+  const hb=(time%1.7)/1.7,beat=Math.exp(-Math.pow(hb/0.05,2))+0.6*Math.exp(-Math.pow((hb-0.2)/0.05,2));
+  const hp=proj(byId.NYC.lon,byId.NYC.lat),waveR=hb*W*0.95;ctx.globalCompositeOperation='lighter';
+  if(!flow){
+    for(const a of arts){const mid=bez(a,0.5),dist=Math.hypot(mid[0]-hp[0],mid[1]-hp[1]),wave=Math.exp(-Math.pow((dist-waveR)/(W*0.09),2)),hot=(a.A.heat+a.B.heat)/2;
+      ctx.lineWidth=1+hot*1.2;ctx.strokeStyle=`rgba(255,${60+80*hot|0},70,${0.13+0.12*hot+0.4*wave})`;ctx.beginPath();ctx.moveTo(a.pa[0],a.pa[1]);ctx.quadraticCurveTo(a.cp[0],a.cp[1],a.pb[0],a.pb[1]);ctx.stroke();}
+    ctx.strokeStyle=`rgba(255,42,61,${0.28*(1-hb)})`;ctx.lineWidth=1.2;ctx.beginPath();ctx.arc(hp[0],hp[1],waveR,0,Math.PI*2);ctx.stroke();
+    for(const p of parts){const a=arts[p.a],hot=(a.A.heat+a.B.heat)/2;
+      if(!reduce){p.t+=p.dir*p.sp*dt*(1+hot*1.4)*(300/Math.max(120,a.len));if(p.t>1)p.t-=1;if(p.t<0)p.t+=1;}
+      const q=bez(a,p.t),hh=(p.dir>0?a.B:a.A).heat,rad=p.sz*(0.9+hh*0.9),g=ctx.createRadialGradient(q[0],q[1],0,q[0],q[1],rad*2.4);
+      g.addColorStop(0,`rgba(255,${110+100*hh|0},${90+80*hh|0},.95)`);g.addColorStop(1,'rgba(255,40,60,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(q[0],q[1],rad*2.4,0,Math.PI*2);ctx.fill();}
+  } else {
+    for(const a of farts){const h=a.A,inflow=h.d1>=0;ctx.lineWidth=0.8+Math.min(3.2,Math.abs(h.d6)/45);ctx.strokeStyle=inflow?'rgba(255,215,220,.28)':'rgba(255,110,40,.34)';
+      ctx.beginPath();ctx.moveTo(a.pa[0],a.pa[1]);ctx.quadraticCurveTo(a.cp[0],a.cp[1],a.pb[0],a.pb[1]);ctx.stroke();}
+    for(const p of fparts){const a=farts[p.a],h=a.A,inflow=h.d1>=0;if(!reduce){p.t+=p.sp*dt*(300/Math.max(120,a.len));if(p.t>1)p.t-=1;}
+      const q=bez(a,inflow?p.t:1-p.t),rad=1.2+Math.min(1.6,Math.abs(h.d1)/25),g=ctx.createRadialGradient(q[0],q[1],0,q[0],q[1],rad*2.6);
+      g.addColorStop(0,inflow?'rgba(255,240,240,.95)':'rgba(255,130,50,.95)');g.addColorStop(1,'rgba(255,40,60,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(q[0],q[1],rad*2.6,0,Math.PI*2);ctx.fill();}
+  }
+  ctx.font='11px "Share Tech Mono",monospace';ctx.textBaseline='middle';const labels=[];
+  for(const h of HUBS){
+    const p=proj(h.lon,h.lat),isHeart=h.id==='NYC',hv=flow?(h.d1==null?0.12:Math.min(1,Math.abs(h.d1)/40)):h.heat,wound=!flow&&!h.stale&&h.heat>0.6;
+    const dist=Math.hypot(p[0]-hp[0],p[1]-hp[1]),wv=Math.exp(-Math.pow((dist-waveR)/(W*0.06),2));let rad=3+hv*4+(isHeart?beat*4:0)+wv*3;
+    const col=flow&&h.d1!=null&&h.d1<0?`rgba(255,${110+60*hv|0},40,.9)`:(h.stale&&!h.relay&&!flow?'rgba(110,50,60,.8)':heatColor(hv,0.9));
+    const gr=ctx.createRadialGradient(p[0],p[1],0,p[0],p[1],rad*4);gr.addColorStop(0,col);gr.addColorStop(1,'rgba(255,30,50,0)');
+    ctx.fillStyle=gr;ctx.beginPath();ctx.arc(p[0],p[1],rad*4,0,Math.PI*2);ctx.fill();ctx.fillStyle=wound?'rgba(255,241,232,.95)':col;ctx.beginPath();ctx.arc(p[0],p[1],rad*0.6,0,Math.PI*2);ctx.fill();
+    if(wound)for(let k=0;k<2;k++){const ph=((time*0.9+k*0.5)%1);ctx.strokeStyle=`rgba(255,70,70,${0.6*(1-ph)})`;ctx.lineWidth=1.4;ctx.beginPath();ctx.arc(p[0],p[1],6+ph*28*(0.6+h.heat),0,Math.PI*2);ctx.stroke();}
+    if(isHeart){ctx.strokeStyle=`rgba(255,200,200,${0.35+0.4*beat})`;ctx.lineWidth=1;ctx.beginPath();ctx.arc(p[0],p[1],rad+5,0,Math.PI*2);ctx.stroke();}
+    labels.push([h,p,wound]);
+  }
+  for(const c of CH){   // chokepoints: bigger and brighter the further traffic is below its own norm
+    const p=proj(c.lon,c.lat),st=c.stress;
+    if(st>0.4)for(let k=0;k<2;k++){const ph=((time*0.6+k*0.5)%1);ctx.strokeStyle=`rgba(255,240,230,${0.5*(1-ph)*st})`;ctx.lineWidth=1.2;ctx.beginPath();ctx.arc(p[0],p[1],5+ph*(10+22*st),0,Math.PI*2);ctx.stroke();}
+    ctx.fillStyle=`rgba(255,60,60,${0.12+0.3*st})`;diamond(p[0],p[1],7+8*st);ctx.fill();
+    ctx.fillStyle=c.stale?'rgba(150,90,100,.7)':'#fff1e8';diamond(p[0],p[1],3.5+2.5*st);ctx.fill();
+  }
+  ctx.globalCompositeOperation='source-over';
+  const LBL={NYC:[-12,-12,'r'],HOU:[-12,-12,'r'],GRU:[12,-12,'l'],LON:[-12,-14,'r'],FRA:[12,-26,'l'],ZRH:[12,6,'l'],DXB:[12,-12,'l'],JNB:[12,-12,'l'],BOM:[12,16,'l'],SIN:[12,16,'l'],SHA:[12,18,'l'],TYO:[12,-14,'l'],SYD:[-12,16,'r']};
+  function lab(txt,p,L,bright){ctx.fillStyle=bright?'#fff1e8':'rgba(255,200,205,.82)';const tw=ctx.measureText(txt).width;let al=L[2],x=p[0]+(al==='l'?Math.abs(L[0]):-Math.abs(L[0]));
+    if(al==='l'&&x+tw>W-6){al='r';x=p[0]-Math.abs(L[0]);}if(al==='r'&&x-tw<6){al='l';x=p[0]+Math.abs(L[0]);}ctx.textAlign=al==='l'?'left':'right';ctx.fillText(txt,x,p[1]+L[1]);}
+  for(const [h,p,wound] of labels){let t=h.name.toUpperCase();if(W>=560){if(flow){if(h.d1!=null)t+='  '+fmtD(h.d1)+'B';}else if(!h.relay&&!h.stale&&h.price!=null)t+='  '+h.sig+' '+fmtVal(h);else if(h.stale&&!h.relay)t+='  stale';}
+    lab(t,p,LBL[h.id]||[12,-12,'l'],wound||h.idx===hover);}
+  if(!flow&&W>=560)for(const c of CH){const t=c.name.toUpperCase()+(c.stale?'  stale':(c.ratio!=null?'  '+Math.round(c.ratio*100)+'% of norm':''));lab(t,proj(c.lon,c.lat),CLBL[c.id]||[12,-12,'l'],c.stress>0.4);}
+  ctx.fillStyle='rgba(0,0,0,.10)';for(let y=0;y<H;y+=3)ctx.fillRect(0,y,W,1);
+  if(!reduce)requestAnimationFrame(frame);
+}
+
+function buildTable(){
+  const tb=document.querySelector('#tbl tbody');tb.innerHTML='';
+  [...HUBS].sort((a,b)=>b.heat-a.heat).forEach(h=>{
+    const tr=document.createElement('tr');tr.dataset.i=h.idx;const dim=h.stale&&!h.relay?' class="stale"':'';
+    const mv=h.chg==null||h.stale?'<span class="stale">n/a</span>':`<span class="${h.chg>=0?'up':'dn'}">${h.chg>=0?'+':''}${h.chg.toFixed(h.unit==='bp'?1:(h.typ<1?3:2))}${h.unit==='bp'?' bp':'%'}</span>`;
+    const rng=h.pos==null?'<span class="stale">n/a</span>':`<span class="bar"><span style="width:${(h.pos*100).toFixed(0)}%;background:#7a1a28"></span></span> ${(h.pos*100).toFixed(0)}%`;
+    const ht=h.stale&&!h.relay?'<span class="stale">n/a</span>':`<span class="bar"><span style="width:${(h.heat*100).toFixed(0)}%;background:linear-gradient(90deg,#7a1a28,#ff2a3d,#fff1e8)"></span></span> ${(h.heat*100).toFixed(0)}`;
+    const tc=d=>d==null?'<span class="stale">n/a</span>':`<span class="${d>=0?'in':'out'}">${fmtD(d)}B</span>`;
+    const asof=h.relay?'n/a':(h.missing?'no data':fmtDate(h.asof)+(h.stale?'<span class="tag">STALE</span>':''));
+    tr.innerHTML=`<td>${h.name}</td><td${dim}>${h.sig}</td><td${dim}>${h.relay||h.missing?'':fmtVal(h)}</td><td>${mv}</td><td>${rng}</td><td>${ht}</td><td title="${h.ticnote||''}">${tc(h.d1)}</td><td>${tc(h.d6)}</td><td${dim}>${asof}</td>`;tb.appendChild(tr);});
+  const cb=document.querySelector('#ctbl tbody');cb.innerHTML='';
+  if(!CH.length){cb.innerHTML='<tr><td colspan="6" class="stale">No chokepoint data yet. It appears after the first daily data run.</td></tr>';}
+  CH.forEach(c=>{const tr=document.createElement('tr');const pc=c.ratio==null?'n/a':Math.round(c.ratio*100)+'%';
+    tr.innerHTML=`<td>◆ ${c.name}</td><td>${c.latest}</td><td>${c.avg7}</td><td>${c.base} <span class="stale">(${c.baseline_note||''})</span></td><td>${c.stale?'<span class="stale">n/a</span>':`<span class="bar"><span style="width:${Math.min(100,(c.ratio||0)*100).toFixed(0)}%;background:#7a1a28"></span></span> ${pc}`}</td><td>${fmtDate(c.asof)}${c.stale?'<span class="tag">STALE</span>':''}</td>`;cb.appendChild(tr);});
+}
+function buildLegend(){$('legend').innerHTML=mode==='flow'
+ ?'<span><i style="background:#ffe9ea;box-shadow:0 0 8px #ff2a3d"></i>holdings up: toward New York</span><span><i style="background:#ff7a28"></i>holdings down: away</span><span>line weight = six-month change</span><span>source: U.S. Treasury TIC'+(TIC?', '+TIC.label:'')+'</span>'
+ :'<span><i style="background:#7a1a28"></i>calm hub</span><span><i style="background:#ff4d3d"></i>stressed hub</span><span><i style="background:#fff1e8;box-shadow:0 0 8px #ff2a3d"></i>far from normal</span><span><i class="dia" style="background:#fff1e8"></i>chokepoint (bigger = less traffic than its norm)</span><span><i style="background:#6e323c"></i>grey = stale or missing, excluded from heat</span>';}
+function setMode(m){mode=m;$('m-circ').setAttribute('aria-pressed',m==='circ');$('m-flow').setAttribute('aria-pressed',m==='flow');buildLegend();if(reduce)requestAnimationFrame(frame);}
+$('m-circ').onclick=()=>setMode('circ');$('m-flow').onclick=()=>setMode('flow');
+
+function hit(ev){const r=cv.getBoundingClientRect(),x=(ev.clientX-r.left)*(W/r.width),y=(ev.clientY-r.top)*(H/r.height);let best=-1,bd=22,kind=null;
+  HUBS.forEach((h,i)=>{const p=proj(h.lon,h.lat),d=Math.hypot(p[0]-x,p[1]-y);if(d<bd){bd=d;best=i;kind='h';}});
+  CH.forEach((c,i)=>{const p=proj(c.lon,c.lat),d=Math.hypot(p[0]-x,p[1]-y);if(d<bd){bd=d;best=i;kind='c';}});
+  return {i:best,kind,x:ev.clientX-r.left,y:ev.clientY-r.top};}
+cv.addEventListener('pointermove',ev=>{const h=hit(ev);hover=h.kind==='h'?h.i:-1;
+  document.querySelectorAll('#tbl tbody tr').forEach(tr=>tr.classList.toggle('on',+tr.dataset.i===hover));
+  if(h.i<0){tip.style.display='none';return;}
+  if(h.kind==='h'){const o=HUBS[h.i];tip.innerHTML=`<b>${o.name.toUpperCase()}</b><br>${o.sig}${o.price!=null&&!o.relay?' '+fmtVal(o):''}${o.chg!=null&&!o.stale?' ('+(o.chg>=0?'+':'')+o.chg.toFixed(2)+(o.unit==='bp'?' bp':'%')+')':''}${o.asof?'<br>as of '+fmtDate(o.asof)+(o.stale?' · STALE':''):''}${o.src?'<br>source: '+o.src:''}${o.d1!=null?'<br>Treasuries held '+fmtD(o.d1)+'B (1M), '+fmtD(o.d6)+'B (6M)'+(o.ticnote?'<br>'+o.ticnote:''):''}`;}
+  else{const o=CH[h.i];tip.innerHTML=`<b>◆ ${o.name.toUpperCase()}</b><br>${o.latest} transits on ${fmtDate(o.asof)}<br>7-day avg ${o.avg7} vs norm ${o.base}${o.ratio!=null?' ('+Math.round(o.ratio*100)+'%)':''}<br>source: IMF PortWatch`;}
+  tip.style.display='block';const tw=tip.offsetWidth;tip.style.left=Math.min(h.x+14,stage.clientWidth-tw-6)+'px';tip.style.top=Math.max(4,h.y-10)+'px';});
+cv.addEventListener('pointerleave',()=>{hover=-1;tip.style.display='none';});
+
+function buildStatus(){
+  const st=(DATA&&DATA.status)||{},names={ecb:'ECB',ust:'Treasury yield',eia:'EIA oil',portwatch:'IMF PortWatch'};
+  const bad=Object.keys(names).filter(k=>st[k]&&st[k].ok===false), gen=DATA&&DATA.generated_utc, age=gen?(Date.now()-Date.parse(gen))/36e5:Infinity;
+  let msg='',cls='ok';
+  if(!DATA){cls='';msg='no data loaded';}
+  else if(age>48){cls='warn';msg='data job has not run since '+new Date(gen).toLocaleDateString('en-US',{month:'short',day:'numeric'});}
+  else if(bad.length){cls='warn';msg='updated '+new Date(gen).toLocaleDateString('en-US',{month:'short',day:'numeric'})+' · '+bad.length+' source'+(bad.length>1?'s':'')+' on last-good values';}
+  else msg='updated '+new Date(gen).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+  $('dot').className='dot '+cls;$('stxt').textContent=msg;
+  const b=$('banner');const lines=[];
+  if(age>48)lines.push('The daily data job has not run for '+(isFinite(age)?Math.floor(age/24)+' days':'a while')+'. Numbers below may be old; each shows its own as-of date and old ones are greyed out.');
+  bad.forEach(k=>lines.push(names[k]+' failed on the last run, so its values are the last good ones and age out automatically.'));
+  b.style.display=lines.length?'block':'none';b.textContent=lines.join(' ');
+}
+function buildSources(){
+  const m=(DATA&&DATA.status)||{};
+  $('sources').innerHTML=[
+   'Euro reference rates: Source: ECB statistics. Rates are EUR per one unit of the currency shown, published once each working day; ratios and ranges on this page are our own calculations from them.',
+   'US 10-year yield: U.S. Department of the Treasury, daily par yield curve.',
+   'Oil: Source: U.S. Energy Information Administration, spot prices, published in weekly batches so the latest print is usually several days old.',
+   'Chokepoints: Source: International Monetary Fund, PortWatch, daily chokepoint transit calls, <a href="https://portwatch.imf.org" target="_blank" rel="noopener">portwatch.imf.org</a>. Transit calls come from satellite ship tracking; the norm and percentages are our calculation. Not endorsed by the IMF.',
+   'Treasury holdings: U.S. Department of the Treasury, Treasury International Capital (TIC), Major Foreign Holders'+(TIC?', '+TIC.label:'')+'.',
+   'Not affiliated with or endorsed by any source named here. Map outlines are a simplified drawing.'
+  ].map(s=>'<div>• '+s+'</div>').join('');
+}
+
+async function j(u){try{const r=await fetch(u,{cache:'no-cache'});if(!r.ok)throw new Error(r.status);return await r.json();}catch(e){return null;}}
+async function boot(){
+  [LAND,DATA,TIC]=await Promise.all([j('land.json'),j('data.json'),j('tic.json')]);
+  LAND=LAND||[];merge();layout();buildTable();buildLegend();buildStatus();buildSources();
+  if(TIP_URL){$('tiplink').href=TIP_URL;$('tipjar').style.display='block';}
+  if(!started){started=true;requestAnimationFrame(frame);}
+  if(location.hash==='#flows')setMode('flow');
+}
+let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{if(!LAND.length)return;layout();if(reduce)requestAnimationFrame(frame);},150);});
+setInterval(async()=>{const d=await j('data.json');if(d){DATA=d;merge();if(W){layout();}buildTable();buildStatus();}},30*60*1000);  // pick up a new daily file without a reload
+boot();
+if('serviceWorker' in navigator&&location.protocol.startsWith('http')){navigator.serviceWorker.register('sw.js').catch(()=>{});}
+</script>
+</body>
+</html>

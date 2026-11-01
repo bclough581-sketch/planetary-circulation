@@ -1,0 +1,19 @@
+{
+ "label": "Aug 2026",
+ "asof": "2026-08-31",
+ "max_age_days": 100,
+ "source": "U.S. Department of the Treasury, Treasury International Capital (TIC), Major Foreign Holders of Treasury Securities",
+ "note": "Holdings in $ billions: [latest month, prior month, six months before]. Euro hub = France + Belgium + Luxembourg + Ireland. Holdings move with prices and custody, not only buying and selling.",
+ "holders": {
+  "TYO": [1068.3, 1103.9, 1239.3],
+  "LON": [1009.5, 998.3, 897.3],
+  "SHA": [590.7, 618.0, 694.2],
+  "FRA": [1654.2, 1611.4, 1646.1],
+  "SIN": [277.9, 277.7, 280.0],
+  "BOM": [219.7, 202.6, 190.6],
+  "DXB": [141.2, 142.4, 160.4],
+  "GRU": [168.4, 168.0, 170.6],
+  "ZRH": [285.8, 284.8, 286.7]
+ },
+ "labels": {"DXB": "Saudi Arabia", "SHA": "China, mainland", "FRA": "FR+BE+LU+IE"}
+}
