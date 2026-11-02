@@ -3,6 +3,9 @@ on:
   schedule:
     - cron: "10 22 * * *"      # daily, about 4:10 PM Central
   workflow_dispatch: {}
+  push:
+    branches: [main]
+    paths: ["fetch_data.py", ".github/workflows/refresh.yml"]
 permissions:
   contents: write
 concurrency:
