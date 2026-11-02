@@ -138,7 +138,7 @@ _pw_good = [None]
 
 
 def _pw(q):
-    q = dict(q, outSR="4326")
+    q = dict(q)
     errs = []
     order = [_pw_good[0]] if _pw_good[0] is not None else range(len(PW_VARIANTS))
     for i in order:
@@ -148,7 +148,7 @@ def _pw(q):
             errs.append("v%d: %s" % (i, str(e)[:80]))
             continue
         if "error" in js:
-            errs.append("v%d: %s" % (i, str(js["error"])[:100]))
+            errs.append("v%d %s: %s" % (i, q.get("outFields"), json.dumps(js["error"])[:260]))
             continue
         _pw_good[0] = i
         return js.get("features", [])
