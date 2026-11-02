@@ -1,5 +1,5 @@
 {
- "generated_utc": "2026-11-02T17:06:24Z",
+ "generated_utc": "2026-11-02T17:07:55Z",
  "hubs": {
   "GRU": {
    "price": 6.099,
@@ -99,27 +99,100 @@
    "src": "eia"
   }
  },
- "chokepoints": [],
+ "chokepoints": [
+  {
+   "id": "HRM",
+   "name": "Strait of Hormuz",
+   "lat": 26.5,
+   "lon": 56.3,
+   "latest": 2,
+   "avg7": 3.3,
+   "base": 85.5,
+   "ratio": 0.038,
+   "asof": "2026-10-25",
+   "baseline_note": "mean of 2025"
+  },
+  {
+   "id": "BAB",
+   "name": "Bab el-Mandeb",
+   "lat": 12.6,
+   "lon": 43.3,
+   "latest": 36,
+   "avg7": 28.9,
+   "base": 33.5,
+   "ratio": 0.862,
+   "asof": "2026-10-25",
+   "baseline_note": "mean of 2025"
+  },
+  {
+   "id": "SUZ",
+   "name": "Suez Canal",
+   "lat": 30.0,
+   "lon": 32.5,
+   "latest": 46,
+   "avg7": 41.3,
+   "base": 38.5,
+   "ratio": 1.071,
+   "asof": "2026-10-25",
+   "baseline_note": "mean of 2025"
+  },
+  {
+   "id": "MAL",
+   "name": "Strait of Malacca",
+   "lat": 2.5,
+   "lon": 101.5,
+   "latest": 212,
+   "avg7": 228,
+   "base": 234.5,
+   "ratio": 0.972,
+   "asof": "2026-10-25",
+   "baseline_note": "mean of 2025"
+  },
+  {
+   "id": "PAN",
+   "name": "Panama Canal",
+   "lat": 9.1,
+   "lon": -79.7,
+   "latest": 28,
+   "avg7": 28.7,
+   "base": 31.1,
+   "ratio": 0.923,
+   "asof": "2026-10-25",
+   "baseline_note": "mean of 2025"
+  },
+  {
+   "id": "CAP",
+   "name": "Cape of Good Hope",
+   "lat": -34.4,
+   "lon": 18.5,
+   "latest": 100,
+   "avg7": 87.1,
+   "base": 89.5,
+   "ratio": 0.974,
+   "asof": "2026-10-25",
+   "baseline_note": "mean of 2025"
+  }
+ ],
  "status": {
   "ecb": {
    "ok": true,
-   "ran_utc": "2026-11-02T17:06:24Z",
-   "last_ok_utc": "2026-11-02T17:06:24Z"
+   "ran_utc": "2026-11-02T17:07:55Z",
+   "last_ok_utc": "2026-11-02T17:07:55Z"
   },
   "ust": {
    "ok": true,
-   "ran_utc": "2026-11-02T17:06:24Z",
-   "last_ok_utc": "2026-11-02T17:06:24Z"
+   "ran_utc": "2026-11-02T17:07:55Z",
+   "last_ok_utc": "2026-11-02T17:07:55Z"
   },
   "eia": {
    "ok": true,
-   "ran_utc": "2026-11-02T17:06:24Z",
-   "last_ok_utc": "2026-11-02T17:06:24Z"
+   "ran_utc": "2026-11-02T17:07:55Z",
+   "last_ok_utc": "2026-11-02T17:07:55Z"
   },
   "portwatch": {
-   "ok": false,
-   "error": "PortWatch all variants failed: v0 portid,portname: {\"code\": 400, \"message\": \"Cannot perform query. Invalid query parameters.\", \"details\": [\"Unable to perform query. Please check your parameters.\"]} | ",
-   "last_ok_utc": null
+   "ok": true,
+   "ran_utc": "2026-11-02T17:07:55Z",
+   "last_ok_utc": "2026-11-02T17:07:55Z"
   }
  }
 }
