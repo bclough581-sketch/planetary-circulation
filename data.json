@@ -1,5 +1,5 @@
 {
- "generated_utc": "2026-11-02T19:12:15Z",
+ "generated_utc": "2026-11-02T20:02:21Z",
  "hubs": {
   "GRU": {
    "price": 6.099,
@@ -176,22 +176,22 @@
  "status": {
   "ecb": {
    "ok": true,
-   "ran_utc": "2026-11-02T19:12:15Z",
-   "last_ok_utc": "2026-11-02T19:12:15Z"
+   "ran_utc": "2026-11-02T20:02:21Z",
+   "last_ok_utc": "2026-11-02T20:02:21Z"
   },
   "ust": {
    "ok": true,
-   "ran_utc": "2026-11-02T19:12:15Z",
-   "last_ok_utc": "2026-11-02T19:12:15Z"
+   "ran_utc": "2026-11-02T20:02:21Z",
+   "last_ok_utc": "2026-11-02T20:02:21Z"
   },
   "eia": {
    "ok": true,
-   "ran_utc": "2026-11-02T19:12:15Z",
-   "last_ok_utc": "2026-11-02T19:12:15Z"
+   "ran_utc": "2026-11-02T20:02:21Z",
+   "last_ok_utc": "2026-11-02T20:02:21Z"
   },
   "portwatch": {
    "ok": false,
-   "error": "PortWatch all variants failed: v1 a0 *: {\"code\": 400, \"message\": \"Invalid URL\", \"details\": [\"Invalid URL\"]} | v1 a1 *: {\"code\": 400, \"message\": \"Invalid URL\", \"details\": [\"Invalid URL\"]} | v1 a2 *: {\"",
+   "error": "PortWatch all variants failed: v0 a0 portid,portname: {\"code\": 499, \"message\": \"Token Required\", \"messageCode\": \"GWM_0003\", \"details\": [\"Token Required\"]} | v0 a1 portid,portname: {\"code\": 499, \"messa",
    "last_ok_utc": "2026-11-02T17:07:55Z"
   }
  }
