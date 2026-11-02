@@ -1,5 +1,5 @@
 {
- "generated_utc": "2026-11-02T17:07:55Z",
+ "generated_utc": "2026-11-02T17:16:30Z",
  "hubs": {
   "GRU": {
    "price": 6.099,
@@ -176,22 +176,22 @@
  "status": {
   "ecb": {
    "ok": true,
-   "ran_utc": "2026-11-02T17:07:55Z",
-   "last_ok_utc": "2026-11-02T17:07:55Z"
+   "ran_utc": "2026-11-02T17:16:30Z",
+   "last_ok_utc": "2026-11-02T17:16:30Z"
   },
   "ust": {
    "ok": true,
-   "ran_utc": "2026-11-02T17:07:55Z",
-   "last_ok_utc": "2026-11-02T17:07:55Z"
+   "ran_utc": "2026-11-02T17:16:30Z",
+   "last_ok_utc": "2026-11-02T17:16:30Z"
   },
   "eia": {
    "ok": true,
-   "ran_utc": "2026-11-02T17:07:55Z",
-   "last_ok_utc": "2026-11-02T17:07:55Z"
+   "ran_utc": "2026-11-02T17:16:30Z",
+   "last_ok_utc": "2026-11-02T17:16:30Z"
   },
   "portwatch": {
-   "ok": true,
-   "ran_utc": "2026-11-02T17:07:55Z",
+   "ok": false,
+   "error": "PortWatch all variants failed: v0 a0 *: {\"code\": 400, \"message\": \"Cannot perform query. Invalid query parameters.\", \"details\": [\"Unable to perform query. Please check your parameters.\"]} | v0 a1 *: {\"",
    "last_ok_utc": "2026-11-02T17:07:55Z"
   }
  }
