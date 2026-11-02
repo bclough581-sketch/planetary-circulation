@@ -1,85 +1,109 @@
 {
- "generated_utc": "2026-11-01T20:00:00Z",
+ "generated_utc": "2026-11-02T01:27:17Z",
  "hubs": {
   "GRU": {
    "price": 6.0692,
-   "chg": null,
-   "lo": null,
-   "hi": null,
+   "chg": 1.895472021221245,
+   "lo": 5.5819,
+   "hi": 6.5851,
    "asof": "2026-10-30",
    "src": "ecb"
   },
   "LON": {
    "price": 0.8338,
-   "chg": null,
-   "lo": null,
-   "hi": null,
+   "chg": -0.2369044485390881,
+   "lo": 0.8338,
+   "hi": 0.8846,
    "asof": "2026-10-30",
    "src": "ecb"
   },
   "FRA": {
    "price": 1.1172,
-   "chg": null,
-   "lo": null,
-   "hi": null,
+   "chg": 0.37735849056603765,
+   "lo": 1.113,
+   "hi": 1.1974,
    "asof": "2026-10-30",
    "src": "ecb"
   },
   "ZRH": {
    "price": 0.9194,
-   "chg": null,
-   "lo": null,
-   "hi": null,
+   "chg": -0.30362177401865864,
+   "lo": 0.9008,
+   "hi": 0.9478,
    "asof": "2026-10-30",
    "src": "ecb"
   },
   "JNB": {
    "price": 18.6455,
-   "chg": null,
-   "lo": null,
-   "hi": null,
+   "chg": 0.6678616549147476,
+   "lo": 18.393,
+   "hi": 20.1215,
    "asof": "2026-10-30",
    "src": "ecb"
   },
   "BOM": {
    "price": 106.084,
-   "chg": null,
-   "lo": null,
-   "hi": null,
+   "chg": 0.046682919238549836,
+   "lo": 101.867,
+   "hi": 112.317,
    "asof": "2026-10-30",
    "src": "ecb"
   },
   "SHA": {
    "price": 7.4326,
-   "chg": null,
-   "lo": null,
-   "hi": null,
+   "chg": 0.2454682779456263,
+   "lo": 7.4144,
+   "hi": 8.3176,
    "asof": "2026-10-30",
    "src": "ecb"
   },
   "TYO": {
    "price": 175.68,
-   "chg": null,
-   "lo": null,
-   "hi": null,
+   "chg": -0.13642564802182067,
+   "lo": 175.51,
+   "hi": 187.72,
    "asof": "2026-10-30",
    "src": "ecb"
   },
   "SYD": {
    "price": 1.5904,
-   "chg": null,
-   "lo": null,
-   "hi": null,
+   "chg": 0.3913647266759135,
+   "lo": 1.583,
+   "hi": 1.7878,
    "asof": "2026-10-30",
    "src": "ecb"
+  },
+  "NYC": {
+   "price": 4.94,
+   "chg": -4.0000000000000036,
+   "chg_unit": "bp",
+   "lo": 3.97,
+   "hi": 5.31,
+   "asof": "2026-10-30",
+   "src": "ust"
   }
  },
  "chokepoints": [],
  "status": {
   "ecb": {
    "ok": true,
-   "seed": true
+   "ran_utc": "2026-11-02T01:27:17Z",
+   "last_ok_utc": "2026-11-02T01:27:17Z"
   },
-  "note": "seed values from the ECB daily file; the first Action run replaces them"
+  "ust": {
+   "ok": true,
+   "ran_utc": "2026-11-02T01:27:17Z",
+   "last_ok_utc": "2026-11-02T01:27:17Z"
+  },
+  "eia": {
+   "ok": false,
+   "error": "EIA_API_KEY not set (free key at eia.gov/opendata)",
+   "last_ok_utc": null
+  },
+  "portwatch": {
+   "ok": false,
+   "error": "PortWatch: {'code': 400, 'message': 'Invalid URL', 'details': ['Invalid URL']}",
+   "last_ok_utc": null
+  }
  }
 }
