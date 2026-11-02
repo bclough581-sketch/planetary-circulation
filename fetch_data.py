@@ -219,13 +219,101 @@ def fetch_portwatch():
     return out
 
 
+# ---------------------------------------------------------------- Treasury TIC (major foreign holders)
+TIC_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tic.json")
+TIC_URLS = ["https://ticdata.treasury.gov/resource-center/data-chart-center/tic/Documents/mfh.txt",
+            "https://ticdata.treasury.gov/Publish/mfh.txt"]
+MONTHS = {m: i + 1 for i, m in enumerate("Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split())}
+TIC_MAP = {"TYO": ["Japan"], "LON": ["United Kingdom"], "SHA": ["China, Mainland"],
+           "FRA": ["France", "Belgium", "Luxembourg", "Ireland"], "DXB": ["Saudi Arabia"],
+           "SIN": ["Singapore"], "BOM": ["India"], "GRU": ["Brazil"], "ZRH": ["Switzerland"]}
+
+
+def _num(tok):
+    try:
+        return float(tok.replace(",", ""))
+    except ValueError:
+        return None
+
+
+def parse_mfh(text):
+    """Parse Treasury's 'Major Foreign Holders' text table (newest month first).
+    Returns {"asof": "YYYY-MM-DD", "label": "Mon YYYY", "holders": {hub: [latest, prior, six_months_before]}}.
+    Raises ValueError on anything unexpected, so the caller keeps the previous file."""
+    months = years = None
+    rows = {}
+    for ln in text.splitlines():
+        toks = ln.split()
+        if not toks:
+            continue
+        if months is None:
+            if len(toks) >= 8 and all(t in MONTHS for t in toks):
+                months = toks
+            continue
+        if years is None:
+            if toks[0] == "Country" and len(toks) > len(months) and all(t.isdigit() for t in toks[1:len(months) + 1]):
+                years = toks[1:len(months) + 1]
+            continue
+        nums = []
+        while toks and _num(toks[-1]) is not None:
+            nums.append(_num(toks.pop()))
+        nums.reverse()
+        if toks and len(nums) >= len(months):
+            rows[" ".join(toks)] = nums[:len(months)]
+    if months is None or years is None or not rows:
+        raise ValueError("TIC: header or country rows not found")
+    y0, m0, y1, m1 = int(years[0]), MONTHS[months[0]], int(years[1]), MONTHS[months[1]]
+    if (y0, m0) <= (y1, m1):
+        raise ValueError("TIC: columns are not newest-first")
+    holders = {}
+    for hub, names in TIC_MAP.items():
+        series = []
+        for nm in names:
+            if nm not in rows or len(rows[nm]) < 7:
+                raise ValueError("TIC: missing country %s" % nm)
+            series.append(rows[nm])
+        trip = [round(sum(s[i] for s in series), 1) for i in (0, 1, 6)]
+        if not all(0 < v < 4000 for v in trip):
+            raise ValueError("TIC: implausible value for %s: %s" % (hub, trip))
+        holders[hub] = trip
+    nxt = date(y0 + (m0 == 12), m0 % 12 + 1, 1)
+    return {"asof": (nxt - timedelta(days=1)).isoformat(),
+            "label": "%s %d" % (months[0], y0), "holders": holders}
+
+
+def fetch_tic():
+    """Refresh tic.json when Treasury has published a newer month. Returns a short status string."""
+    best, errs = None, []
+    for url in TIC_URLS:
+        try:
+            p = parse_mfh(get(url, 60).decode("utf-8", "replace"))
+            if best is None or p["asof"] > best["asof"]:
+                best = p
+        except Exception as e:
+            errs.append("%s: %s" % (url.rsplit("/", 2)[-2], str(e)[:80]))
+    if best is None:
+        raise RuntimeError("TIC fetch/parse failed: " + " | ".join(errs))
+    try:
+        with open(TIC_PATH, encoding="utf-8") as f:
+            cur = json.load(f)
+    except Exception:
+        cur = {}
+    if cur.get("asof", "") >= best["asof"]:
+        return "tic up to date (%s)" % cur.get("asof")
+    cur.update({"label": best["label"], "asof": best["asof"], "holders": best["holders"]})
+    cur.setdefault("max_age_days", 100)
+    with open(TIC_PATH, "w", encoding="utf-8") as f:
+        json.dump(cur, f, indent=1, ensure_ascii=False)
+    return "tic updated to %s" % best["label"]
+
+
 # ---------------------------------------------------------------- main
 def main():
     prev = load_prev()
     data = {"generated_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "hubs": dict(prev.get("hubs", {})), "chokepoints": prev.get("chokepoints", []),
             "status": {}}
-    jobs = [("ecb", fetch_ecb), ("ust", fetch_ust), ("eia", fetch_eia), ("portwatch", fetch_portwatch)]
+    jobs = [("ecb", fetch_ecb), ("ust", fetch_ust), ("eia", fetch_eia), ("portwatch", fetch_portwatch), ("tic", fetch_tic)]
     ok = 0
     for name, fn in jobs:
         try:
@@ -236,11 +324,13 @@ def main():
                 data["hubs"]["NYC"] = {**res, "src": "ust"}
             elif name == "eia":
                 for k, v in res.items(): data["hubs"][k] = {**v, "src": "eia"}
-            else:
+            elif name == "portwatch":
                 data["chokepoints"] = res
+            # "tic" writes tic.json itself
             data["status"][name] = {"ok": True, "ran_utc": data["generated_utc"]}
-            ok += 1
-            print("ok  ", name)
+            if name != "tic":
+                ok += 1
+            print("ok  ", name, res if name == "tic" else "")
         except Exception as e:                      # keep previous values; page will age them out
             data["status"][name] = {"ok": False, "error": str(e)[:200],
                                     "last_ok_utc": prev.get("status", {}).get(name, {}).get("last_ok_utc") or
