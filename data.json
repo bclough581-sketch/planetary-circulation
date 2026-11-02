@@ -1,5 +1,5 @@
 {
- "generated_utc": "2026-11-02T20:02:21Z",
+ "generated_utc": "2026-11-02T20:24:35Z",
  "hubs": {
   "GRU": {
    "price": 6.099,
@@ -176,23 +176,28 @@
  "status": {
   "ecb": {
    "ok": true,
-   "ran_utc": "2026-11-02T20:02:21Z",
-   "last_ok_utc": "2026-11-02T20:02:21Z"
+   "ran_utc": "2026-11-02T20:24:35Z",
+   "last_ok_utc": "2026-11-02T20:24:35Z"
   },
   "ust": {
    "ok": true,
-   "ran_utc": "2026-11-02T20:02:21Z",
-   "last_ok_utc": "2026-11-02T20:02:21Z"
+   "ran_utc": "2026-11-02T20:24:35Z",
+   "last_ok_utc": "2026-11-02T20:24:35Z"
   },
   "eia": {
    "ok": true,
-   "ran_utc": "2026-11-02T20:02:21Z",
-   "last_ok_utc": "2026-11-02T20:02:21Z"
+   "ran_utc": "2026-11-02T20:24:35Z",
+   "last_ok_utc": "2026-11-02T20:24:35Z"
   },
   "portwatch": {
    "ok": false,
    "error": "PortWatch all variants failed: v0 a0 portid,portname: {\"code\": 499, \"message\": \"Token Required\", \"messageCode\": \"GWM_0003\", \"details\": [\"Token Required\"]} | v0 a1 portid,portname: {\"code\": 499, \"messa",
    "last_ok_utc": "2026-11-02T17:07:55Z"
+  },
+  "tic": {
+   "ok": true,
+   "ran_utc": "2026-11-02T20:24:35Z",
+   "last_ok_utc": "2026-11-02T20:24:35Z"
   }
  }
 }
