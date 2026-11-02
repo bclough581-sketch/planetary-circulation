@@ -38,6 +38,10 @@ class Calcs(unittest.TestCase):
         self.assertIsNone(fetch_data.pct(None, 100))
         self.assertIsNone(fetch_data.pct(5, 0))
 
+    def test_range_stats_history(self):
+        st = fetch_data.range_stats([3.0, None, 2.0, 1.0], ["2026-01-04", "2026-01-03", "2026-01-02", "2026-01-01"])
+        self.assertEqual(st["hist"], [["2026-01-04", 3.0], ["2026-01-02", 2.0], ["2026-01-01", 1.0]])   # gaps dropped
+
     def test_range_stats(self):
         st = fetch_data.range_stats([2.0, 1.0, 4.0, 3.0])          # newest first
         self.assertEqual((st["price"], st["lo"], st["hi"]), (2.0, 1.0, 4.0))
@@ -111,6 +115,13 @@ class SelfCheck(unittest.TestCase):
         self.assertTrue(any("HOU" in b for b in check_data.check(d, self.tic, self.now)))
         later = datetime(2030, 1, 1, tzinfo=timezone.utc)
         self.assertTrue(any("older" in b for b in check_data.check(self.data, self.tic, later)))
+
+    def test_catches_bad_history(self):
+        d = copy.deepcopy(self.data)
+        h = d["hubs"]["FRA"].get("hist")
+        if h:
+            h[1][0] = "2030-01-01"                      # out of order
+            self.assertTrue(any("FRA history" in b for b in check_data.check(d, self.tic, self.now)))
 
     def test_catches_bad_chokepoint(self):
         d = copy.deepcopy(self.data)

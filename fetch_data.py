@@ -36,13 +36,21 @@ def pct(a, b):
     return None if (a is None or b in (None, 0)) else (a / b - 1) * 100
 
 
-def range_stats(vals):
-    """vals newest-first. returns price, chg%, lo, hi over up to 260 obs."""
-    vals = [v for v in vals if v is not None]
+HIST_N = 130
+
+
+def range_stats(vals, dates=None):
+    """vals newest-first. returns price, chg%, lo, hi over up to 260 obs.
+    With dates, also returns hist: [[date, value], ...] newest-first (about six months) for Pulse and Sync."""
+    pairs = [(d, v) for d, v in zip(dates or [None] * len(vals), vals) if v is not None]
+    vals = [v for _, v in pairs]
     if len(vals) < 2:
         return None
     w = vals[:260]
-    return {"price": vals[0], "chg": pct(vals[0], vals[1]), "lo": min(w), "hi": max(w)}
+    st = {"price": vals[0], "chg": pct(vals[0], vals[1]), "lo": min(w), "hi": max(w)}
+    if dates:
+        st["hist"] = [[d, round(v, 6)] for d, v in pairs[:HIST_N]]
+    return st
 
 
 # ---------------------------------------------------------------- ECB
@@ -64,7 +72,7 @@ def fetch_ecb():
                 series.append(float(r[ccy]))
             except (KeyError, ValueError):
                 series.append(None)
-        st = range_stats(series)
+        st = range_stats(series, [r["Date"] for r in rows[:300]])
         if st:
             st["asof"] = rows[0]["Date"]
             out[hub] = st
@@ -95,7 +103,8 @@ def fetch_ust():
     series = [v for _, v in vals[:260]]
     cur, prev = series[0], series[1]
     return {"price": cur, "chg": (cur - prev) * 100, "chg_unit": "bp",   # basis points
-            "lo": min(series), "hi": max(series), "asof": vals[0][0]}
+            "lo": min(series), "hi": max(series), "asof": vals[0][0],
+            "hist": [[d, v] for d, v in vals[:HIST_N]]}
 
 
 # ---------------------------------------------------------------- EIA
@@ -112,7 +121,7 @@ def fetch_eia():
     for hub, sid in (("HOU", "RWTC"), ("DXB", "RBRTE")):
         rr = sorted([r for r in rows if r.get("series") == sid and r.get("value") not in (None, "")],
                     key=lambda r: r["period"], reverse=True)
-        st = range_stats([float(r["value"]) for r in rr])
+        st = range_stats([float(r["value"]) for r in rr], [r["period"] for r in rr])
         if st:
             st["asof"] = rr[0]["period"]
             out[hub] = st

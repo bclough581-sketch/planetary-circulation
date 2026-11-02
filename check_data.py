@@ -42,6 +42,13 @@ def check(data, tic, now=None, max_age_hours=36):
                 bad.append("%s move %s is implausibly large" % (h, chg))
             if _d(v["asof"]) > now.date() + timedelta(days=1):
                 bad.append("%s as-of date is in the future" % h)
+            hist = v.get("hist")
+            if hist is not None:
+                ds = [_d(x[0]) for x in hist]
+                if len(hist) < 20 or ds != sorted(ds, reverse=True) or len(set(ds)) != len(ds):
+                    bad.append("%s history is too short or not newest-first" % h)
+                if any(not lo_b <= float(x[1]) <= hi_b for x in hist):
+                    bad.append("%s history has an implausible value" % h)
         except Exception as e:
             bad.append("hub %s malformed (%s)" % (h, e))
     for c in data.get("chokepoints", []):
