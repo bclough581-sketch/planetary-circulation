@@ -53,7 +53,7 @@ td{padding:8px 12px;border-bottom:1px solid #1d0a0e;white-space:nowrap}
 tr.on td{background:#1b0910}tr:last-child td{border-bottom:0}
 .bar{display:inline-block;width:90px;height:7px;background:#1d0a0e;border-radius:4px;vertical-align:middle;position:relative;overflow:hidden}
 .bar>span{position:absolute;left:0;top:0;bottom:0;border-radius:4px}
-.up{color:#ff8f6a}.dn{color:#ff4d5f}.in{color:#ffd9dc}.out{color:#ff7a45}.stale{color:#7a4a50}
+.up{color:#8fbbe0}.dn{color:#ffa24d}.in{color:#ffd9dc}.out{color:#ff7a45}.stale{color:#7a4a50}
 .tag{font-size:10px;letter-spacing:.1em;border:1px solid #7a4a50;color:#b07a82;border-radius:3px;padding:1px 5px;margin-left:6px}
 .note{margin:16px 2px 0;color:var(--dim);font-size:12px;line-height:1.7;max-width:940px}
 .note b{color:var(--ink);font-weight:400}
@@ -70,7 +70,7 @@ a{color:#ff9a8a}
   <span class="sub">money as blood</span>
   <span class="status" role="status"><i class="dot" id="dot"></i><span id="stxt">loading…</span></span>
 </header>
-<p class="disc"><b>Information only.</b> A display of public data. Not investment advice, not a recommendation to buy or sell anything, and not personalized to anyone. Data is delayed and can be wrong or stale; every number carries its own as-of date. Do your own research.</p>
+<p class="disc"><b>Information only.</b> A display of public data. Red means unusual for that signal, not danger. Not investment advice, not a recommendation to buy or sell anything, and not personalized to anyone. Data is delayed and can be wrong or stale; every number carries its own as-of date. Do your own research.</p>
 <div class="banner" id="banner" role="alert"></div>
 <div class="modes" role="group" aria-label="View">
   <button id="m-circ" aria-pressed="true">CIRCULATION</button>
@@ -120,7 +120,7 @@ const HUBDEF = [
  {id:'SYD',name:'Sydney',lat:-33.9,lon:151.2,sig:'EUR/AUD',dp:4,typ:0.5,age:5,src:'ECB'}
 ];
 const LINKS=[['NYC','LON'],['LON','FRA'],['FRA','ZRH'],['FRA','DXB'],['DXB','BOM'],['BOM','SIN'],['SIN','SHA'],['SHA','TYO'],['SIN','SYD'],['NYC','HOU'],['NYC','GRU'],['LON','JNB'],['DXB','JNB'],['HOU','GRU'],['ZRH','DXB'],['SHA','SYD']];
-const CLBL={HRM:[-14,-26,'r'],BAB:[-10,14,'r'],SUZ:[-10,-14,'r'],MAL:[-12,-16,'r'],PAN:[12,12,'l'],CAP:[12,10,'l']};
+const CLBL={HRM:[14,-36,'l'],BAB:[-10,14,'r'],SUZ:[-10,-14,'r'],MAL:[-12,-16,'r'],PAN:[12,12,'l'],CAP:[12,10,'l']};
 let LAND=[], HUBS=HUBDEF.map((h,i)=>({...h,idx:i,price:null,chg:null,lo:null,hi:null,asof:null,tic:null,stale:true,missing:true})), byId={}, CH=[], DATA=null, TIC=null;
 HUBS.forEach(h=>byId[h.id]=h);
 
@@ -170,25 +170,29 @@ function layout(){
   landDots.step=step;arts=LINKS.map(([a,b])=>mkArc(byId[a],byId[b]));farts=HUBS.filter(h=>h.d1!=null&&h.id!=='NYC').map(h=>mkArc(h,byId.NYC));seedParts();
 }
 const bez=(a,t)=>{const u=1-t;return [u*u*a.pa[0]+2*u*t*a.cp[0]+t*t*a.pb[0],u*u*a.pa[1]+2*u*t*a.cp[1]+t*t*a.pb[1]];};
-function heatColor(h,al){const r=Math.round(122+133*h),g=Math.round(26+(h>0.7?(h-0.7)*3.3*190:0)+20*h),b=Math.round(40+(h>0.8?(h-0.8)*5*150:0));return `rgba(${r},${g},${b},${al})`;}
+const STOPS=[[0,[86,128,168]],[0.35,[255,170,70]],[0.7,[255,60,60]],[1,[255,241,232]]];
+function heatColor(h,al){h=Math.max(0,Math.min(1,h));let i=1;while(i<STOPS.length-1&&h>STOPS[i][0])i++;const a=STOPS[i-1],b=STOPS[i],t=(h-a[0])/(b[0]-a[0]),c=a[1].map((v,k)=>Math.round(v+(b[1][k]-v)*t));return `rgba(${c[0]},${c[1]},${c[2]},${al})`;}
+function bloodColor(hot,al){hot=Math.max(0,Math.min(1,hot));const k=Math.pow(hot,0.8),c=[Math.round(112+143*k),Math.round(20+52*k),Math.round(34+28*k)];return `rgba(${c[0]},${c[1]},${c[2]},${al})`;}
 function diamond(x,y,r){ctx.beginPath();ctx.moveTo(x,y-r);ctx.lineTo(x+r,y);ctx.lineTo(x,y+r);ctx.lineTo(x-r,y);ctx.closePath();}
 
 let last=performance.now(),time=0.8;
 function frame(now){
   const dt=Math.min(0.05,(now-last)/1000);last=now;if(!reduce)time+=dt;
   ctx.setTransform(DPR,0,0,DPR,0,0);ctx.globalCompositeOperation='source-over';ctx.clearRect(0,0,W,H);
-  const flow=mode==='flow';ctx.fillStyle=flow?'rgba(150,34,50,.55)':'rgba(176,38,56,.8)';
+  const flow=mode==='flow';ctx.fillStyle=flow?'rgba(100,34,50,.5)':'rgba(112,34,52,.62)';
   const s=landDots.step,r=Math.max(1.8,s*0.34);for(const p of landDots)ctx.fillRect(p[0]-r/2,p[1]-r/2,r,r);
-  const hb=(time%1.7)/1.7,beat=Math.exp(-Math.pow(hb/0.05,2))+0.6*Math.exp(-Math.pow((hb-0.2)/0.05,2));
+  const hb=(time%1.7)/1.7,surge=Math.exp(-Math.pow((hb-0.1)/0.16,2)),beat=Math.exp(-Math.pow(hb/0.05,2))+0.6*Math.exp(-Math.pow((hb-0.2)/0.05,2));
   const hp=proj(byId.NYC.lon,byId.NYC.lat),waveR=hb*W*0.95;ctx.globalCompositeOperation='lighter';
   if(!flow){
-    for(const a of arts){const mid=bez(a,0.5),dist=Math.hypot(mid[0]-hp[0],mid[1]-hp[1]),wave=Math.exp(-Math.pow((dist-waveR)/(W*0.09),2)),hot=(a.A.heat+a.B.heat)/2;
-      ctx.lineWidth=1+hot*1.2;ctx.strokeStyle=`rgba(255,${60+80*hot|0},70,${0.13+0.12*hot+0.4*wave})`;ctx.beginPath();ctx.moveTo(a.pa[0],a.pa[1]);ctx.quadraticCurveTo(a.cp[0],a.cp[1],a.pb[0],a.pb[1]);ctx.stroke();}
-    ctx.strokeStyle=`rgba(255,42,61,${0.28*(1-hb)})`;ctx.lineWidth=1.2;ctx.beginPath();ctx.arc(hp[0],hp[1],waveR,0,Math.PI*2);ctx.stroke();
-    for(const p of parts){const a=arts[p.a],hot=(a.A.heat+a.B.heat)/2;
-      if(!reduce){p.t+=p.dir*p.sp*dt*(1+hot*1.4)*(300/Math.max(120,a.len));if(p.t>1)p.t-=1;if(p.t<0)p.t+=1;}
-      const q=bez(a,p.t),hh=(p.dir>0?a.B:a.A).heat,rad=p.sz*(0.9+hh*0.9),g=ctx.createRadialGradient(q[0],q[1],0,q[0],q[1],rad*2.4);
-      g.addColorStop(0,`rgba(255,${110+100*hh|0},${90+80*hh|0},.95)`);g.addColorStop(1,'rgba(255,40,60,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(q[0],q[1],rad*2.4,0,Math.PI*2);ctx.fill();}
+    for(const a of arts){const mid=bez(a,0.5),dist=Math.hypot(mid[0]-hp[0],mid[1]-hp[1]),wave=Math.exp(-Math.pow((dist-waveR)/(W*0.09),2)),hot=Math.max(0,((a.A.heat+a.B.heat)/2-0.25)/0.75);
+      ctx.lineWidth=1.1+hot*1.3+wave*0.8;ctx.strokeStyle=bloodColor(hot*0.8+wave*0.4,0.26+0.2*hot+0.35*wave);ctx.beginPath();ctx.moveTo(a.pa[0],a.pa[1]);ctx.quadraticCurveTo(a.cp[0],a.cp[1],a.pb[0],a.pb[1]);ctx.stroke();}
+    ctx.strokeStyle=`rgba(190,40,56,${0.26*(1-hb)})`;ctx.lineWidth=1.2;ctx.beginPath();ctx.arc(hp[0],hp[1],waveR,0,Math.PI*2);ctx.stroke();
+    for(const p of parts){const a=arts[p.a],hot=Math.max(0,((a.A.heat+a.B.heat)/2-0.25)/0.75);
+      if(!reduce){p.t+=p.dir*p.sp*dt*(0.45+hot*1.2)*(1+0.9*surge)*(300/Math.max(120,a.len));if(p.t>1)p.t-=1;if(p.t<0)p.t+=1;}
+      const hh=Math.max(0,(((p.dir>0?a.B:a.A).heat)-0.25)/0.75),rad=p.sz*(0.9+hh*0.8);
+      for(let k=4;k>=1;k--){const tt=p.t-p.dir*k*0.013;if(tt<0||tt>1)continue;const q2=bez(a,tt);ctx.fillStyle=bloodColor(hot,0.34*(1-k/5));ctx.beginPath();ctx.arc(q2[0],q2[1],rad*(1.5-k*0.2),0,Math.PI*2);ctx.fill();}
+      const q=bez(a,p.t),g=ctx.createRadialGradient(q[0],q[1],0,q[0],q[1],rad*2.4);
+      g.addColorStop(0,bloodColor(hh,0.95));g.addColorStop(1,bloodColor(hh,0));ctx.fillStyle=g;ctx.beginPath();ctx.arc(q[0],q[1],rad*2.4,0,Math.PI*2);ctx.fill();}
   } else {
     for(const a of farts){const h=a.A,inflow=h.d1>=0;ctx.lineWidth=0.8+Math.min(3.2,Math.abs(h.d6)/45);ctx.strokeStyle=inflow?'rgba(255,215,220,.28)':'rgba(255,110,40,.34)';
       ctx.beginPath();ctx.moveTo(a.pa[0],a.pa[1]);ctx.quadraticCurveTo(a.cp[0],a.cp[1],a.pb[0],a.pb[1]);ctx.stroke();}
@@ -198,20 +202,20 @@ function frame(now){
   }
   ctx.font='11px "Share Tech Mono",monospace';ctx.textBaseline='middle';const labels=[];
   for(const h of HUBS){
-    const p=proj(h.lon,h.lat),isHeart=h.id==='NYC',hv=flow?(h.d1==null?0.12:Math.min(1,Math.abs(h.d1)/40)):h.heat,wound=!flow&&!h.stale&&h.heat>0.6;
+    const p=proj(h.lon,h.lat),isHeart=h.id==='NYC',hv=flow?(h.d1==null?0.12:Math.min(1,Math.abs(h.d1)/40)):h.heat,wound=!flow&&!h.stale&&h.heat>0.85;
     const dist=Math.hypot(p[0]-hp[0],p[1]-hp[1]),wv=Math.exp(-Math.pow((dist-waveR)/(W*0.06),2));let rad=3+hv*4+(isHeart?beat*4:0)+wv*3;
-    const col=flow&&h.d1!=null&&h.d1<0?`rgba(255,${110+60*hv|0},40,.9)`:(h.stale&&!h.relay&&!flow?'rgba(110,50,60,.8)':heatColor(hv,0.9));
-    const gr=ctx.createRadialGradient(p[0],p[1],0,p[0],p[1],rad*4);gr.addColorStop(0,col);gr.addColorStop(1,'rgba(255,30,50,0)');
+    const col=flow&&h.d1!=null&&h.d1<0?`rgba(255,${110+60*hv|0},40,.9)`:(h.stale&&!h.relay&&!flow?'rgba(110,50,60,.8)':heatColor(hv*0.8,0.9));
+    const gr=ctx.createRadialGradient(p[0],p[1],0,p[0],p[1],rad*4);gr.addColorStop(0,col);gr.addColorStop(1,heatColor(hv*0.8,0));
     ctx.fillStyle=gr;ctx.beginPath();ctx.arc(p[0],p[1],rad*4,0,Math.PI*2);ctx.fill();ctx.fillStyle=wound?'rgba(255,241,232,.95)':col;ctx.beginPath();ctx.arc(p[0],p[1],rad*0.6,0,Math.PI*2);ctx.fill();
     if(wound)for(let k=0;k<2;k++){const ph=((time*0.9+k*0.5)%1);ctx.strokeStyle=`rgba(255,70,70,${0.6*(1-ph)})`;ctx.lineWidth=1.4;ctx.beginPath();ctx.arc(p[0],p[1],6+ph*28*(0.6+h.heat),0,Math.PI*2);ctx.stroke();}
-    if(isHeart){ctx.strokeStyle=`rgba(255,200,200,${0.35+0.4*beat})`;ctx.lineWidth=1;ctx.beginPath();ctx.arc(p[0],p[1],rad+5,0,Math.PI*2);ctx.stroke();}
+    if(isHeart){ctx.strokeStyle=`rgba(255,205,205,${0.3+0.4*beat})`;ctx.lineWidth=1;ctx.beginPath();ctx.arc(p[0],p[1],rad+5,0,Math.PI*2);ctx.stroke();}
     labels.push([h,p,wound]);
   }
   for(const c of CH){   // chokepoints: bigger and brighter the further traffic is below its own norm
     const p=proj(c.lon,c.lat),st=c.stress;
     if(st>0.4)for(let k=0;k<2;k++){const ph=((time*0.6+k*0.5)%1);ctx.strokeStyle=`rgba(255,240,230,${0.5*(1-ph)*st})`;ctx.lineWidth=1.2;ctx.beginPath();ctx.arc(p[0],p[1],5+ph*(10+22*st),0,Math.PI*2);ctx.stroke();}
-    ctx.fillStyle=`rgba(255,60,60,${0.12+0.3*st})`;diamond(p[0],p[1],7+8*st);ctx.fill();
-    ctx.fillStyle=c.stale?'rgba(150,90,100,.7)':'#fff1e8';diamond(p[0],p[1],3.5+2.5*st);ctx.fill();
+    ctx.fillStyle=heatColor(st*1.6,0.12+0.3*st);diamond(p[0],p[1],7+8*st);ctx.fill();
+    ctx.fillStyle=c.stale?'rgba(150,90,100,.7)':heatColor(st*1.6,1);diamond(p[0],p[1],3.5+2.5*st);ctx.fill();
   }
   ctx.globalCompositeOperation='source-over';
   const LBL={NYC:[-12,-12,'r'],HOU:[-12,-12,'r'],GRU:[12,-12,'l'],LON:[-12,-14,'r'],FRA:[12,-26,'l'],ZRH:[12,6,'l'],DXB:[12,-12,'l'],JNB:[12,-12,'l'],BOM:[12,16,'l'],SIN:[12,16,'l'],SHA:[12,18,'l'],TYO:[12,-14,'l'],SYD:[-12,16,'r']};
@@ -229,19 +233,19 @@ function buildTable(){
   [...HUBS].sort((a,b)=>b.heat-a.heat).forEach(h=>{
     const tr=document.createElement('tr');tr.dataset.i=h.idx;const dim=h.stale&&!h.relay?' class="stale"':'';
     const mv=h.chg==null||h.stale?'<span class="stale">n/a</span>':`<span class="${h.chg>=0?'up':'dn'}">${h.chg>=0?'+':''}${h.chg.toFixed(h.unit==='bp'?1:(h.typ<1?3:2))}${h.unit==='bp'?' bp':'%'}</span>`;
-    const rng=h.pos==null?'<span class="stale">n/a</span>':`<span class="bar"><span style="width:${(h.pos*100).toFixed(0)}%;background:#7a1a28"></span></span> ${(h.pos*100).toFixed(0)}%`;
-    const ht=h.stale&&!h.relay?'<span class="stale">n/a</span>':`<span class="bar"><span style="width:${(h.heat*100).toFixed(0)}%;background:linear-gradient(90deg,#7a1a28,#ff2a3d,#fff1e8)"></span></span> ${(h.heat*100).toFixed(0)}`;
+    const rng=h.pos==null?'<span class="stale">n/a</span>':`<span class="bar"><span style="width:${(h.pos*100).toFixed(0)}%;background:#56809f"></span></span> ${(h.pos*100).toFixed(0)}%`;
+    const ht=h.stale&&!h.relay?'<span class="stale">n/a</span>':`<span class="bar"><span style="width:${(h.heat*100).toFixed(0)}%;background:linear-gradient(90deg,#56809f,#ffaa46,#ff3c3c)"></span></span> ${(h.heat*100).toFixed(0)}`;
     const tc=d=>d==null?'<span class="stale">n/a</span>':`<span class="${d>=0?'in':'out'}">${fmtD(d)}B</span>`;
     const asof=h.relay?'n/a':(h.missing?'no data':fmtDate(h.asof)+(h.stale?'<span class="tag">STALE</span>':''));
     tr.innerHTML=`<td>${h.name}</td><td${dim}>${h.sig}</td><td${dim}>${h.relay||h.missing?'':fmtVal(h)}</td><td>${mv}</td><td>${rng}</td><td>${ht}</td><td title="${h.ticnote||''}">${tc(h.d1)}</td><td>${tc(h.d6)}</td><td${dim}>${asof}</td>`;tb.appendChild(tr);});
   const cb=document.querySelector('#ctbl tbody');cb.innerHTML='';
   if(!CH.length){cb.innerHTML='<tr><td colspan="6" class="stale">No chokepoint data yet. It appears after the first daily data run.</td></tr>';}
   CH.forEach(c=>{const tr=document.createElement('tr');const pc=c.ratio==null?'n/a':Math.round(c.ratio*100)+'%';
-    tr.innerHTML=`<td>◆ ${c.name}</td><td>${c.latest}</td><td>${c.avg7}</td><td>${c.base} <span class="stale">(${c.baseline_note||''})</span></td><td>${c.stale?'<span class="stale">n/a</span>':`<span class="bar"><span style="width:${Math.min(100,(c.ratio||0)*100).toFixed(0)}%;background:#7a1a28"></span></span> ${pc}`}</td><td>${fmtDate(c.asof)}${c.stale?'<span class="tag">STALE</span>':''}</td>`;cb.appendChild(tr);});
+    tr.innerHTML=`<td>◆ ${c.name}</td><td>${c.latest}</td><td>${c.avg7}</td><td>${c.base} <span class="stale">(${c.baseline_note||''})</span></td><td>${c.stale?'<span class="stale">n/a</span>':`<span class="bar"><span style="width:${Math.min(100,(c.ratio||0)*100).toFixed(0)}%;background:${(c.ratio||0)>=0.9?'#56809f':(c.ratio||0)>=0.75?'#ffaa46':'#ff3c3c'}"></span></span> ${pc}`}</td><td>${fmtDate(c.asof)}${c.stale?'<span class="tag">STALE</span>':''}</td>`;cb.appendChild(tr);});
 }
 function buildLegend(){$('legend').innerHTML=mode==='flow'
  ?'<span><i style="background:#ffe9ea;box-shadow:0 0 8px #ff2a3d"></i>holdings up: toward New York</span><span><i style="background:#ff7a28"></i>holdings down: away</span><span>line weight = six-month change</span><span>source: U.S. Treasury TIC'+(TIC?', '+TIC.label:'')+'</span>'
- :'<span><i style="background:#7a1a28"></i>calm hub</span><span><i style="background:#ff4d3d"></i>stressed hub</span><span><i style="background:#fff1e8;box-shadow:0 0 8px #ff2a3d"></i>far from normal</span><span><i class="dia" style="background:#fff1e8"></i>chokepoint (bigger = less traffic than its norm)</span><span><i style="background:#6e323c"></i>grey = stale or missing, excluded from heat</span>';}
+ :'<span><i style="background:#56809f"></i>calm</span><span><i style="background:#ffaa46"></i>stirring</span><span><i style="background:#ff3c3c;box-shadow:0 0 8px #ff2a3d"></i>far from its own normal</span><span><i class="dia" style="background:#fff1e8"></i>chokepoint (bigger = less traffic than its norm)</span><span><i style="background:#6e323c"></i>grey = stale or missing</span><span>red means unusual, not danger</span>';}
 function setMode(m){mode=m;$('m-circ').setAttribute('aria-pressed',m==='circ');$('m-flow').setAttribute('aria-pressed',m==='flow');buildLegend();if(reduce)requestAnimationFrame(frame);}
 $('m-circ').onclick=()=>setMode('circ');$('m-flow').onclick=()=>setMode('flow');
 
