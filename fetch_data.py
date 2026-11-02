@@ -174,9 +174,14 @@ def fetch_portwatch():
     rows, offset = [], 0
     while True:
         feats = _pw({"where": "portid IN (%s) AND year >= %d" % (idlist, year_from),
-                     "outFields": "date,portid,portname,n_total", "returnGeometry": "false", "f": "json",
+                     "outFields": "*", "returnGeometry": "false", "f": "json",
                      "resultOffset": str(offset), "resultRecordCount": "1000"})
-        rows += [f["attributes"] for f in feats]
+        for f in feats:
+            r = f["attributes"]
+            if r.get("n_total") is None:
+                parts = [r.get(k) for k in ("n_container", "n_dry_bulk", "n_general_cargo", "n_roro", "n_tanker")]
+                r["n_total"] = sum(x for x in parts if isinstance(x, (int, float))) if any(isinstance(x, (int, float)) for x in parts) else None
+            rows.append(r)
         if len(feats) < 1000 or offset > 20000:
             break
         offset += 1000
