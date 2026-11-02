@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Daily data job for Planetary Circulation.
+"""Daily data job for Tributary.
 
 Pulls ONLY sources whose terms allow public display with attribution:
   - ECB euro foreign exchange reference rates   (Source: ECB statistics.)

@@ -1,4 +1,4 @@
-# Planetary Circulation
+# Tributary (formerly Planetary Circulation)
 
 A free, installable, open-data HUD of global money flows and shipping chokepoints. Information only; not investment advice.
 
