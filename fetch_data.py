@@ -11,7 +11,7 @@ not-ok and keeps its previous values (never silently shows a stale number as
 fresh: every series carries its own as-of date and the page enforces age limits).
 Stdlib only. Exits non-zero if EVERY source failed, so the Action goes red.
 """
-import csv, io, json, os, re, statistics, sys, urllib.parse, urllib.request, zipfile
+import csv, io, json, os, re, statistics, sys, time, urllib.parse, urllib.request, zipfile
 from datetime import date, datetime, timedelta, timezone
 
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data.json")
@@ -142,16 +142,19 @@ def _pw(q):
     errs = []
     order = [_pw_good[0]] if _pw_good[0] is not None else range(len(PW_VARIANTS))
     for i in order:
-        try:
-            js = json.loads(get(PW_VARIANTS[i] + "?" + urllib.parse.urlencode(q), 90))
-        except Exception as e:
-            errs.append("v%d: %s" % (i, str(e)[:80]))
-            continue
-        if "error" in js:
-            errs.append("v%d %s: %s" % (i, q.get("outFields"), json.dumps(js["error"])[:260]))
-            continue
-        _pw_good[0] = i
-        return js.get("features", [])
+        for attempt in range(4):
+            if attempt:
+                time.sleep(4 * attempt)
+            try:
+                js = json.loads(get(PW_VARIANTS[i] + "?" + urllib.parse.urlencode(q), 90))
+            except Exception as e:
+                errs.append("v%d a%d: %s" % (i, attempt, str(e)[:80]))
+                continue
+            if "error" in js:
+                errs.append("v%d a%d %s: %s" % (i, attempt, q.get("outFields"), json.dumps(js["error"])[:160]))
+                continue
+            _pw_good[0] = i
+            return js.get("features", [])
     raise RuntimeError("PortWatch all variants failed: " + " | ".join(errs))
 
 
