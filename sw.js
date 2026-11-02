@@ -1,4 +1,4 @@
-const SHELL='pc-shell-v9', FILES=['./','index.html','land.json','manifest.webmanifest','icon-192.png'];
+const SHELL='pc-shell-v10', FILES=['./','index.html','land.json','manifest.webmanifest','icon-192.png'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(SHELL).then(c=>c.addAll(FILES)).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==SHELL).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});
 self.addEventListener('fetch',e=>{
