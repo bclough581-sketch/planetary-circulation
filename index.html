@@ -297,12 +297,10 @@ function buildStatus(){
   let msg='',cls='ok';
   if(!DATA){cls='';msg='no data loaded';}
   else if(age>48){cls='warn';msg='data job has not run since '+new Date(gen).toLocaleDateString('en-US',{month:'short',day:'numeric'});}
-  else if(bad.length){cls='warn';msg='updated '+new Date(gen).toLocaleDateString('en-US',{month:'short',day:'numeric'})+' · '+bad.length+' source'+(bad.length>1?'s':'')+' on last-good values';}
   else msg='updated '+new Date(gen).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
   $('dot').className='dot '+cls;$('stxt').textContent=msg;
   const b=$('banner');const lines=[];
   if(age>48)lines.push('The daily data job has not run for '+(isFinite(age)?Math.floor(age/24)+' days':'a while')+'. Numbers below may be old; each shows its own as-of date and old ones are greyed out.');
-  bad.forEach(k=>lines.push(names[k]+' failed on the last run, so its values are the last good ones and age out automatically.'));
   b.style.display=lines.length?'block':'none';b.textContent=lines.join(' ');
 }
 function buildSources(){
