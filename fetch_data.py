@@ -157,8 +157,9 @@ def _pw(q):
 
 def fetch_portwatch():
     # Step 1: list distinct chokepoints (no LIKE / percent signs, which this server's URL filter may reject)
-    names = _pw({"where": "1=1", "outFields": "portid,portname", "returnDistinctValues": "true",
-                 "returnGeometry": "false", "f": "json"})
+    probe = date.today() - timedelta(days=21)
+    names = _pw({"where": "year = %d AND month = %d AND day = %d" % (probe.year, probe.month, probe.day),
+                 "outFields": "portid,portname", "returnGeometry": "false", "f": "json"})
     ids = {}
     for f in names:
         a = f["attributes"]
