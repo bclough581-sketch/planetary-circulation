@@ -1,4 +1,4 @@
-# Tributary (formerly Planetary Circulation)
+# Amalgam (formerly Tributary, Planetary Circulation)
 
 A free, installable, open-data HUD of global money flows and shipping chokepoints. Information only; not investment advice.
 
