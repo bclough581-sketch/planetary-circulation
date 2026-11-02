@@ -133,21 +133,33 @@ CHOKES = [  # (key, lat, lon, label, substrings to match portname)
 PW = "https://services9.arcgis.com/weJ1QsnbMYJlCHdG/ArcGIS/rest/services/Daily_Chokepoints_Data/FeatureServer/0/query"
 
 
+def _pw(q):
+    js = json.loads(get(PW + "?" + urllib.parse.urlencode(q), 90))
+    if "error" in js:
+        raise RuntimeError("PortWatch: %s" % js["error"])
+    return js.get("features", [])
+
+
 def fetch_portwatch():
-    since = (date.today() - timedelta(days=800)).isoformat()
+    # Step 1: list distinct chokepoints (no LIKE / percent signs, which this server's URL filter may reject)
+    names = _pw({"where": "1=1", "outFields": "portid,portname", "returnDistinctValues": "true",
+                 "returnGeometry": "false", "f": "json"})
+    ids = {}
+    for f in names:
+        a = f["attributes"]
+        nm = (a.get("portname") or "").lower()
+        if any(s in nm for c in CHOKES for s in c[4]):
+            ids[a["portid"]] = a.get("portname")
+    if not ids:
+        raise RuntimeError("PortWatch: no matching chokepoint names in %d distinct rows" % len(names))
+    # Step 2: pull recent rows by portid and integer year (no date literals)
+    year_from = date.today().year - 2
+    idlist = ",".join("'%s'" % i for i in ids)
     rows, offset = [], 0
-    like = " OR ".join("LOWER(portname) LIKE '%%%s%%'" % s for c in CHOKES for s in c[4])
     while True:
-        q = {"where": "(%s) AND date >= DATE '%s'" % (like, since), "outFields": "date,portid,portname,n_total",
-             "orderByFields": "date DESC", "returnGeometry": "false", "f": "json",
-             "resultOffset": str(offset), "resultRecordCount": "1000"}
-        js = json.loads(get(PW + "?" + urllib.parse.urlencode(q), 90))
-        if "error" in js:   # some servers want a plain quoted date literal instead of DATE '...'
-            q["where"] = "(%s) AND date >= '%s'" % (like, since)
-            js = json.loads(get(PW + "?" + urllib.parse.urlencode(q), 90))
-        if "error" in js:
-            raise RuntimeError("PortWatch: %s" % js["error"])
-        feats = js.get("features", [])
+        feats = _pw({"where": "portid IN (%s) AND year >= %d" % (idlist, year_from),
+                     "outFields": "date,portid,portname,n_total", "returnGeometry": "false", "f": "json",
+                     "resultOffset": str(offset), "resultRecordCount": "1000"})
         rows += [f["attributes"] for f in feats]
         if len(feats) < 1000 or offset > 20000:
             break
