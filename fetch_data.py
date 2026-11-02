@@ -133,11 +133,26 @@ CHOKES = [  # (key, lat, lon, label, substrings to match portname)
 PW = "https://services9.arcgis.com/weJ1QsnbMYJlCHdG/ArcGIS/rest/services/Daily_Chokepoints_Data/FeatureServer/0/query"
 
 
+PW_VARIANTS = [PW, PW.replace("/ArcGIS/", "/arcgis/")]
+_pw_good = [None]
+
+
 def _pw(q):
-    js = json.loads(get(PW + "?" + urllib.parse.urlencode(q), 90))
-    if "error" in js:
-        raise RuntimeError("PortWatch: %s" % js["error"])
-    return js.get("features", [])
+    q = dict(q, outSR="4326")
+    errs = []
+    order = [_pw_good[0]] if _pw_good[0] is not None else range(len(PW_VARIANTS))
+    for i in order:
+        try:
+            js = json.loads(get(PW_VARIANTS[i] + "?" + urllib.parse.urlencode(q), 90))
+        except Exception as e:
+            errs.append("v%d: %s" % (i, str(e)[:80]))
+            continue
+        if "error" in js:
+            errs.append("v%d: %s" % (i, str(js["error"])[:100]))
+            continue
+        _pw_good[0] = i
+        return js.get("features", [])
+    raise RuntimeError("PortWatch all variants failed: " + " | ".join(errs))
 
 
 def fetch_portwatch():
