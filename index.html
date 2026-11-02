@@ -74,7 +74,7 @@ a{color:#cfe8ff}
   <span class="sub">global markets and shipping, from public data</span>
   <span class="status" role="status"><i class="dot" id="dot"></i><span id="stxt">loading…</span></span>
 </header>
-<p class="disc"><b>Information only.</b> A display of public data. Red means unusual for that signal, not danger. Not investment advice, not a recommendation to buy or sell anything, and not personalized to anyone. Data is delayed and can be wrong or stale; every number carries its own as-of date. Do your own research.</p>
+<p class="disc"><b>Information only.</b> A display of public data. Color shows how far a reading sits from its own 52-week range. Not investment advice, not a recommendation to buy or sell anything, and not personalized to anyone. Data is delayed and can be wrong or stale; every number carries its own as-of date. Verify with primary sources.</p>
 <div class="banner" id="banner" role="alert"></div>
 <div class="chips" id="chips" role="group" aria-label="Overlays">
   <button data-ov="press" aria-pressed="true">PRESSURE</button>
@@ -93,7 +93,7 @@ a{color:#cfe8ff}
 
 <h2>HUBS</h2>
 <div class="tablewrap"><table id="tbl"><thead><tr>
-  <th>HUB</th><th>SIGNAL</th><th>READING</th><th>MOVE</th><th>52-WK RANGE</th><th>HEAT</th><th>UST HELD Δ 1M</th><th>Δ 6M</th><th>AS OF</th>
+  <th>HUB</th><th>SIGNAL</th><th>READING</th><th>MOVE</th><th>52-WK RANGE</th><th>DEVIATION</th><th>UST HELD Δ 1M</th><th>Δ 6M</th><th>AS OF</th>
 </tr></thead><tbody></tbody></table></div>
 
 <h2>SHIPPING CHOKEPOINTS</h2>
@@ -102,7 +102,7 @@ a{color:#cfe8ff}
 </tr></thead><tbody></tbody></table></div>
 
 <p class="note">
-<b>How to read it.</b> Heat is how far a signal sits from normal: its distance from the middle of its 52-week range, or a large move in one session, whichever is bigger. The heart beats from New York. Particles lean toward the hotter end of each artery; that is a display rule, not measured capital flow. The ring around a hub is a pressure gauge: how far round it sits tells you where the reading is in its own 52-week range.<br>
+<b>How to read it.</b> Deviation is how far a signal sits from normal: its distance from the middle of its 52-week range, or a large move in one session, whichever is bigger. The heart beats from New York. Particles lean toward the hotter end of each artery; that is a display rule, not measured capital flow. The ring around a hub is a pressure gauge: how far round it sits tells you where the reading is in its own 52-week range.<br>
 <b>Treasury holdings overlay.</b> Lines run from a country's hub to New York. Particles move toward New York where that country's reported Treasury holdings rose over the last month, away where they fell; line weight is the six-month change. Holdings change with prices and custody, not only buying and selling. The UK, Belgium, Luxembourg and Ireland are custody centers: their rows show where assets are held, not whose money it is.<br>
 <b>Chokepoints.</b> Daily ship transit counts from satellite tracking, compared with the same chokepoint's own average. Published with a lag of days. Low traffic is a measurement, not a forecast.<br>
 <b>What this is not.</b> It describes what already happened. It does not predict prices, and nothing here tells anyone what to do with money.
@@ -270,11 +270,11 @@ function buildTable(){
   CH.forEach(c=>{const tr=document.createElement('tr');const pc=c.ratio==null?'n/a':Math.round(c.ratio*100)+'%';
     tr.innerHTML=`<td>◆ ${c.name}</td><td>${c.latest}</td><td>${c.avg7}</td><td>${c.base} <span class="stale">(${c.baseline_note||''})</span></td><td>${c.stale?'<span class="stale">n/a</span>':`<span class="bar"><span style="width:${Math.min(100,(c.ratio||0)*100).toFixed(0)}%;background:${(c.ratio||0)>=0.9?'#56809f':(c.ratio||0)>=0.75?'#ffaa46':'#ff3c3c'}"></span></span> ${pc}`}</td><td>${fmtDate(c.asof)}${c.stale?'<span class="tag">STALE</span>':''}</td>`;cb.appendChild(tr);});
 }
-function buildLegend(){$('legend').innerHTML='<span><i style="background:#56809f"></i>calm</span><span><i style="background:#ffaa46"></i>stirring</span><span><i style="background:#ff3c3c;box-shadow:0 0 8px #ff2a3d"></i>far from its own normal</span>'
+function buildLegend(){$('legend').innerHTML='<span><i style="background:#56809f"></i>within typical range</span><span><i style="background:#ffaa46"></i>elevated</span><span><i style="background:#ff3c3c;box-shadow:0 0 8px #ff2a3d"></i>outside typical range</span>'
  +(ov.press?'<span>ring = pressure gauge: where it sits in its 52-week range</span>':'')
  +(ov.ship?'<span><i class="dia" style="background:#fff1e8"></i>valve: bigger = less traffic than its norm</span>':'')
  +(ov.hold?'<span><i style="background:#ffe9ea;box-shadow:0 0 8px #ff2a3d"></i>holdings up: toward New York</span><span><i style="background:#ff7a28"></i>holdings down: away</span><span>line weight = six-month change'+(TIC?', source: U.S. Treasury TIC, '+TIC.label:'')+'</span>':'')
- +'<span><i style="background:#6e323c"></i>grey = stale or missing</span><span>red means unusual, not danger</span>';}
+ +'<span><i style="background:#6e323c"></i>grey = stale or missing</span><span>color = distance from the 52-week range</span>';}
 document.querySelectorAll('#chips button[data-ov]').forEach(b=>b.onclick=()=>{const k=b.dataset.ov;ov[k]=!ov[k];b.setAttribute('aria-pressed',ov[k]);buildLegend();if(reduce)requestAnimationFrame(frame);});
 function setHold(){ov.hold=true;const b=document.querySelector('#chips button[data-ov="hold"]');if(b)b.setAttribute('aria-pressed','true');buildLegend();}
 
