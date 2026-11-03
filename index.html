@@ -39,7 +39,11 @@ h1{font-family:var(--display);font-weight:700;font-size:clamp(18px,3vw,28px);let
 .modes button{font-family:var(--display);font-size:11px;letter-spacing:.14em;color:var(--dim);background:var(--panel);border:1px solid var(--line);padding:9px 16px;cursor:pointer;min-height:40px}
 .modes button:first-child{border-radius:5px 0 0 5px}.modes button:last-child{border-radius:0 5px 5px 0;border-left:0}
 .modes button[aria-pressed="true"]{color:#fff1e8;background:#0f2036;border-color:var(--crimson);box-shadow:0 0 12px rgba(90,168,240,.30) inset}
-.stage{position:relative;border:1px solid var(--line);background:radial-gradient(ellipse at 50% 46%,#0b1830 0%,#050a14 62%,#020308 100%);border-radius:8px;overflow:hidden;margin:8px 0 12px}
+.stage{position:relative;border:1px solid var(--line);background:radial-gradient(ellipse at 50% 46%,#0b1830 0%,#050a14 62%,#020308 100%);border-radius:8px;overflow:hidden;padding:98px 0 98px;margin:8px 0 12px}
+#hc{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:.5}
+#c{position:relative}
+@media (min-width:700px){.stage{padding:54px 0 62px}.ht b{font-size:20px}}
+.stage:fullscreen .ht,.stage:fullscreen .hcap{display:none}.stage:fullscreen{padding:0}
 canvas{display:block;width:100%;height:auto}
 .tip{z-index:3;position:absolute;pointer-events:none;background:rgba(4,10,20,.94);border:1px solid var(--crimson);padding:8px 10px;font-size:12px;line-height:1.45;border-radius:4px;display:none;max-width:260px;box-shadow:0 0 18px rgba(90,168,240,.30)}
 .tip b{color:#fff1e8;font-family:var(--display);font-size:12px;letter-spacing:.08em}
@@ -123,172 +127,30 @@ details.more>summary,details.srcs>summary{cursor:pointer;font-family:var(--displ
  .legend{font-size:11px;gap:4px 14px}
 }
 
-
-
-
-body.w3d{padding:0;max-width:none;overflow:hidden}
-body.w3d>*:not(#w3):not(#splash):not(script){display:none!important}
-#w3{display:none}
-body.w3d #w3{display:block;position:fixed;inset:0;background:#02050c;touch-action:none;user-select:none;-webkit-user-select:none;overflow:hidden}
-#w3c{position:absolute;inset:0;width:100%;height:100%;display:block}
-#lbs{position:absolute;inset:0;pointer-events:none;overflow:hidden}
-#lbs.off{display:none}
-.lb{position:absolute;left:0;top:0;margin:-14px 0 0 -4px;opacity:0;white-space:nowrap;font-family:var(--mono);color:#dff0ff;text-shadow:0 0 8px #02050c,0 0 3px #02050c;padding:6px 8px 6px 4px;will-change:transform}
-.lb b{display:block;font-family:var(--display);font-weight:500;font-size:10px;letter-spacing:.14em}
-.lb i{display:block;font-style:normal;font-size:12px;color:#8fbbe0}
-.lb.c b{color:#bcd9f2}.lb.n i,.lb.n b{color:#7f9cb8}
-.scan{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(to bottom,rgba(150,200,255,.035) 0 1px,transparent 1px 3px);mix-blend-mode:screen}
-.scan:after{content:"";position:absolute;left:0;right:0;height:16%;top:-20%;background:linear-gradient(to bottom,transparent,rgba(120,185,255,.07),transparent);animation:sweep 9s linear infinite}
-@keyframes sweep{to{top:110%}}
-#w3:before{content:"";position:absolute;inset:0;z-index:3;pointer-events:none;background:radial-gradient(ellipse at 50% 48%,transparent 52%,rgba(1,3,8,.78) 100%)}
-.hint3{position:absolute;left:0;right:0;top:46%;text-align:center;z-index:4;font-size:12px;letter-spacing:.06em;color:#bcd9f2;text-shadow:0 0 10px #02050c;pointer-events:none;transition:opacity 1.2s;animation:hf 1s}
-.hint3.gone{opacity:0}
-@keyframes hf{from{opacity:0}}
-#glt{position:absolute;inset:0;pointer-events:none;opacity:0;background:repeating-linear-gradient(to bottom,rgba(90,168,240,.22) 0 2px,transparent 2px 9px),linear-gradient(90deg,rgba(255,61,88,.14),transparent 30%,transparent 70%,rgba(90,168,240,.16))}
-#glt.on{animation:glt .55s steps(7) 1}
-@keyframes glt{0%{opacity:.9;transform:translateX(-6px)}20%{opacity:.2;transform:translateX(5px) scaleY(1.02)}40%{opacity:.8;transform:translateX(-3px)}70%{opacity:.25;transform:translateX(2px)}100%{opacity:0;transform:none}}
-.ui{position:absolute;z-index:5}
-#hero3{display:none;left:0;right:0;bottom:0;padding:60px 16px calc(22px + env(safe-area-inset-bottom));text-align:center;background:linear-gradient(to top,rgba(2,5,12,.92),rgba(2,5,12,.55) 55%,transparent);transition:opacity .8s,transform .8s}
-#hero3.out{opacity:0;transform:translateY(24px);pointer-events:none}
-#hero3 b{display:block;font-family:var(--display);font-weight:700;font-size:clamp(22px,5vw,34px);letter-spacing:.2em;color:#cfe6ff;text-shadow:0 0 16px rgba(90,168,240,.5)}
-#hero3 p{margin:8px auto 14px;font-size:13px;color:#9db8d2;max-width:30em}
-#hero3 small{display:block;margin-top:10px;font-size:10px;color:#6f8aa6}
-#top3{left:0;right:0;top:0;padding:calc(10px + env(safe-area-inset-top)) 14px 22px;display:flex;justify-content:space-between;gap:10px;font-family:var(--display);font-size:11px;letter-spacing:.16em;color:#9db8d2;background:linear-gradient(to bottom,rgba(2,5,12,.8),transparent);opacity:0;transition:opacity 1s;pointer-events:none}
-#top3 span:last-child{font-family:var(--mono);letter-spacing:.02em;font-size:10px;color:#6f8aa6;text-align:right}
-#w3.inside #top3,#w3.inside #dock3,#w3.inside #info3{opacity:1}
-#dock3,#info3{pointer-events:none}#w3.inside #dock3,#w3.inside #info3{pointer-events:auto}
-#dock3{left:0;right:0;bottom:calc(26px + env(safe-area-inset-bottom));display:flex;justify-content:center;gap:6px;padding:0 8px;opacity:0;transition:opacity 1s;flex-wrap:wrap}
-#dock3 button{font-family:var(--display);font-size:10px;letter-spacing:.12em;color:#cfe6ff;background:rgba(7,16,28,.78);border:1px solid #2a4764;border-radius:999px;padding:10px 13px;min-height:40px;cursor:pointer;backdrop-filter:blur(4px)}
-#dock3 button.on{border-color:#5aa8f0;box-shadow:0 0 12px rgba(90,168,240,.4) inset;color:#fff}
-#info3{left:0;right:0;bottom:calc(6px + env(safe-area-inset-bottom));text-align:center;font-size:10px;color:#5f7b97;opacity:0;transition:opacity 1s}
-#info3 button{background:none;border:0;color:#7fb4e8;text-decoration:underline;font:inherit;cursor:pointer;padding:6px}
-#panel3{left:10px;right:10px;bottom:calc(98px + env(safe-area-inset-bottom));max-width:480px;margin:0 auto;background:linear-gradient(180deg,rgba(9,20,36,.86),rgba(5,11,20,.92));border:1px solid #2a4764;border-radius:10px;padding:12px 14px 12px;backdrop-filter:blur(6px);transform:translateY(16px);opacity:0;pointer-events:none;transition:all .5s}
-#panel3.on{transform:none;opacity:1;pointer-events:auto}
-#panel3 .k{display:block;font-family:var(--display);font-size:10px;letter-spacing:.13em;color:var(--dim)}
-#panel3 .big{display:block;font-weight:400;font-size:30px;line-height:1.15;color:#fff;margin-top:2px}
-#panel3 .mv{display:block;font-style:normal;font-size:12px;color:#8fbbe0}
-#panel3 p{margin:8px 0 0;font-size:12px;line-height:1.5;color:#b2c8dc}
-#panel3 small{display:block;margin-top:6px;font-size:10px;color:#6f8aa6}
-.bar{position:relative;height:6px;border-radius:3px;margin-top:10px;background:linear-gradient(90deg,#56809f,#ffaa46 50%,#56809f)}
-.bar u{position:absolute;top:-4px;width:3px;height:14px;background:#fff;box-shadow:0 0 8px #fff;border-radius:2px}
-.barl{display:flex;justify-content:space-between;font-size:10px;color:#6f8aa6;margin-top:4px}
-.row{display:flex;gap:8px;margin-top:10px}
-.row button{flex:1;font-family:var(--display);font-size:10px;letter-spacing:.12em;color:#e8f3ff;background:#0f2036;border:1px solid #3a5a78;border-radius:6px;padding:10px;min-height:42px;cursor:pointer}
-.row button:nth-child(1),.row button:nth-child(3){flex:0 0 52px;font-size:16px}
-#sheet3{left:10px;right:10px;bottom:calc(98px + env(safe-area-inset-bottom));max-width:480px;margin:0 auto;max-height:52vh;overflow:auto;background:rgba(5,11,20,.94);border:1px solid #2a4764;border-radius:10px;padding:10px 10px 6px;backdrop-filter:blur(8px);display:none}
-#sheet3.on{display:block}
-#sheet3 h3{margin:2px 4px 8px;font-family:var(--display);font-weight:500;font-size:11px;letter-spacing:.16em;color:var(--dim)}
-#sheet3 .it{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;border-top:1px solid #12263b;color:#dbeaf8;font-family:var(--mono);font-size:12px;padding:11px 4px;min-height:44px;cursor:pointer}
-#sheet3 .it span{flex:1}#sheet3 .it b{font-weight:400;color:#8fbbe0}
-#sheet3 .d{width:9px;height:9px;border-radius:50%;flex:none;box-shadow:0 0 8px currentColor}
-#sheet3 .tg[aria-pressed="false"]{opacity:.55}
-#sheet3 .dis{font-size:12px;line-height:1.55;color:#b2c8dc;margin:0 4px 8px}
-.enter{font-family:var(--display);font-size:12px;letter-spacing:.24em;color:#e8f3ff;background:rgba(15,32,54,.72);border:1px solid #5aa8f0;border-radius:999px;padding:13px 34px;min-height:46px;cursor:pointer;box-shadow:0 0 20px rgba(90,168,240,.4);animation:bob 3.2s ease-in-out infinite}
-@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(3px)}}
-@media (prefers-reduced-motion:reduce){.enter{animation:none}}
-#tour3{left:10px;right:10px;bottom:calc(98px + env(safe-area-inset-bottom));max-width:440px;margin:0 auto;background:linear-gradient(180deg,rgba(9,20,36,.92),rgba(5,11,20,.95));border:1px solid #5aa8f0;border-radius:10px;padding:12px 14px;box-shadow:0 0 24px rgba(90,168,240,.3);display:none;z-index:6}
-#tour3.on{display:block;animation:hf .5s}
-#tour3 small{font-family:var(--display);font-size:10px;letter-spacing:.14em;color:var(--dim)}
-#tour3 p{margin:6px 0 0;font-size:13px;line-height:1.5;color:#dbeaf8}
-.lg{display:flex;gap:10px;align-items:flex-start;margin:0 4px 10px;font-size:12px;line-height:1.5;color:#b2c8dc}.lg i{font-style:normal;font-size:16px;width:20px;text-align:center;flex:none}.lg b{color:#e8f3ff;font-weight:400}
-#dock3 button{padding:10px 11px!important}
-#today{margin:6px 0 10px}
-.tcs{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
-@media (min-width:760px){.tcs{grid-template-columns:repeat(4,1fr)}}
-.tc{text-align:left;background:linear-gradient(180deg,#0a1626,#07101c);border:1px solid var(--line);border-radius:8px;padding:10px 12px;color:var(--ink);font-family:var(--mono);cursor:pointer;min-height:76px}
-.tc span{display:block;font-family:var(--display);font-size:9px;letter-spacing:.12em;color:var(--dim)}
-.tc b{display:block;font-weight:400;font-size:20px;line-height:1.3;margin-top:2px}
-.tc i{display:block;font-style:normal;font-size:11px;color:#8fbbe0}
-.tc.n b,.tc.n i{color:#7f9cb8}
-.tl{margin:8px 2px 0;font-size:12px;line-height:1.5;color:#9db8d2}.tl b{color:#dbeaf8;font-weight:400}
-#to3{position:fixed;right:12px;bottom:12px;z-index:50;font-family:var(--display);font-size:11px;letter-spacing:.16em;color:#e8f3ff;background:rgba(15,32,54,.9);border:1px solid #5aa8f0;border-radius:999px;padding:12px 18px;min-height:44px;cursor:pointer;box-shadow:0 0 18px rgba(90,168,240,.4)}
-#to3[hidden]{display:none}
-
-#tabs{display:flex;gap:6px;margin:0 0 12px}
-#tabs button{flex:1;font-family:var(--display);font-size:12px;letter-spacing:.16em;color:var(--dim);background:var(--panel);border:1px solid var(--line);padding:12px;border-radius:6px;min-height:44px;cursor:pointer}
-#tabs button[aria-selected=true]{color:var(--ink);border-color:var(--crimson);box-shadow:0 0 0 1px var(--crimson) inset}
-body:not(.tab-map) #to3{display:none}
-#checkview[hidden],#mapview[hidden]{display:none}
-.ck-h{font-family:var(--display);font-size:13px;letter-spacing:.16em;margin:22px 0 8px}
-.ck-intro,.ck-small{font-size:12.5px;line-height:1.6;color:var(--dim);margin:0 0 10px}
-.ck-box{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:12px;margin:0 0 10px;font-size:13px;line-height:1.6}
-.ck-box[hidden]{display:none}
-.ck-box p{margin:0 0 8px}.ck-box a{color:var(--crimson)}
-.ck-st{font-size:12px;color:var(--dim)}
-#checkview button,#checkview .find button{font-family:var(--display);font-size:11px;letter-spacing:.12em;color:var(--ink);background:#0b1a2c;border:1px solid var(--line);border-radius:5px;padding:10px 14px;min-height:44px;cursor:pointer}
-.find button{margin-left:6px}
-.ck-big{width:100%;margin-bottom:8px}
-.ck-head{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;color:var(--dim)}
-.ck-head b{font-family:var(--display);font-size:20px;color:var(--ink);letter-spacing:.1em}
-.ck-line{margin:8px 0 12px;padding:9px 10px;border-radius:6px;border:1px solid var(--line);font-size:13px}
-.ck-line.pass{border-color:#3fbf7f}.ck-line.flag{border-color:#e0b341}.ck-line.fail{border-color:#e0605a}
-.ck-g{display:grid!important;grid-template-columns:34px 1fr auto;grid-template-areas:"i u s" "i e s";gap:2px 8px;width:100%;text-align:left;margin:0 0 6px;letter-spacing:.06em!important;border-left:4px solid var(--line)!important}
-.ck-g i{grid-area:i;font-style:normal;color:var(--dim)}.ck-g u{grid-area:u;text-decoration:none;font-size:11px}.ck-g em{grid-area:e;font-style:normal;font-family:var(--mono);font-size:12px;color:var(--dim);letter-spacing:0}.ck-g s{grid-area:s;text-decoration:none;font-size:10px;align-self:center}
-.ck-sep{font-family:var(--display);font-size:10px;letter-spacing:.14em;color:var(--dim);margin:12px 0 6px}
-.ck-g.pass{border-left-color:#3fbf7f!important}.ck-g.flag{border-left-color:#e0b341!important}.ck-g.fail{border-left-color:#e0605a!important}.ck-g.na{border-left-color:#5b7a99!important}
-.ck-d{background:#050c16;border:1px solid var(--line);border-radius:6px;padding:10px 12px;margin:-2px 0 8px;font-size:12.5px;line-height:1.6;color:var(--dim)}
-.ck-d[hidden]{display:none}.ck-d b{color:var(--ink)}
-.ck-cat{margin:10px 0;font-size:12px;color:var(--dim)}.ck-cat button{padding:6px 10px!important;min-height:34px!important;margin:0 4px 0 0}.ck-cat button.on{border-color:var(--crimson)!important}
-.ck-chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
-.ck-chip{display:inline-flex;align-items:center;border:1px solid var(--line);background:var(--panel);border-radius:5px;font-size:13px}
-.ck-chip a{padding:10px 8px 10px 12px;color:var(--ink);text-decoration:none}.ck-chip b{padding:10px 12px 10px 6px;color:var(--dim);cursor:pointer}
-.ck-none{color:var(--dim);font-size:12px}
-.ck-row{display:grid;grid-template-columns:70px 70px 1fr;gap:8px;padding:8px 0;border-bottom:1px solid #12233a;font-size:13px}
-.ck-row a{color:var(--ink);font-family:var(--display);letter-spacing:.08em}.ck-row em{font-style:normal;color:var(--dim);font-size:12px}
-.ck-box h4{font-family:var(--display);font-size:11px;letter-spacing:.14em;margin:12px 0 4px}.ck-box h4 small{color:var(--dim)}
-.ck-asof{font-size:11.5px;color:var(--dim)}
-.ck-t{width:100%;min-width:0}.ck-warn{font-size:12px;color:var(--hot)}
-#ckkey form{display:flex}#ckkey input{flex:1;min-width:0;font-size:14px;color:var(--ink);background:#050c16;border:1px solid var(--line);border-radius:5px;padding:10px}
+.ht{position:absolute;z-index:2;max-width:46%;background:rgba(3,8,16,.62);border:1px solid #1d3550;border-radius:5px;padding:6px 8px;text-align:left;color:var(--ink);font-family:var(--mono);cursor:pointer;backdrop-filter:blur(2px)}
+.ht span{display:block;font-family:var(--display);font-size:9px;letter-spacing:.12em;color:var(--dim)}
+.ht b{display:block;font-weight:400;font-size:15px;line-height:1.25}
+.ht i{display:block;font-style:normal;font-size:11px;color:#8fbbe0}
+.ht.n b,.ht.n i{color:#7f9cb8}
+.ht.tl{left:8px;top:8px}.ht.tr{right:8px;top:8px;text-align:right}.ht.bl{left:8px;bottom:30px}.ht.br{right:8px;bottom:30px;text-align:right}
+.hcap{position:absolute;left:0;right:0;bottom:7px;text-align:center;font-size:10px;color:#7f9cb8;letter-spacing:.04em;padding:0 12px;pointer-events:none}
 </style>
 </head>
 <body>
 <div id="splash" aria-hidden="true"><img src="icon-512.png" alt=""><b>AMALGAM</b></div>
-<script>(function(){var s=document.getElementById("splash");if(!s)return;function go(){s.style.display="none"}s.addEventListener("click",go);s.addEventListener("touchstart",go,{passive:true});setTimeout(go,1300);})();</script>
-<div id="w3" aria-label="Immersive 3D view of global money and shipping">
-  <canvas id="w3c"></canvas>
-  <div id="lbs"></div>
-  <div class="scan"></div><div id="glt"></div>
-  <div id="hero3" class="ui"><b>AMALGAM<sup>™</sup></b><p>Step inside the world's money and shipping.</p><button class="enter" id="enter3" type="button">ENTER</button><small>Information only. Not investment advice.</small></div>
-  <div id="top3" class="ui"><span>AMALGAM™</span><span id="st3"></span></div>
-  <div id="panel3" class="ui"></div>
-  <div id="tour3" class="ui"></div>
-  <div id="sheet3" class="ui"></div>
-  <nav id="dock3" class="ui" aria-label="Navigate"><button type="button" data-s="over">OVERVIEW</button><button type="button" data-s="hubs">HUBS</button><button type="button" data-s="sea">SEA LANES</button><button type="button" data-s="layers">LAYERS</button><button type="button" data-s="guide">GUIDE</button><button type="button" data-s="flat">FLAT</button></nav>
-  <div id="info3" class="ui">Information only · Not investment advice · <button type="button" id="disc3">details</button></div>
-</div>
-<button id="to3" type="button">3D VIEW</button>
+<script>(function(){var s=document.getElementById("splash");if(!s)return;function go(){s.style.display="none"}s.addEventListener("click",go);s.addEventListener("touchstart",go,{passive:true});setTimeout(go,4600);})();</script>
 <header>
   <div class="brand"><img class="mark" src="icon-192.png" alt=""><div><h1>AMALGAM<sup>™</sup></h1><span class="sub">global markets and shipping, from public data</span></div></div>
   <span class="status" role="status"><i class="dot" id="dot"></i><span id="stxt">loading…</span></span>
 </header>
-<div class="banner" id="banner" role="alert"></div>
 <details class="disc" id="disc"><summary><b>Information only.</b> Not investment advice. <span class="more">Tap for more</span></summary>A display of public data. Color shows how far a reading sits from its own 52-week range. Not investment advice, not a recommendation to buy or sell anything, and not personalized to anyone. Data is delayed and can be wrong or stale; every number carries its own as-of date. Verify with primary sources. The full disclaimer is at the bottom of the page.</details>
-<nav id="tabs" role="tablist" aria-label="Views"><button type="button" role="tab" data-v="check" aria-selected="true">CHECK</button><button type="button" role="tab" data-v="map" aria-selected="false">MAP</button></nav>
-<section id="checkview" aria-label="Rule check">
-  <h2 class="ck-h">TICKER CHECK</h2>
-  <p class="ck-intro">Type a ticker. See how it measures against three written rules (plus two notes), and tap any rule to see exactly how it is calculated. Measurements of what already happened; not advice, not a recommendation.</p>
-  <div id="ckkey" class="ck-box"></div>
-  <form id="ckf" class="find" autocomplete="off"><input id="ckq" placeholder="Ticker, e.g. AAPL" autocapitalize="characters" aria-label="Ticker"><button type="submit">CHECK</button></form>
-  <div id="ckst" class="ck-st" role="status"></div>
-  <div id="ckres" class="ck-box" hidden></div>
-  <h2 class="ck-h">MY WATCHLIST</h2>
-  <form id="ckwf" class="find" autocomplete="off"><input id="ckwi" placeholder="Add a ticker (up to 15)" autocapitalize="characters" aria-label="Add to watchlist"><button type="submit">ADD</button></form>
-  <div id="ckwl" class="ck-chips"></div>
-  <h2 class="ck-h">TODAY'S LIST</h2>
-  <p class="ck-intro">Your watchlist, sorted by how many of the stated rules each name meets today.</p>
-  <button id="ckscan" type="button" class="ck-big">SCAN WATCHLIST</button> <span id="ckscanst" class="ck-st"></span>
-  <div id="ckdaily" class="ck-box"></div>
-  <h2 class="ck-h">WHAT I ALREADY HOLD</h2>
-  <p class="ck-intro">Used only for the overlap rule (G5). Stored on this device.</p>
-  <form id="ckbf" class="find" autocomplete="off"><input id="ckbi" placeholder="Add a holding (up to 6)" autocapitalize="characters" aria-label="Add holding"><button type="submit">ADD</button></form>
-  <div id="ckbk" class="ck-chips"></div>
-  <h2 class="ck-h">SCOREBOARD</h2>
-  <div id="ckscore" class="ck-box"></div>
-</section>
-<div id="mapview" hidden>
-<div id="today" aria-live="polite"></div>
+<div class="banner" id="banner" role="alert"></div>
 <div class="stage" id="stage">
+  <canvas id="hc" aria-hidden="true"></canvas>
   <canvas id="c" aria-label="Animated world map: particles flow along arteries between financial hubs; hubs far from normal pulse; diamonds mark shipping chokepoints, larger and brighter when traffic is below normal"></canvas>
+  <button class="ht tl" id="ht0" type="button"></button><button class="ht tr" id="ht1" type="button"></button>
+  <button class="ht bl" id="ht2" type="button"></button><button class="ht br" id="ht3" type="button"></button>
+  <div class="hcap">The star ripples more when today's readings sit further from normal.</div>
   <div class="tip" id="tip"></div>
 </div>
 <form class="find" id="find" autocomplete="off"><input id="q" list="mk" placeholder="Find a market: GBP, oil, Hormuz, or any ticker" aria-label="Find a market or ticker" enterkeyhint="search" autocapitalize="off" spellcheck="false"><button type="submit">FIND</button></form>
@@ -310,18 +172,18 @@ body:not(.tab-map) #to3{display:none}
 <div class="legend" id="legend"></div>
 <div id="syncnote"></div>
 
-<h2 id="sec-hubs">HUBS</h2>
+<h2>HUBS</h2>
 <div class="tablewrap"><table id="tbl"><thead><tr>
   <th>HUB</th><th>SIGNAL</th><th>READING</th><th>MOVE</th><th>52-WK RANGE</th><th>DEVIATION</th><th>UST HELD Δ 1M</th><th>Δ 6M</th><th>6 MO</th><th>AS OF</th>
 </tr></thead><tbody></tbody></table></div>
 
-<h2 id="sec-ship">SHIPPING CHOKEPOINTS</h2>
+<h2>SHIPPING CHOKEPOINTS</h2>
 <div class="tablewrap"><table id="ctbl" style="min-width:700px"><thead><tr>
   <th>CHOKEPOINT</th><th>LATEST DAY</th><th>7-DAY AVG</th><th>BASELINE</th><th>% OF NORM</th><th>AS OF</th>
 </tr></thead><tbody></tbody></table></div>
 
 <div class="cards"><div class="card"><svg viewBox="0 0 120 64"><defs><radialGradient id="g1"><stop offset="0" stop-color="#ff7a45"/><stop offset="1" stop-color="#ff2a3d" stop-opacity="0"/></radialGradient></defs><circle cx="60" cy="32" r="22" fill="url(#g1)"/><circle cx="60" cy="32" r="6" fill="#fff1e8"/><path d="M38 48 A26 26 0 1 1 82 48" fill="none" stroke="#3b4d60" stroke-width="3" stroke-linecap="round"/><path d="M38 48 A26 26 0 0 1 60 6" fill="none" stroke="#ff7a45" stroke-width="3" stroke-linecap="round"/></svg><b>HUB</b><span>A market. The ring shows where today sits in its own 52-week range.</span></div><div class="card"><svg viewBox="0 0 120 64"><path d="M8 52 Q60 -6 112 52" fill="none" stroke="#ff9a6a" stroke-opacity=".5" stroke-width="2"/><g fill="#ffd2b0"><circle cx="26" cy="35" r="2.5"/><circle cx="44" cy="22" r="3"/><circle cx="64" cy="17" r="3.5"/><circle cx="86" cy="26" r="3"/><circle cx="100" cy="40" r="2.5"/></g><circle cx="8" cy="52" r="5" fill="#56809f"/><circle cx="112" cy="52" r="5" fill="#ff3c3c"/></svg><b>ARTERY</b><span>Links two hubs. Brighter when both ends are far from their normal.</span></div><div class="card"><svg viewBox="0 0 120 64"><g fill="#ecf7ff"><path d="M30 32 l8 -8 l8 8 l-8 8z" opacity=".55"/><path d="M80 32 l16 -16 l16 16 l-16 16z" fill="#ff3c3c"/></g><circle cx="96" cy="32" r="26" fill="none" stroke="#ff7a7a" stroke-opacity=".4"/><text x="38" y="58" fill="#a8d6ff" font-size="9" text-anchor="middle" font-family="monospace">normal</text><text x="96" y="62" fill="#a8d6ff" font-size="9" text-anchor="middle" font-family="monospace">quiet</text></svg><b>VALVE</b><span>A shipping chokepoint. Bigger and brighter = less traffic than usual.</span></div><div class="card"><svg viewBox="0 0 120 64"><path d="M10 50 Q60 0 110 14" fill="none" stroke="#ffe9ea" stroke-opacity=".6" stroke-width="3"/><path d="M104 8 L114 15 L103 20z" fill="#ffe9ea"/><circle cx="12" cy="50" r="5" fill="#56809f"/><circle cx="112" cy="14" r="6" fill="#ff7a45"/><text x="112" y="36" fill="#a8d6ff" font-size="9" text-anchor="middle" font-family="monospace">NYC</text></svg><b>HOLDINGS</b><span>Foreign holdings of U.S. Treasuries, moving toward or away from New York.</span></div><div class="card"><svg viewBox="0 0 120 64"><polyline points="4,36 22,36 30,36 36,12 44,56 52,26 58,36 76,36 84,36 90,20 96,46 102,36 116,36" fill="none" stroke="#ff7a45" stroke-width="2.5" stroke-linejoin="round"/></svg><b>PULSE</b><span>How fast a market has moved lately (14-day RSI). Faster beat = further from even.</span></div><div class="card"><svg viewBox="0 0 120 64"><polyline points="4,44 24,30 44,38 64,16 84,26 116,10" fill="none" stroke="#9fd2ff" stroke-width="2.5"/><polyline points="4,52 24,40 44,46 64,28 84,36 116,22" fill="none" stroke="#ff9a6a" stroke-width="2.5" stroke-dasharray="5 4"/></svg><b>SYNC</b><span>Pairs that moved together over 60 days. Ice = same way, amber = opposite.</span></div></div>
-<details class="more" id="sec-guide"><summary>THE DETAILS</summary>
+<details class="more"><summary>THE DETAILS</summary>
 <p class="note">
 <b>How to read it.</b> Deviation is how far a signal sits from normal: its distance from the middle of its 52-week range, or a large move in one session, whichever is bigger. The heart beats from New York. Particles lean toward the hotter end of each artery; that is a display rule, not measured capital flow. The ring around a hub is a pressure gauge: how far round it sits tells you where the reading is in its own 52-week range.<br>
 <b>Treasury holdings overlay.</b> Lines run from a country's hub to New York. Particles move toward New York where that country's reported Treasury holdings rose over the last month, away where they fell; line weight is the six-month change. Holdings change with prices and custody, not only buying and selling. The UK, Belgium, Luxembourg and Ireland are custody centers: their rows show where assets are held, not whose money it is.<br>
@@ -330,12 +192,11 @@ body:not(.tab-map) #to3{display:none}
 <b>Pulse.</b> The 14-day relative strength index (Wilder) of each hub's own daily readings. It describes recent speed and direction of movement. It is not a signal and does not say what happens next.<br>
 <b>Sync.</b> Pearson correlation of daily changes over the latest 60 shared days, shown only where it is 0.5 or stronger in either direction. The euro-quoted currencies all share the euro as their base, so some of their sync comes from that shared base. Correlation is not causation and changes over time.
 </p></details>
-<h2 id="sec-src">SOURCES AND LICENSES</h2>
+<h2>SOURCES AND LICENSES</h2>
 <div class="pills"><a href="https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html" target="_blank" rel="noopener">ECB</a><a href="https://home.treasury.gov/resource-center/data-chart-center/interest-rates" target="_blank" rel="noopener">U.S. Treasury</a><a href="https://www.eia.gov/dnav/pet/pet_pri_spt_s1_d.htm" target="_blank" rel="noopener">EIA</a><a href="https://portwatch.imf.org" target="_blank" rel="noopener">IMF PortWatch</a><a href="https://ticdata.treasury.gov/resource-center/data-chart-center/tic/Documents/mfh.txt" target="_blank" rel="noopener">Treasury TIC</a></div>
 <details class="srcs"><summary>TERMS AND ATTRIBUTION</summary><div class="src" id="sources"></div></details>
 <p class="tip-jar" id="tipjar"><a id="tiplink" rel="noopener" target="_blank">Free to use. If it was useful, $1 keeps it running.</a></p>
 <p class="note" id="legal"><b>Disclaimer.</b> Amalgam™ is an information display built from public data sources. It is not investment, financial, legal, or tax advice, and it does not recommend buying or selling any security, currency, or commodity. Data may be delayed, incomplete, or stale, and visualizations are illustrative, not predictive. Past patterns do not indicate future results. You are solely responsible for your own decisions.</p>
-</div>
 <script>
 const TIP_URL = '';   // set only after IMF reuse permission is confirmed; empty = no payment link shown
 const HUBDEF = [
@@ -449,9 +310,7 @@ function lanePt(a,t,off){const q=bez(a,t),d=tanAt(a,t),l=Math.hypot(d[0],d[1])||
 function diamond(x,y,r){ctx.beginPath();ctx.moveTo(x,y-r);ctx.lineTo(x+r,y);ctx.lineTo(x,y+r);ctx.lineTo(x-r,y);ctx.closePath();}
 
 let last=performance.now(),time=0.8;
-let stalled=false;
 function frame(now){
-  if(!reduce&&document.body.classList.contains('w3d')){stalled=true;return;}
   const dt=Math.min(0.05,(now-last)/1000);last=now;if(!reduce)time+=dt;
   ctx.setTransform(DPR,0,0,DPR,0,0);ctx.globalCompositeOperation='source-over';ctx.clearRect(0,0,W,H);
   const s=landDots.step,r=Math.max(1.8,s*0.36),lk=ov.hold?0.7:1;
@@ -631,37 +490,80 @@ async function boot(){
   if(location.hash==='#flows')setHold();
 }
 
+/* ---- hero: live string-art star + four readings (display only) ---- */
+const HERO=(()=>{
+  const cv=document.getElementById('hc'),g=cv.getContext('2d');
+  const F=1200,PI2=Math.PI*2;let Wd=0,Hd=0,dpr=1,amp=0.06,vis=true,raf=0,last=0;
+  function size(){dpr=Math.min(2,devicePixelRatio||1);const r=cv.getBoundingClientRect();Wd=r.width;Hd=r.height;cv.width=Math.round(Wd*dpr);cv.height=Math.round(Hd*dpr);}
+  function proj(x,y,ax,ay,zoff){const x1=x*Math.cos(ay),z1=-x*Math.sin(ay),y1=y*Math.cos(ax)-z1*Math.sin(ax),z2=y*Math.sin(ax)+z1*Math.cos(ax)+zoff,s=F/(F-z2);return [x1*s,y1*s,s];}
+  // one star: returns line list [[x1,y1,x2,y2,colorIndex,scale]]
+  function star(R,rot,n,t,off,zbase,P,ax,ay,k,cfn,out){
+    const s0=F/(F-zbase),zoff=zbase+P;
+    for(let q=0;q<4;q++)for(let i=0;i<=n;i++){
+      const th=Math.PI/2*i/n,
+        Ri=(R/s0)*(1+0.05*Math.sin(PI2*(t+off)))*(1+amp*Math.sin(PI2*(t+k*i/n+q*0.25))),
+        ang=q*Math.PI/2+rot*Math.PI/180,ca=Math.cos(ang),sa=Math.sin(ang);
+      const p=[[Ri*Math.cos(th),0],[0,Ri*Math.sin(th)]].map(([x,y])=>proj(x*ca-y*sa,x*sa+y*ca,ax,ay,zoff));
+      out.push([p[0][0],p[0][1],p[1][0],p[1][1],cfn(q,th),(p[0][2]+p[1][2])/(2*s0)]);
+    }
+  }
+  const redA=(q,th)=>(q===3&&th<0.49)||(q===2&&th>1.08)?1:0;
+  function draw(t){
+    g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,Wd,Hd);
+    const m=Math.min(Wd,Hd*1.02)*0.86,u=m/1024,cx=Wd/2,cy=Hd/2,rot2=90*t,
+      P=190*(0.5-0.5*Math.cos(PI2*t)),ax=0.2*Math.sin(PI2*t),ay=0.2*Math.sin(PI2*t+Math.PI/2),L=[];
+    star(430,0,46,t,0,0,P,ax,ay,2,redA,L);
+    star(300,45-rot2,40,t,1/3,110,P,ax,ay,2,()=>2,L);
+    star(190,rot2,34,t,2/3,220,P,ax,ay,2,()=>3,L);
+    const cols=['rgba(214,232,255,','rgba(255,61,88,','rgba(74,160,255,','rgba(143,208,255,'];
+    g.globalCompositeOperation='lighter';g.lineCap='round';
+    for(const pass of [0,1]){
+      for(let c=0;c<4;c++){
+        g.beginPath();
+        for(const l of L)if(l[4]===c){g.moveTo(cx+l[0]*u,cy+l[1]*u);g.lineTo(cx+l[2]*u,cy+l[3]*u);}
+        g.strokeStyle=cols[c]+(pass?'.55)':'.10)');g.lineWidth=(pass?1.05:3.4)*Math.max(.6,u*1.6);g.stroke();
+      }
+    }
+    const core=g.createRadialGradient(cx,cy,0,cx,cy,110*u);core.addColorStop(0,'rgba(255,255,255,1)');core.addColorStop(.25,'rgba(190,225,255,.75)');core.addColorStop(1,'rgba(40,120,224,0)');
+    g.fillStyle=core;g.beginPath();g.arc(cx,cy,110*u,0,PI2);g.fill();
+    g.globalCompositeOperation='source-over';
+  }
+  function loop(ts){
+    raf=0;if(!vis||document.hidden)return;
+    if(ts-last>=33){last=ts;draw(((ts/1000)/24)%1);}
+    raf=requestAnimationFrame(loop);
+  }
+  function start(){if(reduce){size();draw(0.14);return;}if(!raf&&vis&&!document.hidden)raf=requestAnimationFrame(loop);}
+  new IntersectionObserver(es=>{vis=es[0].isIntersecting;if(vis)start();},{threshold:0.02}).observe(cv);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)start();});
+  addEventListener('resize',()=>{size();if(reduce)draw(0.14);});
+  if(window.ResizeObserver)new ResizeObserver(()=>{size();if(reduce)draw(0.14);}).observe(cv);
+  size();start();
+  return {setAmp(a){amp=a;if(reduce)draw(0.14);},size};
+})();
 function heroTiles(){
-  window.dispatchEvent(new Event('amalgam:data'));
   try{
-    const T=$('today');if(!T)return;
-    const mv=h=>h.chg==null?'':(h.chg>=0?'▲ +':'▼ ')+h.chg.toFixed(h.unit==='bp'?1:(h.typ<1?3:2))+(h.unit==='bp'?' bp':'%');
-    const cards=['NYC','HOU','DXB','FRA'].map(id=>byId[id]).filter(Boolean).map(h=>{const ok=!h.stale&&!h.missing&&h.price!=null;
-      return '<button type="button" class="tc'+(ok?'':' n')+'" data-i="'+h.idx+'"><span>'+h.sig.toUpperCase().replace(', SPOT','')+'</span><b>'+(ok?fmtVal(h):'n/a')+'</b><i>'+(ok?mv(h):'no fresh reading')+'</i></button>';});
-    const live=HUBS.filter(h=>!h.relay&&!h.stale&&h.price!=null),odd=live.slice().sort((a,b)=>b.heat-a.heat)[0];
-    const cs=CH.filter(c=>!c.stale&&c.ratio!=null).sort((a,b)=>b.stress-a.stress)[0];
-    let line='';
-    if(odd)line+='Furthest from its own normal today: <b>'+odd.sig+'</b> at '+fmtVal(odd)+(odd.pos!=null?', '+Math.round(odd.pos*100)+'% of the way up its 52-week range':'')+'. ';
-    if(cs)line+='Lowest shipping traffic: <b>'+cs.name+'</b> at '+Math.round(cs.ratio*100)+'% of its norm (as of '+fmtDate(cs.asof)+'). ';
-    T.innerHTML='<div class="tcs">'+cards.join('')+'</div>'+(line?'<p class="tl">'+line+'Descriptions of what already happened, not advice.</p>':'');
-    T.querySelectorAll('.tc').forEach(b=>b.onclick=()=>{try{pinTo({k:'h',i:+b.dataset.i});}catch(e){}$('stage').scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'});});
+    const live=HUBS.filter(h=>!h.relay&&!h.stale&&h.heat!=null),cs=CH.filter(c=>!c.stale&&c.ratio!=null);
+    const mean=live.length?live.reduce((a,h)=>a+h.heat,0)/live.length:0.2;
+    const cstress=cs.length?Math.max(...cs.map(c=>c.stress)):0;
+    HERO.setAmp(0.04+0.07*Math.min(1,0.65*mean+0.35*cstress));
+    const hubTile=(id,i)=>{const h=byId[id],b=$('ht'+i);if(!h)return;
+      const ok=!h.stale&&!h.missing&&h.price!=null;b.className='ht '+['tl','tr','bl','br'][i]+(ok?'':' n');
+      const mv=ok&&h.chg!=null?(h.chg>=0?'+':'')+h.chg.toFixed(h.unit==='bp'?1:(h.typ<1?3:2))+(h.unit==='bp'?' bp':'%'):'';
+      b.innerHTML='<span>'+h.sig.toUpperCase().replace(', SPOT','')+'</span><b>'+(ok?fmtVal(h):'n/a')+'</b><i>'+(ok?mv:'stale or missing')+'</i>';
+      b.onclick=()=>{try{pinTo({k:'h',i:h.idx});}catch(e){}$('stage').scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'});};};
+    hubTile('NYC',0);hubTile('DXB',1);hubTile('LON',2);
+    const b3=$('ht3');let c=cs.slice().sort((a,b)=>b.stress-a.stress)[0];
+    if(c){b3.className='ht br';b3.innerHTML='<span>◆ '+c.name.toUpperCase()+'</span><b>'+Math.round(c.ratio*100)+'% of norm</b><i>transits, '+fmtDate(c.asof)+'</i>';
+      b3.onclick=()=>{try{pinTo({k:'c',i:c.ci});}catch(e){}$('stage').scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'});};}
+    else{b3.className='ht br n';b3.innerHTML='<span>◆ SHIPPING</span><b>n/a</b><i>no fresh data</i>';}
   }catch(e){}
 }
-window.addEventListener('amalgam:flat',()=>{if(stalled){stalled=false;last=performance.now();requestAnimationFrame(frame);}if(LAND.length){layout();}});
-window.AM={get SYNC(){return SYNC},get HUBS(){return HUBS},get CH(){return CH},get LAND(){return LAND},LINKS,STOPS,ov,nodeVal,fmtVal,fmtDate};
 let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{if(!LAND.length)return;layout();if(reduce)requestAnimationFrame(frame);},150);});
 setInterval(async()=>{const d=await j('data.json');if(d){DATA=d;merge();if(W){layout();}buildTable();buildStatus();syncNote();heroTiles();}},30*60*1000);  // pick up a new daily file without a reload
 if(innerWidth>=700)$('disc').open=true;
-$('to3').onclick=function(){const b=this;if(window.A3){A3.to3d();return;}b.textContent='LOADING…';b.disabled=true;
-  const sc=document.createElement('script');sc.src='world3d.js';
-  sc.onload=()=>{b.disabled=false;b.textContent='3D VIEW';if(window.A3)A3.to3d();};
-  sc.onerror=()=>{b.disabled=false;b.textContent='3D UNAVAILABLE';};
-  document.body.appendChild(sc);};
 boot();
 if('serviceWorker' in navigator&&location.protocol.startsWith('http')){navigator.serviceWorker.register('sw.js').catch(()=>{});}
 </script>
-
-<script src="gates.js"></script>
-<script src="check.js"></script>
 </body>
 </html>
