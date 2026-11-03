@@ -197,6 +197,8 @@ details.more>summary,details.srcs>summary{cursor:pointer;font-family:var(--displ
 .legalrow{font-size:11.5px;color:var(--dim);margin:10px 2px}
 .cta{display:block;text-align:center;text-decoration:none;font-family:var(--display);font-size:12px;letter-spacing:.16em;color:var(--ink);border:1px solid var(--crimson);box-shadow:0 0 0 1px var(--crimson) inset,0 0 18px rgba(90,168,240,.25);background:var(--panel);border-radius:8px;padding:15px;margin:0 0 10px;min-height:48px}
 html{scroll-behavior:smooth}.mapsec{margin-top:26px}
+a.card{text-decoration:none;color:inherit;display:block}
+#gatetiles .card:last-child{grid-column:1/-1}
 </style>
 </head>
 <body>
@@ -211,7 +213,7 @@ html{scroll-behavior:smooth}.mapsec{margin-top:26px}
 <a href="#gates" class="cta" id="cta">START HERE: THE FIVE GATES &darr;</a>
 <div class="stage" id="stage">
   <canvas id="hc" aria-hidden="true"></canvas>
-  <canvas id="c" aria-label="Animated world map: particles flow along arteries between financial hubs; hubs far from normal pulse; diamonds mark shipping chokepoints, larger and brighter when traffic is below normal"></canvas>
+  <canvas id="c" aria-label="Animated world map: particles flow along lines between financial markets; markets far from normal pulse; diamonds mark shipping chokepoints, larger and brighter when traffic is below normal"></canvas>
   <button class="ht tl" id="ht0" type="button"></button><button class="ht tr" id="ht1" type="button"></button>
   <button class="ht bl" id="ht2" type="button"></button><button class="ht br" id="ht3" type="button"></button>
   <div class="hcap">The star ripples more when today's readings sit further from normal.</div>
@@ -249,22 +251,22 @@ html{scroll-behavior:smooth}.mapsec{margin-top:26px}
 <div class="chips" id="presets" role="group" aria-label="Layers"><button data-pre="all">ALL LAYERS</button><button data-pre="sea">SEA ONLY</button><button data-pre="mkt">MARKETS ONLY</button><button disabled title="Needs an air-traffic data source" id="airpre">AIR ONLY</button><button id="fs" title="Full screen, landscape on phones">⛶ FULL SCREEN</button></div>
 <div class="chips" id="chips" role="group" aria-label="Overlays">
   <button data-ov="mkt" aria-pressed="true">MARKETS</button>
-  <button data-ov="press" aria-pressed="true">PRESSURE</button>
+  <button data-ov="press" aria-pressed="true">FAR FROM NORMAL</button>
   <button data-ov="move" aria-pressed="false">TODAY'S MOVE</button>
-  <button data-ov="ship" aria-pressed="true">SHIPPING FLOW</button>
+  <button data-ov="ship" aria-pressed="true">SHIPPING</button>
   <button data-ov="hold" aria-pressed="false">TREASURY HOLDINGS</button>
   <button data-ov="air" aria-pressed="false" disabled title="Needs an air-traffic data source">AIR TRAFFIC</button>
   <button data-ov="labels" aria-pressed="true">LABELS</button>
-  <button data-ov="pulse" aria-pressed="false">PULSE</button>
-  <button data-ov="sync" aria-pressed="false">SYNC</button>
+  <button data-ov="pulse" aria-pressed="false">RSI</button>
+  <button data-ov="sync" aria-pressed="false">CORRELATION</button>
 </div>
 </div>
 <div class="legend" id="legend"></div>
 <div id="syncnote"></div>
 
-<h2>HUBS</h2>
+<h2>MARKETS</h2>
 <div class="tablewrap"><table id="tbl"><thead><tr>
-  <th>HUB</th><th>SIGNAL</th><th>READING</th><th>MOVE</th><th>52-WK RANGE</th><th>DEVIATION</th><th>UST HELD Δ 1M</th><th>Δ 6M</th><th>6 MO</th><th>AS OF</th>
+  <th>MARKET</th><th>SIGNAL</th><th>READING</th><th>MOVE</th><th>52-WK RANGE</th><th>DEVIATION</th><th>UST HELD Δ 1M</th><th>Δ 6M</th><th>6 MO</th><th>AS OF</th>
 </tr></thead><tbody></tbody></table></div>
 
 <h2>SHIPPING CHOKEPOINTS</h2>
@@ -272,15 +274,15 @@ html{scroll-behavior:smooth}.mapsec{margin-top:26px}
   <th>CHOKEPOINT</th><th>LATEST DAY</th><th>7-DAY AVG</th><th>BASELINE</th><th>% OF NORM</th><th>AS OF</th>
 </tr></thead><tbody></tbody></table></div>
 
-<div class="cards"><div class="card"><svg viewBox="0 0 120 64"><defs><radialGradient id="g1"><stop offset="0" stop-color="#ff7a45"/><stop offset="1" stop-color="#ff2a3d" stop-opacity="0"/></radialGradient></defs><circle cx="60" cy="32" r="22" fill="url(#g1)"/><circle cx="60" cy="32" r="6" fill="#fff1e8"/><path d="M38 48 A26 26 0 1 1 82 48" fill="none" stroke="#3b4d60" stroke-width="3" stroke-linecap="round"/><path d="M38 48 A26 26 0 0 1 60 6" fill="none" stroke="#ff7a45" stroke-width="3" stroke-linecap="round"/></svg><b>HUB</b><span>A market. The ring shows where today sits in its own 52-week range.</span></div><div class="card"><svg viewBox="0 0 120 64"><path d="M8 52 Q60 -6 112 52" fill="none" stroke="#ff9a6a" stroke-opacity=".5" stroke-width="2"/><g fill="#ffd2b0"><circle cx="26" cy="35" r="2.5"/><circle cx="44" cy="22" r="3"/><circle cx="64" cy="17" r="3.5"/><circle cx="86" cy="26" r="3"/><circle cx="100" cy="40" r="2.5"/></g><circle cx="8" cy="52" r="5" fill="#56809f"/><circle cx="112" cy="52" r="5" fill="#ff3c3c"/></svg><b>ARTERY</b><span>Links two hubs. Brighter when both ends are far from their normal.</span></div><div class="card"><svg viewBox="0 0 120 64"><g fill="#ecf7ff"><path d="M30 32 l8 -8 l8 8 l-8 8z" opacity=".55"/><path d="M80 32 l16 -16 l16 16 l-16 16z" fill="#ff3c3c"/></g><circle cx="96" cy="32" r="26" fill="none" stroke="#ff7a7a" stroke-opacity=".4"/><text x="38" y="58" fill="#a8d6ff" font-size="9" text-anchor="middle" font-family="monospace">normal</text><text x="96" y="62" fill="#a8d6ff" font-size="9" text-anchor="middle" font-family="monospace">quiet</text></svg><b>VALVE</b><span>A shipping chokepoint. Bigger and brighter = less traffic than usual.</span></div><div class="card"><svg viewBox="0 0 120 64"><path d="M10 50 Q60 0 110 14" fill="none" stroke="#ffe9ea" stroke-opacity=".6" stroke-width="3"/><path d="M104 8 L114 15 L103 20z" fill="#ffe9ea"/><circle cx="12" cy="50" r="5" fill="#56809f"/><circle cx="112" cy="14" r="6" fill="#ff7a45"/><text x="112" y="36" fill="#a8d6ff" font-size="9" text-anchor="middle" font-family="monospace">NYC</text></svg><b>HOLDINGS</b><span>Foreign holdings of U.S. Treasuries, moving toward or away from New York.</span></div><div class="card"><svg viewBox="0 0 120 64"><polyline points="4,36 22,36 30,36 36,12 44,56 52,26 58,36 76,36 84,36 90,20 96,46 102,36 116,36" fill="none" stroke="#ff7a45" stroke-width="2.5" stroke-linejoin="round"/></svg><b>PULSE</b><span>How fast a market has moved lately (14-day RSI). Faster beat = further from even.</span></div><div class="card"><svg viewBox="0 0 120 64"><polyline points="4,44 24,30 44,38 64,16 84,26 116,10" fill="none" stroke="#9fd2ff" stroke-width="2.5"/><polyline points="4,52 24,40 44,46 64,28 84,36 116,22" fill="none" stroke="#ff9a6a" stroke-width="2.5" stroke-dasharray="5 4"/></svg><b>SYNC</b><span>Pairs that moved together over 60 days. Ice = same way, amber = opposite.</span></div></div>
+<div class="cards" id="gatetiles"><a class="card" href="#gates" data-g="0"><svg viewBox="0 0 120 64"><defs><radialGradient id="g1"><stop offset="0" stop-color="#ff7a45"/><stop offset="1" stop-color="#ff2a3d" stop-opacity="0"/></radialGradient></defs><circle cx="60" cy="32" r="22" fill="url(#g1)"/><circle cx="60" cy="32" r="6" fill="#fff1e8"/><path d="M38 48 A26 26 0 1 1 82 48" fill="none" stroke="#3b4d60" stroke-width="3" stroke-linecap="round"/><path d="M38 48 A26 26 0 0 1 60 6" fill="none" stroke="#ff7a45" stroke-width="3" stroke-linecap="round"/></svg><b>RANGE</b><span>Ring and color show where each market sits in its 52-week range. The same question as gate G1.</span></a><a class="card" href="#gates" data-g="1"><svg viewBox="0 0 120 64"><polyline points="4,36 22,36 30,36 36,12 44,56 52,26 58,36 76,36 84,36 90,20 96,46 102,36 116,36" fill="none" stroke="#ff7a45" stroke-width="2.5" stroke-linejoin="round"/></svg><b>RSI</b><span>The 14-day RSI of each market, on the PULSE layer. The same math as gate G2.</span></a><a class="card" href="#gates" data-g="4"><svg viewBox="0 0 120 64"><polyline points="4,44 24,30 44,38 64,16 84,26 116,10" fill="none" stroke="#9fd2ff" stroke-width="2.5"/><polyline points="4,52 24,40 44,46 64,28 84,36 116,22" fill="none" stroke="#ff9a6a" stroke-width="2.5" stroke-dasharray="5 4"/></svg><b>CORRELATION</b><span>Which markets moved together over 60 days, on the SYNC layer. The same math as gate G5.</span></a></div></div>
 <details class="more"><summary>THE DETAILS</summary>
 <p class="note">
 <b>How to read it.</b> Deviation is how far a signal sits from normal: its distance from the middle of its 52-week range, or a large move in one session, whichever is bigger. The heart beats from New York. Particles lean toward the hotter end of each artery; that is a display rule, not measured capital flow. The ring around a hub is a pressure gauge: how far round it sits tells you where the reading is in its own 52-week range.<br>
-<b>Treasury holdings overlay.</b> Lines run from a country's hub to New York. Particles move toward New York where that country's reported Treasury holdings rose over the last month, away where they fell; line weight is the six-month change. Holdings change with prices and custody, not only buying and selling. The UK, Belgium, Luxembourg and Ireland are custody centers: their rows show where assets are held, not whose money it is.<br>
+<b>Treasury holdings overlay.</b> Lines run from a country's market to New York. Particles move toward New York where that country's reported Treasury holdings rose over the last month, away where they fell; line weight is the six-month change. Holdings change with prices and custody, not only buying and selling. The UK, Belgium, Luxembourg and Ireland are custody centers: their rows show where assets are held, not whose money it is.<br>
 <b>Chokepoints.</b> Daily ship transit counts from satellite tracking, compared with the same chokepoint's own average. Published with a lag of days. Low traffic is a measurement, not a forecast.<br>
 <b>What this is not.</b> It describes what already happened. It does not predict prices, and nothing here tells anyone what to do with money.
-<b>Pulse.</b> The 14-day relative strength index (Wilder) of each hub's own daily readings. It describes recent speed and direction of movement. It is not a signal and does not say what happens next.<br>
-<b>Sync.</b> Pearson correlation of daily changes over the latest 60 shared days, shown only where it is 0.5 or stronger in either direction. The euro-quoted currencies all share the euro as their base, so some of their sync comes from that shared base. Correlation is not causation and changes over time.
+<b>RSI (the PULSE layer).</b> The 14-day relative strength index (Wilder) of each market's own daily readings. It describes recent speed and direction of movement. It is not a signal and does not say what happens next.<br>
+<b>Correlation (the SYNC layer).</b> Pearson correlation of daily changes over the latest 60 shared days, shown only where it is 0.5 or stronger in either direction. The euro-quoted currencies all share the euro as their base, so some of their sync comes from that shared base. Correlation is not causation and changes over time.
 </p></details>
 <h2>SOURCES AND LICENSES</h2>
 <div class="pills"><a href="https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html" target="_blank" rel="noopener">ECB</a><a href="https://home.treasury.gov/resource-center/data-chart-center/interest-rates" target="_blank" rel="noopener">U.S. Treasury</a><a href="https://www.eia.gov/dnav/pet/pet_pri_spt_s1_d.htm" target="_blank" rel="noopener">EIA</a><a href="https://portwatch.imf.org" target="_blank" rel="noopener">IMF PortWatch</a><a href="https://ticdata.treasury.gov/resource-center/data-chart-center/tic/Documents/mfh.txt" target="_blank" rel="noopener">Treasury TIC</a></div>
@@ -488,7 +490,7 @@ function buildTable(){
 }
 function buildLegend(){$('legend').innerHTML='<span><i style="background:#56809f"></i>within typical range</span><span><i style="background:#ffaa46"></i>elevated</span><span><i style="background:#ff3c3c;box-shadow:0 0 8px #ff2a3d"></i>outside typical range</span>'
  +(ov.press?'<span>ring = pressure gauge: where it sits in its 52-week range</span>':'')
- +(ov.ship?'<span><i class="dia" style="background:#fff1e8"></i>valve: bigger = less traffic than its norm</span>':'')
+ +(ov.ship?'<span><i class="dia" style="background:#fff1e8"></i>chokepoint: bigger = less traffic than its norm</span>':'')
  +(ov.hold?'<span><i style="background:#ffe9ea;box-shadow:0 0 8px #ff2a3d"></i>holdings up: toward New York</span><span><i style="background:#ff7a28"></i>holdings down: away</span><span>line weight = six-month change'+(TIC?', source: U.S. Treasury TIC, '+TIC.label:'')+'</span>':'')
 
  +(ov.pulse?'<span>inner ring + beat = 14-day RSI; faster beat = further from 50</span>':'')
@@ -674,6 +676,10 @@ var w=document.getElementById('welcome');
 try{if(!localStorage.getItem('am_welcome'))w.hidden=false}catch(e){w.hidden=false}
 document.getElementById('welok').onclick=function(){w.hidden=true;try{localStorage.setItem('am_welcome','1')}catch(e){}};
 })();
+</script>
+<script>
+document.querySelectorAll('#gatetiles .card').forEach(function(c){c.addEventListener('click',function(e){e.preventDefault();
+ var g=document.querySelectorAll('#gates .gt')[+c.dataset.g];if(!g)return;g.open=true;g.scrollIntoView({behavior:'smooth',block:'start'})})});
 </script>
 </body>
 </html>
