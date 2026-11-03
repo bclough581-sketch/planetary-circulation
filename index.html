@@ -124,61 +124,93 @@ details.more>summary,details.srcs>summary{cursor:pointer;font-family:var(--displ
 }
 
 
-.lobby{position:relative;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin:6px 0 14px;height:clamp(440px,76svh,780px);background:radial-gradient(ellipse at 50% 42%,#0b1830 0%,#050a14 62%,#020308 100%);touch-action:pan-y}
-#hc{position:absolute;inset:0;width:100%;height:100%}
-.lobby .lt{position:absolute;left:0;right:0;bottom:0;padding:54px 16px 16px;text-align:center;background:linear-gradient(to top,rgba(2,3,8,.92) 0%,rgba(2,3,8,.6) 55%,rgba(2,3,8,0) 100%)}
-.lobby .lt b{display:block;font-family:var(--display);font-weight:500;font-size:clamp(13px,2.4vw,17px);letter-spacing:.3em;color:#cfe6ff;text-shadow:0 0 14px rgba(90,168,240,.5)}
-.lobby .lt p{margin:6px auto 12px;font-size:13px;color:#9db8d2;max-width:34em}
-.lobby .lt small{display:block;margin-top:9px;font-size:10px;color:#6f8aa6;letter-spacing:.04em}
-.enter{font-family:var(--display);font-size:12px;letter-spacing:.2em;color:#e8f3ff;background:rgba(15,32,54,.7);border:1px solid #5aa8f0;border-radius:999px;padding:12px 24px;min-height:44px;cursor:pointer;box-shadow:0 0 18px rgba(90,168,240,.35);animation:bob 3.2s ease-in-out infinite}
+
+
+body.w3d{padding:0;max-width:none;overflow:hidden}
+body.w3d>*:not(#w3):not(#splash):not(script){display:none!important}
+#w3{display:none}
+body.w3d #w3{display:block;position:fixed;inset:0;background:#02050c;touch-action:none;user-select:none;-webkit-user-select:none;overflow:hidden}
+#w3c{position:absolute;inset:0;width:100%;height:100%;display:block}
+#lbs{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+#lbs.off{display:none}
+.lb{position:absolute;left:0;top:0;margin:-14px 0 0 -4px;opacity:0;white-space:nowrap;font-family:var(--mono);color:#dff0ff;text-shadow:0 0 8px #02050c,0 0 3px #02050c;padding:6px 8px 6px 4px;will-change:transform}
+.lb b{display:block;font-family:var(--display);font-weight:500;font-size:10px;letter-spacing:.14em}
+.lb i{display:block;font-style:normal;font-size:12px;color:#8fbbe0}
+.lb.c b{color:#bcd9f2}.lb.n i,.lb.n b{color:#7f9cb8}
+.scan{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(to bottom,rgba(150,200,255,.035) 0 1px,transparent 1px 3px);mix-blend-mode:screen}
+.scan:after{content:"";position:absolute;left:0;right:0;height:16%;top:-20%;background:linear-gradient(to bottom,transparent,rgba(120,185,255,.07),transparent);animation:sweep 9s linear infinite}
+@keyframes sweep{to{top:110%}}
+#w3:before{content:"";position:absolute;inset:0;z-index:3;pointer-events:none;background:radial-gradient(ellipse at 50% 48%,transparent 52%,rgba(1,3,8,.78) 100%)}
+.hint3{position:absolute;left:0;right:0;top:46%;text-align:center;z-index:4;font-size:12px;letter-spacing:.06em;color:#bcd9f2;text-shadow:0 0 10px #02050c;pointer-events:none;transition:opacity 1.2s;animation:hf 1s}
+.hint3.gone{opacity:0}
+@keyframes hf{from{opacity:0}}
+#glt{position:absolute;inset:0;pointer-events:none;opacity:0;background:repeating-linear-gradient(to bottom,rgba(90,168,240,.22) 0 2px,transparent 2px 9px),linear-gradient(90deg,rgba(255,61,88,.14),transparent 30%,transparent 70%,rgba(90,168,240,.16))}
+#glt.on{animation:glt .55s steps(7) 1}
+@keyframes glt{0%{opacity:.9;transform:translateX(-6px)}20%{opacity:.2;transform:translateX(5px) scaleY(1.02)}40%{opacity:.8;transform:translateX(-3px)}70%{opacity:.25;transform:translateX(2px)}100%{opacity:0;transform:none}}
+.ui{position:absolute;z-index:5}
+#hero3{left:0;right:0;bottom:0;padding:60px 16px calc(22px + env(safe-area-inset-bottom));text-align:center;background:linear-gradient(to top,rgba(2,5,12,.92),rgba(2,5,12,.55) 55%,transparent);transition:opacity .8s,transform .8s}
+#hero3.out{opacity:0;transform:translateY(24px);pointer-events:none}
+#hero3 b{display:block;font-family:var(--display);font-weight:700;font-size:clamp(22px,5vw,34px);letter-spacing:.2em;color:#cfe6ff;text-shadow:0 0 16px rgba(90,168,240,.5)}
+#hero3 p{margin:8px auto 14px;font-size:13px;color:#9db8d2;max-width:30em}
+#hero3 small{display:block;margin-top:10px;font-size:10px;color:#6f8aa6}
+#top3{left:0;right:0;top:0;padding:calc(10px + env(safe-area-inset-top)) 14px 22px;display:flex;justify-content:space-between;gap:10px;font-family:var(--display);font-size:11px;letter-spacing:.16em;color:#9db8d2;background:linear-gradient(to bottom,rgba(2,5,12,.8),transparent);opacity:0;transition:opacity 1s;pointer-events:none}
+#top3 span:last-child{font-family:var(--mono);letter-spacing:.02em;font-size:10px;color:#6f8aa6;text-align:right}
+#w3.inside #top3,#w3.inside #dock3,#w3.inside #info3{opacity:1}
+#dock3,#info3{pointer-events:none}#w3.inside #dock3,#w3.inside #info3{pointer-events:auto}
+#dock3{left:0;right:0;bottom:calc(26px + env(safe-area-inset-bottom));display:flex;justify-content:center;gap:6px;padding:0 8px;opacity:0;transition:opacity 1s;flex-wrap:wrap}
+#dock3 button{font-family:var(--display);font-size:10px;letter-spacing:.12em;color:#cfe6ff;background:rgba(7,16,28,.78);border:1px solid #2a4764;border-radius:999px;padding:10px 13px;min-height:40px;cursor:pointer;backdrop-filter:blur(4px)}
+#dock3 button.on{border-color:#5aa8f0;box-shadow:0 0 12px rgba(90,168,240,.4) inset;color:#fff}
+#info3{left:0;right:0;bottom:calc(6px + env(safe-area-inset-bottom));text-align:center;font-size:10px;color:#5f7b97;opacity:0;transition:opacity 1s}
+#info3 button{background:none;border:0;color:#7fb4e8;text-decoration:underline;font:inherit;cursor:pointer;padding:6px}
+#panel3{left:10px;right:10px;bottom:calc(98px + env(safe-area-inset-bottom));max-width:480px;margin:0 auto;background:linear-gradient(180deg,rgba(9,20,36,.86),rgba(5,11,20,.92));border:1px solid #2a4764;border-radius:10px;padding:12px 14px 12px;backdrop-filter:blur(6px);transform:translateY(16px);opacity:0;pointer-events:none;transition:all .5s}
+#panel3.on{transform:none;opacity:1;pointer-events:auto}
+#panel3 .k{display:block;font-family:var(--display);font-size:10px;letter-spacing:.13em;color:var(--dim)}
+#panel3 .big{display:block;font-weight:400;font-size:30px;line-height:1.15;color:#fff;margin-top:2px}
+#panel3 .mv{display:block;font-style:normal;font-size:12px;color:#8fbbe0}
+#panel3 p{margin:8px 0 0;font-size:12px;line-height:1.5;color:#b2c8dc}
+#panel3 small{display:block;margin-top:6px;font-size:10px;color:#6f8aa6}
+.bar{position:relative;height:6px;border-radius:3px;margin-top:10px;background:linear-gradient(90deg,#56809f,#ffaa46 50%,#56809f)}
+.bar u{position:absolute;top:-4px;width:3px;height:14px;background:#fff;box-shadow:0 0 8px #fff;border-radius:2px}
+.barl{display:flex;justify-content:space-between;font-size:10px;color:#6f8aa6;margin-top:4px}
+.row{display:flex;gap:8px;margin-top:10px}
+.row button{flex:1;font-family:var(--display);font-size:10px;letter-spacing:.12em;color:#e8f3ff;background:#0f2036;border:1px solid #3a5a78;border-radius:6px;padding:10px;min-height:42px;cursor:pointer}
+.row button:nth-child(1),.row button:nth-child(3){flex:0 0 52px;font-size:16px}
+#sheet3{left:10px;right:10px;bottom:calc(98px + env(safe-area-inset-bottom));max-width:480px;margin:0 auto;max-height:52vh;overflow:auto;background:rgba(5,11,20,.94);border:1px solid #2a4764;border-radius:10px;padding:10px 10px 6px;backdrop-filter:blur(8px);display:none}
+#sheet3.on{display:block}
+#sheet3 h3{margin:2px 4px 8px;font-family:var(--display);font-weight:500;font-size:11px;letter-spacing:.16em;color:var(--dim)}
+#sheet3 .it{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;border-top:1px solid #12263b;color:#dbeaf8;font-family:var(--mono);font-size:12px;padding:11px 4px;min-height:44px;cursor:pointer}
+#sheet3 .it span{flex:1}#sheet3 .it b{font-weight:400;color:#8fbbe0}
+#sheet3 .d{width:9px;height:9px;border-radius:50%;flex:none;box-shadow:0 0 8px currentColor}
+#sheet3 .tg[aria-pressed="false"]{opacity:.55}
+#sheet3 .dis{font-size:12px;line-height:1.55;color:#b2c8dc;margin:0 4px 8px}
+.enter{font-family:var(--display);font-size:12px;letter-spacing:.24em;color:#e8f3ff;background:rgba(15,32,54,.72);border:1px solid #5aa8f0;border-radius:999px;padding:13px 34px;min-height:46px;cursor:pointer;box-shadow:0 0 20px rgba(90,168,240,.4);animation:bob 3.2s ease-in-out infinite}
 @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(3px)}}
 @media (prefers-reduced-motion:reduce){.enter{animation:none}}
-.hallhead{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;margin:4px 2px 10px}
-.hallhead p{margin:0;font-size:12px;color:var(--dim);max-width:34em}
-.pass{display:flex;align-items:center;gap:6px;font-family:var(--display);font-size:10px;letter-spacing:.14em;color:var(--dim)}
-.pass .st{width:20px;height:20px;border:1px solid #2a4764;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;color:#2a4764;transition:all .4s}
-.pass .st.on{color:#e8f3ff;border-color:#5aa8f0;background:rgba(90,168,240,.18);box-shadow:0 0 10px rgba(90,168,240,.5)}
-.pass button{background:none;border:0;color:#6f8aa6;font-size:10px;text-decoration:underline;cursor:pointer;min-height:32px;font-family:var(--mono)}
-.booths{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:0 0 10px}
-@media (min-width:760px){.booths{grid-template-columns:repeat(3,1fr)}}
-.booth{border:1px solid var(--line);background:linear-gradient(180deg,#0a1626,#07101c);border-radius:8px;overflow:hidden;transition:border-color .25s,box-shadow .25s}
-.booth.open{grid-column:1/-1;border-color:#5aa8f0;box-shadow:0 0 22px rgba(90,168,240,.22)}
-.booth.seen .bh span:after{content:" ✦";color:#5aa8f0}
-.bh{display:block;width:100%;text-align:left;background:none;border:0;color:var(--ink);font-family:var(--mono);padding:11px 12px;cursor:pointer;min-height:84px}
-.bh span{display:block;font-family:var(--display);font-size:10px;letter-spacing:.14em;color:var(--dim)}
-.bh b{display:block;font-weight:400;font-size:19px;line-height:1.3;margin-top:3px}
-.bh i{display:block;font-style:normal;font-size:11px;color:#8fbbe0;margin-top:2px}
-.booth.n .bh b,.booth.n .bh i{color:#7f9cb8}
-.bb{display:none;padding:2px 12px 13px;font-size:13px;line-height:1.55;color:#b9cde0}
-.booth.open .bb{display:block}
-.bb button{margin-top:8px;font-family:var(--display);font-size:10px;letter-spacing:.14em;color:#e8f3ff;background:#0f2036;border:1px solid #5aa8f0;border-radius:5px;padding:9px 14px;min-height:40px;cursor:pointer}
-.dir{display:flex;flex-wrap:wrap;gap:8px;margin:10px 2px 4px}
-.dir a{font-family:var(--display);font-size:10px;letter-spacing:.14em;border:1px solid #2a4764;border-radius:999px;padding:8px 13px;text-decoration:none;color:#9db8d2;min-height:34px;display:inline-flex;align-items:center}
-.floorcap{margin:0 2px 8px;font-size:12px;color:var(--dim)}
-section[id]{scroll-margin-top:10px}
+#to3{position:fixed;right:12px;bottom:12px;z-index:50;font-family:var(--display);font-size:11px;letter-spacing:.16em;color:#e8f3ff;background:rgba(15,32,54,.9);border:1px solid #5aa8f0;border-radius:999px;padding:12px 18px;min-height:44px;cursor:pointer;box-shadow:0 0 18px rgba(90,168,240,.4)}
+#to3[hidden]{display:none}
 </style>
 </head>
-<body>
+<body class="w3d">
 <div id="splash" aria-hidden="true"><img src="icon-512.png" alt=""><b>AMALGAM</b></div>
 <script>(function(){var s=document.getElementById("splash");if(!s)return;function go(){s.style.display="none"}s.addEventListener("click",go);s.addEventListener("touchstart",go,{passive:true});setTimeout(go,4600);})();</script>
+<div id="w3" aria-label="Immersive 3D view of global money and shipping">
+  <canvas id="w3c"></canvas>
+  <div id="lbs"></div>
+  <div class="scan"></div><div id="glt"></div>
+  <div id="hero3" class="ui"><b>AMALGAM<sup>™</sup></b><p>Step inside the world's money and shipping.</p><button class="enter" id="enter3" type="button">ENTER</button><small>Information only. Not investment advice.</small></div>
+  <div id="top3" class="ui"><span>AMALGAM™</span><span id="st3"></span></div>
+  <div id="panel3" class="ui"></div>
+  <div id="sheet3" class="ui"></div>
+  <nav id="dock3" class="ui" aria-label="Navigate"><button type="button" data-s="over">OVERVIEW</button><button type="button" data-s="hubs">HUBS</button><button type="button" data-s="sea">SEA LANES</button><button type="button" data-s="layers">LAYERS</button><button type="button" data-s="flat">FLAT</button></nav>
+  <div id="info3" class="ui">Information only · Not investment advice · <button type="button" id="disc3">details</button></div>
+</div>
+<button id="to3" type="button" hidden>ENTER 3D</button>
 <header>
   <div class="brand"><img class="mark" src="icon-192.png" alt=""><div><h1>AMALGAM<sup>™</sup></h1><span class="sub">global markets and shipping, from public data</span></div></div>
   <span class="status" role="status"><i class="dot" id="dot"></i><span id="stxt">loading…</span></span>
 </header>
 <div class="banner" id="banner" role="alert"></div>
-<section class="lobby" id="lobby" aria-label="Lobby">
-  <canvas id="hc" aria-label="Slowly turning star made of thin lines. It ripples more when today's readings sit further from normal."></canvas>
-  <div class="lt"><b>WELCOME</b><p>Global money and shipping, on one floor. Walk the hall, then step onto the floor.</p><button class="enter" id="enter" type="button">ENTER THE HALL ↓</button><small>Information only. Not investment advice.</small></div>
-</section>
-<section id="hall" aria-label="The hall">
 <details class="disc" id="disc"><summary><b>Information only.</b> Not investment advice. <span class="more">Tap for more</span></summary>A display of public data. Color shows how far a reading sits from its own 52-week range. Not investment advice, not a recommendation to buy or sell anything, and not personalized to anyone. Data is delayed and can be wrong or stale; every number carries its own as-of date. Verify with primary sources. The full disclaimer is at the bottom of the page.</details>
-<div class="hallhead"><p>Each booth has a live reading and one plain sentence about it. Tap to step in.</p><div class="pass" id="pass" aria-label="Passport"></div></div>
-<div class="booths" id="booths"></div>
-<nav class="dir" aria-label="Directory"><a href="#floor">THE FLOOR</a><a href="#sec-hubs">HUBS</a><a href="#sec-ship">SEA LANES</a><a href="#sec-guide">GUIDE</a><a href="#sec-src">SOURCES</a></nav>
-</section>
-<section id="floor" aria-label="The floor">
-<h2>THE FLOOR</h2>
-<p class="floorcap">The live map. Tap a hub or a diamond for its reading.</p>
 <div class="stage" id="stage">
   <canvas id="c" aria-label="Animated world map: particles flow along arteries between financial hubs; hubs far from normal pulse; diamonds mark shipping chokepoints, larger and brighter when traffic is below normal"></canvas>
   <div class="tip" id="tip"></div>
@@ -201,7 +233,6 @@ section[id]{scroll-margin-top:10px}
 </div>
 <div class="legend" id="legend"></div>
 <div id="syncnote"></div>
-</section>
 
 <h2 id="sec-hubs">HUBS</h2>
 <div class="tablewrap"><table id="tbl"><thead><tr>
@@ -341,7 +372,9 @@ function lanePt(a,t,off){const q=bez(a,t),d=tanAt(a,t),l=Math.hypot(d[0],d[1])||
 function diamond(x,y,r){ctx.beginPath();ctx.moveTo(x,y-r);ctx.lineTo(x+r,y);ctx.lineTo(x,y+r);ctx.lineTo(x-r,y);ctx.closePath();}
 
 let last=performance.now(),time=0.8;
+let stalled=false;
 function frame(now){
+  if(!reduce&&document.body.classList.contains('w3d')){stalled=true;return;}
   const dt=Math.min(0.05,(now-last)/1000);last=now;if(!reduce)time+=dt;
   ctx.setTransform(DPR,0,0,DPR,0,0);ctx.globalCompositeOperation='source-over';ctx.clearRect(0,0,W,H);
   const s=landDots.step,r=Math.max(1.8,s*0.36),lk=ov.hold?0.7:1;
@@ -521,120 +554,16 @@ async function boot(){
   if(location.hash==='#flows')setHold();
 }
 
-/* ---- hero: live string-art star + four readings (display only) ---- */
-const HERO=(()=>{
-  const cv=document.getElementById('hc'),g=cv.getContext('2d');
-  const F=1200,PI2=Math.PI*2;let Wd=0,Hd=0,dpr=1,amp=0.06,vis=true,raf=0,last=0,tx=0,ty=0,ux=0,uy=0,kick=0;
-  function size(){dpr=Math.min(2,devicePixelRatio||1);const r=cv.getBoundingClientRect();Wd=r.width;Hd=r.height;cv.width=Math.round(Wd*dpr);cv.height=Math.round(Hd*dpr);}
-  function proj(x,y,ax,ay,zoff){const x1=x*Math.cos(ay),z1=-x*Math.sin(ay),y1=y*Math.cos(ax)-z1*Math.sin(ax),z2=y*Math.sin(ax)+z1*Math.cos(ax)+zoff,s=F/(F-z2);return [x1*s,y1*s,s];}
-  // one star: returns line list [[x1,y1,x2,y2,colorIndex,scale]]
-  function star(R,rot,n,t,off,zbase,P,ax,ay,k,cfn,out){
-    const s0=F/(F-zbase),zoff=zbase+P;
-    for(let q=0;q<4;q++)for(let i=0;i<=n;i++){
-      const th=Math.PI/2*i/n,
-        Ri=(R/s0)*(1+0.05*Math.sin(PI2*(t+off)))*(1+(amp+kick)*Math.sin(PI2*(t+k*i/n+q*0.25))),
-        ang=q*Math.PI/2+rot*Math.PI/180,ca=Math.cos(ang),sa=Math.sin(ang);
-      const p=[[Ri*Math.cos(th),0],[0,Ri*Math.sin(th)]].map(([x,y])=>proj(x*ca-y*sa,x*sa+y*ca,ax,ay,zoff));
-      out.push([p[0][0],p[0][1],p[1][0],p[1][1],cfn(q,th),(p[0][2]+p[1][2])/(2*s0)]);
-    }
-  }
-  const redA=(q,th)=>(q===3&&th<0.49)||(q===2&&th>1.08)?1:0;
-  function draw(t){
-    g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,Wd,Hd);
-    const m=Math.min(Wd,Hd*0.8)*0.9,u=m/1024,cx=Wd/2,cy=Hd*0.43,rot2=90*t,
-      P=190*(0.5-0.5*Math.cos(PI2*t)),ax=0.2*Math.sin(PI2*t)+ux,ay=0.2*Math.sin(PI2*t+Math.PI/2)+uy,L=[];
-    star(430,0,46,t,0,0,P,ax,ay,2,redA,L);
-    star(300,45-rot2,40,t,1/3,110,P,ax,ay,2,()=>2,L);
-    star(190,rot2,34,t,2/3,220,P,ax,ay,2,()=>3,L);
-    const cols=['rgba(214,232,255,','rgba(255,61,88,','rgba(74,160,255,','rgba(143,208,255,'];
-    g.globalCompositeOperation='lighter';g.lineCap='round';
-    for(const pass of [0,1]){
-      for(let c=0;c<4;c++){
-        g.beginPath();
-        for(const l of L)if(l[4]===c){g.moveTo(cx+l[0]*u,cy+l[1]*u);g.lineTo(cx+l[2]*u,cy+l[3]*u);}
-        g.strokeStyle=cols[c]+(pass?'.55)':'.10)');g.lineWidth=(pass?1.05:3.4)*Math.max(.6,u*1.6);g.stroke();
-      }
-    }
-    const core=g.createRadialGradient(cx,cy,0,cx,cy,110*u);core.addColorStop(0,'rgba(255,255,255,1)');core.addColorStop(.25,'rgba(190,225,255,.75)');core.addColorStop(1,'rgba(40,120,224,0)');
-    g.fillStyle=core;g.beginPath();g.arc(cx,cy,110*u,0,PI2);g.fill();
-    g.globalCompositeOperation='source-over';
-  }
-  function loop(ts){
-    raf=0;if(!vis||document.hidden)return;
-    if(ts-last>=33){last=ts;ux+=(tx-ux)*.12;uy+=(ty-uy)*.12;kick*=.93;draw(((ts/1000)/24)%1);}
-    raf=requestAnimationFrame(loop);
-  }
-  function start(){if(reduce){size();draw(0.14);return;}if(!raf&&vis&&!document.hidden)raf=requestAnimationFrame(loop);}
-  new IntersectionObserver(es=>{vis=es[0].isIntersecting;if(vis)start();},{threshold:0.02}).observe(cv);
-  document.addEventListener('visibilitychange',()=>{if(!document.hidden)start();});
-  addEventListener('resize',()=>{size();if(reduce)draw(0.14);});
-  if(window.ResizeObserver)new ResizeObserver(()=>{size();if(reduce)draw(0.14);}).observe(cv);
-  const lb=document.getElementById('lobby');
-  if(!reduce){
-    lb.addEventListener('pointermove',e=>{const r=lb.getBoundingClientRect();tx=((e.clientY-r.top)/r.height-0.5)*-0.5;ty=((e.clientX-r.left)/r.width-0.5)*0.5;});
-    lb.addEventListener('pointerleave',()=>{tx=0;ty=0;});
-    lb.addEventListener('pointerdown',()=>{kick=0.09;});
-  }
-  size();start();
-  return {setAmp(a){amp=a;if(reduce)draw(0.14);},size};
-})();
-const PKEY='amalgam.passport.v1';
-function pgGet(){try{return JSON.parse(localStorage.getItem(PKEY)||'[]')||[];}catch(e){return PSEEN;}}
-let PSEEN=[];
-function pgSet(a){PSEEN=a;try{localStorage.setItem(PKEY,JSON.stringify(a));}catch(e){}}
-function goFloor(){$('floor').scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'});}
-function heroTiles(){
-  try{
-    const live=HUBS.filter(h=>!h.relay&&!h.stale&&h.heat!=null),cs=CH.filter(c=>!c.stale&&c.ratio!=null);
-    const mean=live.length?live.reduce((a,h)=>a+h.heat,0)/live.length:0.2;
-    const cstress=cs.length?Math.max(...cs.map(c=>c.stress)):0;
-    HERO.setAmp(0.04+0.07*Math.min(1,0.65*mean+0.35*cstress));
-    const mvTxt=h=>h.chg==null?'':(h.chg>=0?'+':'')+h.chg.toFixed(h.unit==='bp'?1:(h.typ<1?3:2))+(h.unit==='bp'?' bp':'%');
-    const B=[];
-    const hubBooth=(id,title,extra)=>{const h=byId[id];if(!h)return;
-      const ok=!h.stale&&!h.missing&&h.price!=null;
-      B.push({id,title,ok,big:ok?fmtVal(h):'n/a',small:ok?(mvTxt(h)?mvTxt(h)+' today':h.sig):'dark today',
-        host:ok?h.sig+' reads '+fmtVal(h)+(mvTxt(h)?', '+mvTxt(h)+' on the day':'')+'.'+(h.pos!=null?' It sits '+Math.round(h.pos*100)+'% of the way up its own 52-week range.':'')+(extra||'')+' As of '+fmtDate(h.asof)+'.':'The source for this booth is behind, so it is dark rather than showing an old number.',
-        go:()=>{try{pinTo({k:'h',i:h.idx});}catch(e){}goFloor();}});};
-    hubBooth('NYC','TREASURIES');
-    hubBooth('DXB','GULF OIL',byId.HOU&&!byId.HOU.stale&&byId.HOU.price!=null?' Houston crude is '+fmtVal(byId.HOU)+'.':'');
-    hubBooth('FRA','THE EURO');
-    hubBooth('TYO','TOKYO');
-    const c=cs.slice().sort((a,b)=>b.stress-a.stress)[0];
-    if(c)B.push({id:'sea',title:'SEA LANES',ok:true,big:Math.round(c.ratio*100)+'% of norm',small:'◆ '+c.name+', '+fmtDate(c.asof),
-      host:c.name+' is carrying '+Math.round(c.ratio*100)+'% of its own average ship transits, the lowest of the chokepoints with fresh data. Counts arrive a few days late. This is a measurement, not a forecast.',
-      go:()=>{try{pinTo({k:'c',i:c.ci});}catch(e){}goFloor();}});
-    else B.push({id:'sea',title:'SEA LANES',ok:false,big:'n/a',small:'no fresh data',host:'No chokepoint has fresh data right now, so this booth is dark.',go:goFloor});
-    const odd=live.slice().sort((a,b)=>b.heat-a.heat)[0];
-    if(odd)B.push({id:'odd',title:'ODD ONE OUT',ok:true,big:odd.name,small:odd.sig,
-      host:odd.name+' is the reading furthest from its own normal today, judged by where it sits in its 52-week range or how big its latest move was. Far from normal is a description of the past, not a hint about what comes next.',
-      go:()=>{try{pinTo({k:'h',i:odd.idx});}catch(e){}goFloor();}});
-    const box=$('booths'),seen=pgGet();PSEEN=seen;box.innerHTML='';
-    B.forEach(b=>{
-      const d=document.createElement('div');d.className='booth'+(b.ok?'':' n')+(seen.includes(b.id)?' seen':'');
-      d.innerHTML='<button class="bh" type="button" aria-expanded="false"><span>'+b.title+'</span><b>'+b.big+'</b><i>'+b.small+'</i></button><div class="bb"><div>'+b.host+'</div><button type="button">SHOW ON THE FLOOR →</button></div>';
-      const bh=d.firstChild;
-      bh.onclick=()=>{const was=d.classList.contains('open');
-        box.querySelectorAll('.booth.open').forEach(x=>{x.classList.remove('open');x.firstChild.setAttribute('aria-expanded','false');});
-        if(!was){d.classList.add('open');bh.setAttribute('aria-expanded','true');
-          if(!PSEEN.includes(b.id)){pgSet(PSEEN.concat(b.id));d.classList.add('seen');drawPass(B.length);}
-          setTimeout(()=>d.scrollIntoView({behavior:reduce?'auto':'smooth',block:'nearest'}),30);}};
-      d.querySelector('.bb button').onclick=b.go;
-      box.appendChild(d);});
-    drawPass(B.length);
-  }catch(e){}
-}
-function drawPass(n){
-  const p=$('pass');if(!p)return;const k=PSEEN.length;
-  p.innerHTML='PASSPORT '+Math.min(k,n)+'/'+n+' '+Array.from({length:n},(_,i)=>'<span class="st'+(i<k?' on':'')+'">✦</span>').join('')+(k>=n?' <b style="font-weight:400;color:#cfe6ff">FULL TOUR</b>':'')+(k?' <button type="button" id="pgr">reset</button>':'');
-  const r=$('pgr');if(r)r.onclick=()=>{pgSet([]);heroTiles();};
-}
-$('enter').onclick=()=>$('hall').scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'});
+function heroTiles(){window.dispatchEvent(new Event('amalgam:data'));}
+window.addEventListener('amalgam:flat',()=>{if(stalled){stalled=false;last=performance.now();requestAnimationFrame(frame);}if(LAND.length){layout();}});
+window.AM={get HUBS(){return HUBS},get CH(){return CH},get LAND(){return LAND},LINKS,STOPS,ov,nodeVal,fmtVal,fmtDate};
 let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{if(!LAND.length)return;layout();if(reduce)requestAnimationFrame(frame);},150);});
 setInterval(async()=>{const d=await j('data.json');if(d){DATA=d;merge();if(W){layout();}buildTable();buildStatus();syncNote();heroTiles();}},30*60*1000);  // pick up a new daily file without a reload
 if(innerWidth>=700)$('disc').open=true;
 boot();
 if('serviceWorker' in navigator&&location.protocol.startsWith('http')){navigator.serviceWorker.register('sw.js').catch(()=>{});}
 </script>
+<script src="world3d.js"></script>
+<script>setTimeout(function(){if(!window.A3){document.body.classList.remove("w3d");document.body.classList.add("flat");}},7000);</script>
 </body>
 </html>
