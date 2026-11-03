@@ -186,6 +186,12 @@ body.w3d #w3{display:block;position:fixed;inset:0;background:#02050c;touch-actio
 .enter{font-family:var(--display);font-size:12px;letter-spacing:.24em;color:#e8f3ff;background:rgba(15,32,54,.72);border:1px solid #5aa8f0;border-radius:999px;padding:13px 34px;min-height:46px;cursor:pointer;box-shadow:0 0 20px rgba(90,168,240,.4);animation:bob 3.2s ease-in-out infinite}
 @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(3px)}}
 @media (prefers-reduced-motion:reduce){.enter{animation:none}}
+#tour3{left:10px;right:10px;bottom:calc(98px + env(safe-area-inset-bottom));max-width:440px;margin:0 auto;background:linear-gradient(180deg,rgba(9,20,36,.92),rgba(5,11,20,.95));border:1px solid #5aa8f0;border-radius:10px;padding:12px 14px;box-shadow:0 0 24px rgba(90,168,240,.3);display:none;z-index:6}
+#tour3.on{display:block;animation:hf .5s}
+#tour3 small{font-family:var(--display);font-size:10px;letter-spacing:.14em;color:var(--dim)}
+#tour3 p{margin:6px 0 0;font-size:13px;line-height:1.5;color:#dbeaf8}
+.lg{display:flex;gap:10px;align-items:flex-start;margin:0 4px 10px;font-size:12px;line-height:1.5;color:#b2c8dc}.lg i{font-style:normal;font-size:16px;width:20px;text-align:center;flex:none}.lg b{color:#e8f3ff;font-weight:400}
+#dock3 button{padding:10px 11px!important}
 #to3{position:fixed;right:12px;bottom:12px;z-index:50;font-family:var(--display);font-size:11px;letter-spacing:.16em;color:#e8f3ff;background:rgba(15,32,54,.9);border:1px solid #5aa8f0;border-radius:999px;padding:12px 18px;min-height:44px;cursor:pointer;box-shadow:0 0 18px rgba(90,168,240,.4)}
 #to3[hidden]{display:none}
 </style>
@@ -200,8 +206,9 @@ body.w3d #w3{display:block;position:fixed;inset:0;background:#02050c;touch-actio
   <div id="hero3" class="ui"><b>AMALGAM<sup>™</sup></b><p>Step inside the world's money and shipping.</p><button class="enter" id="enter3" type="button">ENTER</button><small>Information only. Not investment advice.</small></div>
   <div id="top3" class="ui"><span>AMALGAM™</span><span id="st3"></span></div>
   <div id="panel3" class="ui"></div>
+  <div id="tour3" class="ui"></div>
   <div id="sheet3" class="ui"></div>
-  <nav id="dock3" class="ui" aria-label="Navigate"><button type="button" data-s="over">OVERVIEW</button><button type="button" data-s="hubs">HUBS</button><button type="button" data-s="sea">SEA LANES</button><button type="button" data-s="layers">LAYERS</button><button type="button" data-s="flat">FLAT</button></nav>
+  <nav id="dock3" class="ui" aria-label="Navigate"><button type="button" data-s="over">OVERVIEW</button><button type="button" data-s="hubs">HUBS</button><button type="button" data-s="sea">SEA LANES</button><button type="button" data-s="layers">LAYERS</button><button type="button" data-s="guide">GUIDE</button><button type="button" data-s="flat">FLAT</button></nav>
   <div id="info3" class="ui">Information only · Not investment advice · <button type="button" id="disc3">details</button></div>
 </div>
 <button id="to3" type="button" hidden>ENTER 3D</button>
@@ -556,7 +563,7 @@ async function boot(){
 
 function heroTiles(){window.dispatchEvent(new Event('amalgam:data'));}
 window.addEventListener('amalgam:flat',()=>{if(stalled){stalled=false;last=performance.now();requestAnimationFrame(frame);}if(LAND.length){layout();}});
-window.AM={get HUBS(){return HUBS},get CH(){return CH},get LAND(){return LAND},LINKS,STOPS,ov,nodeVal,fmtVal,fmtDate};
+window.AM={get SYNC(){return SYNC},get HUBS(){return HUBS},get CH(){return CH},get LAND(){return LAND},LINKS,STOPS,ov,nodeVal,fmtVal,fmtDate};
 let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{if(!LAND.length)return;layout();if(reduce)requestAnimationFrame(frame);},150);});
 setInterval(async()=>{const d=await j('data.json');if(d){DATA=d;merge();if(W){layout();}buildTable();buildStatus();syncNote();heroTiles();}},30*60*1000);  // pick up a new daily file without a reload
 if(innerWidth>=700)$('disc').open=true;
