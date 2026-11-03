@@ -21,5 +21,6 @@ const sp2=G.volSpike(mk(c2,v2));ok(sp2.status==='flag'&&sp2.hitDay.daysAgo===2,'
 ok(G.volSpike(bars).status==='fail'||G.volSpike(bars).status!=='pass','no spike not pass');
 // top of range fails
 const up=mk(Array.from({length:150},(_,i)=>100+i));ok(G.rangePos(up).status==='fail','at 6-mo high = fail');
-const ev=G.evaluate(bars,{AAA:bars});ok(ev.g5.status==='fail','identical held name = corr fail');
+const ev=G.evaluate(bars,{AAA:bars});ok(ev.g5.status==='fail','identical held name = high overlap');
+const ev0=G.evaluate(bars);ok(ev.meets===ev0.meets&&ev.near===ev0.near,'overlap never changes meets/near');
 console.log(bad?'FAILED':'ALL PASS');process.exit(bad?1:0)

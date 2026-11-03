@@ -56,22 +56,22 @@ function gateInfo(ev,cat){
     nums:g3?['Latest session '+g3.latest.d+': '+(g3.latest.up?'up':'down')+', volume '+g3.latest.ratio.toFixed(2)+'x the '+T.volLen+'-day average']:[],
     rule:'Meets the rule when the latest session closed up with volume >= '+T.volMult+'x the '+T.volLen+'-day average.',
     ho:'On its own, G3 showed a small lift in how often trades hit (1.033, range 1.005 to 1.067) but no money edge after costs (-0.015, range -0.034 to +0.003). Treat it as a lead, not a result.'},
-   {id:'G4',name:'CATALYST',st:c==='yes'?'pass':c==='no'?'fail':'na',
+   {id:'NOTE',note:true,lab:{pass:'YES',fail:'NO',na:'YOUR CALL'},name:'CATALYST',st:c==='yes'?'pass':c==='no'?'fail':'na',
     val:c==='yes'?'you marked: yes':c==='no'?'you marked: no':'you decide',
     what:'Whether there is a dated, checkable reason for attention: earnings, an FDA date, a contract, an index change. This one is a human judgment, so the app does not score it.',
     nums:['Check filings: sec.gov EDGAR company search'],
-    rule:'Your framework uses it as a tiebreaker weighted by evidence. Mark it yourself below.',
+    rule:'A note, not part of the verdict. Mark it yourself below.',
     ho:'Not part of the tested stack.'},
-   {id:'G5',name:'OVERLAP WITH YOUR BOOK',st:g5?g5.status:'na',
+   {id:'NOTE',note:true,lab:{pass:'LOW',flag:'MODERATE',fail:'HIGH',na:'ADD HOLDINGS'},name:'OVERLAP WITH YOUR BOOK',st:g5?g5.status:'na',
     val:g5?'highest '+g5.top.r.toFixed(2)+' vs '+g5.top.t:'add holdings to compute',
     what:'How closely this stock\'s daily moves have tracked each stock you already hold, over the last '+T.corrDays+' sessions (Pearson correlation). High means you would mostly be doubling an existing bet.',
     nums:g5?g5.rows.slice(0,6).map(function(x){return x.t+': '+x.r.toFixed(2)+' ('+x.n+' shared days)'}):[],
-    rule:'Fails at '+T.corrFail.toFixed(2)+' or higher against any holding. Flag from '+T.corrFlag.toFixed(2)+'.',
-    ho:'Not part of the tested stack.'}
+    rule:'High at '+T.corrFail.toFixed(2)+' or higher against any holding, moderate from '+T.corrFlag.toFixed(2)+'. This is a portfolio note, not a measure of the stock, so it never changes the verdict above.',
+    ho:'Not part of the tested stack, and not counted in any list or in the scoreboard.'}
   ];
 }
 function headline(ev){
-  if(ev.meets)return{cls:'pass',t:'Meets all stated rules today (G1, G2, G3'+(ev.g5?', G5':'')+'). That describes the rules, not the stock\'s future.'};
+  if(ev.meets)return{cls:'pass',t:'Meets all stated rules today (G1, G2, G3). That describes the rules, not the stock\'s future.'};
   if(ev.near)return{cls:'flag',t:'One rule away: '+ev.failed[0]+' is outside its range.'};
   return{cls:'fail',t:ev.failed.length+' rules outside range: '+ev.failed.join(', ')+'.'};
 }
@@ -83,6 +83,7 @@ function renderCheck(t,bars,ev){
   var html='<div class="ck-head"><b>'+esc(t)+'</b><span>'+ev.close.toFixed(2)+' · close '+ev.asof+'</span></div>'+
    '<div class="ck-line '+h.cls+'">'+esc(h.t)+'</div><div class="ck-gates">';
   gs.forEach(function(g,i){
+    if(i===3)html+='<div class="ck-sep">NOTES · not part of the verdict</div>';
     html+='<button type="button" class="ck-g '+g.st+'" data-i="'+i+'" aria-expanded="false"><i>'+g.id+'</i><u>'+g.name+'</u><em>'+esc(g.val)+'</em><s>'+STAT[g.st]+'</s></button>'+
       '<div class="ck-d" id="ckd'+i+'" hidden></div>';
   });
@@ -136,7 +137,7 @@ async function scan(){
       try{
         var bars=await getBars(w[i]),b2=Object.assign({},book);delete b2[w[i]];
         var ev=G.evaluate(bars,b2);
-        rows.push({t:w[i],close:ev.close,asof:ev.asof,k:ev.meets?'meets':ev.near?'near':'other',note:ev.meets?'G1 G2 G3 ok':ev.failed.join(', ')+' outside range'});
+        rows.push({t:w[i],close:ev.close,asof:ev.asof,k:ev.meets?'meets':ev.near?'near':'other',note:ev.meets?'G1 G2 G3 all met':ev.failed.join(', ')+' outside range'});
       }catch(e){errs.push(w[i])}
     }
     LS.set('am_daily',{day:today(),rows:rows,errs:errs});

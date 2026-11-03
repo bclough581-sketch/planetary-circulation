@@ -87,8 +87,8 @@ function evaluate(bars,book,catalyst){
   var core=[g1,g2,g3],pass=0,fail=0,failed=[];
   var names=['G1 range','G2 RSI','G3 volume'];
   core.forEach(function(g,i){if(!g)return;if(g.status==='pass')pass++;else{fail++;failed.push(names[i]);}});
-  var all=core.every(function(g){return g&&g.status==='pass';})&&(!g5||g5.status!=='fail');
-  var near=!all&&fail===1&&core.every(function(g){return g;})&&(!g5||g5.status!=='fail');
+  var all=core.every(function(g){return g&&g.status==='pass';});
+  var near=!all&&fail===1&&core.every(function(g){return g;});
   return {g1:g1,g2:g2,g3:g3,g4:g4,g5:g5,meets:all,near:near,failed:failed,
           asof:bars.length?bars[bars.length-1].d:null,
           close:bars.length?bars[bars.length-1].c:null};

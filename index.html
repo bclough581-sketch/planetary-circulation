@@ -224,6 +224,7 @@ body:not(.tab-map) #to3{display:none}
 .ck-line.pass{border-color:#3fbf7f}.ck-line.flag{border-color:#e0b341}.ck-line.fail{border-color:#e0605a}
 .ck-g{display:grid!important;grid-template-columns:34px 1fr auto;grid-template-areas:"i u s" "i e s";gap:2px 8px;width:100%;text-align:left;margin:0 0 6px;letter-spacing:.06em!important;border-left:4px solid var(--line)!important}
 .ck-g i{grid-area:i;font-style:normal;color:var(--dim)}.ck-g u{grid-area:u;text-decoration:none;font-size:11px}.ck-g em{grid-area:e;font-style:normal;font-family:var(--mono);font-size:12px;color:var(--dim);letter-spacing:0}.ck-g s{grid-area:s;text-decoration:none;font-size:10px;align-self:center}
+.ck-sep{font-family:var(--display);font-size:10px;letter-spacing:.14em;color:var(--dim);margin:12px 0 6px}
 .ck-g.pass{border-left-color:#3fbf7f!important}.ck-g.flag{border-left-color:#e0b341!important}.ck-g.fail{border-left-color:#e0605a!important}.ck-g.na{border-left-color:#5b7a99!important}
 .ck-d{background:#050c16;border:1px solid var(--line);border-radius:6px;padding:10px 12px;margin:-2px 0 8px;font-size:12.5px;line-height:1.6;color:var(--dim)}
 .ck-d[hidden]{display:none}.ck-d b{color:var(--ink)}
@@ -265,7 +266,7 @@ body:not(.tab-map) #to3{display:none}
 <nav id="tabs" role="tablist" aria-label="Views"><button type="button" role="tab" data-v="check" aria-selected="true">CHECK</button><button type="button" role="tab" data-v="map" aria-selected="false">MAP</button></nav>
 <section id="checkview" aria-label="Rule check">
   <h2 class="ck-h">TICKER CHECK</h2>
-  <p class="ck-intro">Type a ticker. See how it measures against five written rules, and tap any rule to see exactly how it is calculated. Measurements of what already happened; not advice, not a recommendation.</p>
+  <p class="ck-intro">Type a ticker. See how it measures against three written rules (plus two notes), and tap any rule to see exactly how it is calculated. Measurements of what already happened; not advice, not a recommendation.</p>
   <div id="ckkey" class="ck-box"></div>
   <form id="ckf" class="find" autocomplete="off"><input id="ckq" placeholder="Ticker, e.g. AAPL" autocapitalize="characters" aria-label="Ticker"><button type="submit">CHECK</button></form>
   <div id="ckst" class="ck-st" role="status"></div>
