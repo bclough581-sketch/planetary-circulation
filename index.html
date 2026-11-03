@@ -122,6 +122,17 @@ details.more>summary,details.srcs>summary{cursor:pointer;font-family:var(--displ
  .chips{gap:6px;margin-bottom:8px}.chips button{font-size:9px;padding:7px 9px;min-height:34px}
  .legend{font-size:11px;gap:4px 14px}
 }
+
+#hero{position:relative;border:1px solid var(--line);border-radius:6px;background:radial-gradient(ellipse at 50% 46%,#0b1830 0%,#050a14 62%,#020308 100%);overflow:hidden;margin:8px 0 12px}
+#hc{display:block;width:100%;height:auto;aspect-ratio:1/1.12;max-height:460px;margin:0 auto}
+.ht{position:absolute;max-width:46%;background:rgba(3,8,16,.62);border:1px solid #1d3550;border-radius:5px;padding:6px 8px;text-align:left;color:var(--ink);font-family:var(--mono);cursor:pointer;backdrop-filter:blur(2px)}
+.ht span{display:block;font-family:var(--display);font-size:9px;letter-spacing:.12em;color:var(--dim)}
+.ht b{display:block;font-weight:400;font-size:15px;line-height:1.25}
+.ht i{display:block;font-style:normal;font-size:11px;color:#8fbbe0}
+.ht.n b,.ht.n i{color:#7f9cb8}
+.ht.tl{left:8px;top:8px}.ht.tr{right:8px;top:8px;text-align:right}.ht.bl{left:8px;bottom:36px}.ht.br{right:8px;bottom:36px;text-align:right}
+.hcap{text-align:center;font-size:10px;color:#7f9cb8;letter-spacing:.04em;padding:0 12px 9px;margin-top:-6px;position:relative}
+@media (min-width:700px){#hc{aspect-ratio:2.1/1;max-height:380px}.ht b{font-size:20px}}
 </style>
 </head>
 <body>
@@ -133,6 +144,12 @@ details.more>summary,details.srcs>summary{cursor:pointer;font-family:var(--displ
 </header>
 <details class="disc" id="disc"><summary><b>Information only.</b> Not investment advice. <span class="more">Tap for more</span></summary>A display of public data. Color shows how far a reading sits from its own 52-week range. Not investment advice, not a recommendation to buy or sell anything, and not personalized to anyone. Data is delayed and can be wrong or stale; every number carries its own as-of date. Verify with primary sources. The full disclaimer is at the bottom of the page.</details>
 <div class="banner" id="banner" role="alert"></div>
+<section id="hero" aria-label="Amalgam star with four live readings">
+  <canvas id="hc" aria-hidden="true"></canvas>
+  <button class="ht tl" id="ht0" type="button"></button><button class="ht tr" id="ht1" type="button"></button>
+  <button class="ht bl" id="ht2" type="button"></button><button class="ht br" id="ht3" type="button"></button>
+  <div class="hcap">The star ripples more when today's readings sit further from normal.</div>
+</section>
 <form class="find" id="find" autocomplete="off"><input id="q" list="mk" placeholder="Find a market: GBP, oil, Hormuz, or any ticker" aria-label="Find a market or ticker" enterkeyhint="search" autocapitalize="off" spellcheck="false"><button type="submit">FIND</button></form>
 <datalist id="mk"></datalist>
 <div id="findres" role="status"></div>
@@ -467,13 +484,82 @@ function buildFinder(){$('mk').innerHTML=[...HUBS.filter(h=>!h.relay).map(h=>h.s
 async function j(u){try{const r=await fetch(u,{cache:'no-cache'});if(!r.ok)throw new Error(r.status);return await r.json();}catch(e){return null;}}
 async function boot(){
   [LAND,DATA,TIC]=await Promise.all([j('land.json'),j('data.json'),j('tic.json')]);
-  LAND=LAND||[];merge();layout();buildTable();buildLegend();buildStatus();buildSources();buildFinder();syncNote();syncChips();
+  LAND=LAND||[];merge();layout();buildTable();buildLegend();buildStatus();buildSources();buildFinder();syncNote();syncChips();heroTiles();
   if(TIP_URL){$('tiplink').href=TIP_URL;$('tipjar').style.display='block';}
   if(!started){started=true;requestAnimationFrame(frame);}
   if(location.hash==='#flows')setHold();
 }
+
+/* ---- hero: live string-art star + four readings (display only) ---- */
+const HERO=(()=>{
+  const cv=document.getElementById('hc'),g=cv.getContext('2d');
+  const F=1200,PI2=Math.PI*2;let Wd=0,Hd=0,dpr=1,amp=0.06,vis=true,raf=0,last=0;
+  function size(){dpr=Math.min(2,devicePixelRatio||1);const r=cv.getBoundingClientRect();Wd=r.width;Hd=r.height;cv.width=Math.round(Wd*dpr);cv.height=Math.round(Hd*dpr);}
+  function proj(x,y,ax,ay,zoff){const x1=x*Math.cos(ay),z1=-x*Math.sin(ay),y1=y*Math.cos(ax)-z1*Math.sin(ax),z2=y*Math.sin(ax)+z1*Math.cos(ax)+zoff,s=F/(F-z2);return [x1*s,y1*s,s];}
+  // one star: returns line list [[x1,y1,x2,y2,colorIndex,scale]]
+  function star(R,rot,n,t,off,zbase,P,ax,ay,k,cfn,out){
+    const s0=F/(F-zbase),zoff=zbase+P;
+    for(let q=0;q<4;q++)for(let i=0;i<=n;i++){
+      const th=Math.PI/2*i/n,
+        Ri=(R/s0)*(1+0.05*Math.sin(PI2*(t+off)))*(1+amp*Math.sin(PI2*(t+k*i/n+q*0.25))),
+        ang=q*Math.PI/2+rot*Math.PI/180,ca=Math.cos(ang),sa=Math.sin(ang);
+      const p=[[Ri*Math.cos(th),0],[0,Ri*Math.sin(th)]].map(([x,y])=>proj(x*ca-y*sa,x*sa+y*ca,ax,ay,zoff));
+      out.push([p[0][0],p[0][1],p[1][0],p[1][1],cfn(q,th),(p[0][2]+p[1][2])/(2*s0)]);
+    }
+  }
+  const redA=(q,th)=>(q===3&&th<0.49)||(q===2&&th>1.08)?1:0;
+  function draw(t){
+    g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,Wd,Hd);
+    const m=Math.min(Wd,Hd*1.02)*0.84,u=m/1024,cx=Wd/2,cy=Hd/2,rot2=90*t,
+      P=190*(0.5-0.5*Math.cos(PI2*t)),ax=0.2*Math.sin(PI2*t),ay=0.2*Math.sin(PI2*t+Math.PI/2),L=[];
+    star(430,0,46,t,0,0,P,ax,ay,2,redA,L);
+    star(300,45-rot2,40,t,1/3,110,P,ax,ay,2,()=>2,L);
+    star(190,rot2,34,t,2/3,220,P,ax,ay,2,()=>3,L);
+    const cols=['rgba(214,232,255,','rgba(255,61,88,','rgba(74,160,255,','rgba(143,208,255,'];
+    g.globalCompositeOperation='lighter';g.lineCap='round';
+    for(const pass of [0,1]){
+      for(let c=0;c<4;c++){
+        g.beginPath();
+        for(const l of L)if(l[4]===c){g.moveTo(cx+l[0]*u,cy+l[1]*u);g.lineTo(cx+l[2]*u,cy+l[3]*u);}
+        g.strokeStyle=cols[c]+(pass?'.55)':'.10)');g.lineWidth=(pass?1.05:3.4)*Math.max(.6,u*1.6);g.stroke();
+      }
+    }
+    const core=g.createRadialGradient(cx,cy,0,cx,cy,110*u);core.addColorStop(0,'rgba(255,255,255,1)');core.addColorStop(.25,'rgba(190,225,255,.75)');core.addColorStop(1,'rgba(40,120,224,0)');
+    g.fillStyle=core;g.beginPath();g.arc(cx,cy,110*u,0,PI2);g.fill();
+    g.globalCompositeOperation='source-over';
+  }
+  function loop(ts){
+    raf=0;if(!vis||document.hidden)return;
+    if(ts-last>=33){last=ts;draw(((ts/1000)/24)%1);}
+    raf=requestAnimationFrame(loop);
+  }
+  function start(){if(reduce){size();draw(0.14);return;}if(!raf&&vis&&!document.hidden)raf=requestAnimationFrame(loop);}
+  new IntersectionObserver(es=>{vis=es[0].isIntersecting;if(vis)start();},{threshold:0.02}).observe(cv);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)start();});
+  addEventListener('resize',()=>{size();if(reduce)draw(0.14);});
+  size();start();
+  return {setAmp(a){amp=a;if(reduce)draw(0.14);},size};
+})();
+function heroTiles(){
+  try{
+    const live=HUBS.filter(h=>!h.relay&&!h.stale&&h.heat!=null),cs=CH.filter(c=>!c.stale&&c.ratio!=null);
+    const mean=live.length?live.reduce((a,h)=>a+h.heat,0)/live.length:0.2;
+    const cstress=cs.length?Math.max(...cs.map(c=>c.stress)):0;
+    HERO.setAmp(0.04+0.07*Math.min(1,0.65*mean+0.35*cstress));
+    const hubTile=(id,i)=>{const h=byId[id],b=$('ht'+i);if(!h)return;
+      const ok=!h.stale&&!h.missing&&h.price!=null;b.className='ht '+['tl','tr','bl','br'][i]+(ok?'':' n');
+      const mv=ok&&h.chg!=null?(h.chg>=0?'+':'')+h.chg.toFixed(h.unit==='bp'?1:(h.typ<1?3:2))+(h.unit==='bp'?' bp':'%'):'';
+      b.innerHTML='<span>'+h.sig.toUpperCase().replace(', SPOT','')+'</span><b>'+(ok?fmtVal(h):'n/a')+'</b><i>'+(ok?mv:'stale or missing')+'</i>';
+      b.onclick=()=>{try{pinTo({k:'h',i:h.idx});}catch(e){}$('stage').scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'});};};
+    hubTile('NYC',0);hubTile('DXB',1);hubTile('LON',2);
+    const b3=$('ht3');let c=cs.slice().sort((a,b)=>b.stress-a.stress)[0];
+    if(c){b3.className='ht br';b3.innerHTML='<span>◆ '+c.name.toUpperCase()+'</span><b>'+Math.round(c.ratio*100)+'% of norm</b><i>transits, '+fmtDate(c.asof)+'</i>';
+      b3.onclick=()=>{try{pinTo({k:'c',i:c.ci});}catch(e){}$('stage').scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'});};}
+    else{b3.className='ht br n';b3.innerHTML='<span>◆ SHIPPING</span><b>n/a</b><i>no fresh data</i>';}
+  }catch(e){}
+}
 let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{if(!LAND.length)return;layout();if(reduce)requestAnimationFrame(frame);},150);});
-setInterval(async()=>{const d=await j('data.json');if(d){DATA=d;merge();if(W){layout();}buildTable();buildStatus();syncNote();}},30*60*1000);  // pick up a new daily file without a reload
+setInterval(async()=>{const d=await j('data.json');if(d){DATA=d;merge();if(W){layout();}buildTable();buildStatus();syncNote();heroTiles();}},30*60*1000);  // pick up a new daily file without a reload
 if(innerWidth>=700)$('disc').open=true;
 boot();
 if('serviceWorker' in navigator&&location.protocol.startsWith('http')){navigator.serviceWorker.register('sw.js').catch(()=>{});}
