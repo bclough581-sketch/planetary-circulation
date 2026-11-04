@@ -6,6 +6,8 @@ on:
       - '.github/workflows/cross-domain-history-research.yml'
       - 'intelligence/cross_domain_history.py'
       - 'tests/test_cross_domain_history.py'
+      - 'intelligence/point_in_time.py'
+      - 'tests/test_point_in_time.py'
   workflow_dispatch: {}
 permissions:
   contents: read
@@ -21,7 +23,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Test historical cross-domain alignment
-        run: python -m unittest tests.test_cross_domain_history tests.test_eia_history tests.test_treasury_history -v
+        run: python -m unittest tests.test_cross_domain_history tests.test_eia_history tests.test_treasury_history tests.test_point_in_time -v
       - name: Retrieve 2025 EIA and Treasury observations
         env:
           EIA_API_KEY: ${{ secrets.EIA_API_KEY }}
@@ -39,6 +41,11 @@ jobs:
           assert len(data["observations"]) >= 150, "Insufficient cross-domain overlap"
           assert data["publication_time_verified"] is False
           assert data["predictive_advantage"] == "not_established"
+          from intelligence.point_in_time import assess_asof
+          gate = assess_asof(data, "2026-11-04T00:00:00Z")
+          print("As-of usable observations:", gate["usable_count"])
+          print("As-of blocked observations:", gate["blocked_count"])
+          assert gate["usable_count"] == 0, "Unverified publication timestamps must fail closed"
           PY
       - name: Retain independent source and joined artifacts
         uses: actions/upload-artifact@v4
