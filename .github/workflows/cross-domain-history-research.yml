@@ -10,6 +10,8 @@ on:
       - 'tests/test_point_in_time.py'
       - 'intelligence/audit_validation.py'
       - 'tests/test_audit_validation.py'
+      - 'intelligence/verify_bundle.py'
+      - 'tests/test_verify_bundle.py'
   workflow_dispatch: {}
 permissions:
   contents: read
@@ -25,7 +27,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Test historical cross-domain alignment
-        run: python -m unittest tests.test_cross_domain_history tests.test_eia_history tests.test_treasury_history tests.test_point_in_time tests.test_audit_validation -v
+        run: python -m unittest tests.test_cross_domain_history tests.test_eia_history tests.test_treasury_history tests.test_point_in_time tests.test_audit_validation tests.test_verify_bundle -v
       - name: Retrieve 2025 EIA and Treasury observations
         env:
           EIA_API_KEY: ${{ secrets.EIA_API_KEY }}
@@ -90,6 +92,10 @@ jobs:
           for name, expected in manifest["files"].items():
               assert hashlib.sha256(Path(name).read_bytes()).hexdigest() == expected
           print("Manifest verified for", len(manifest["files"]), "research files")
+          from intelligence.verify_bundle import verify_bundle
+          result = verify_bundle(".")
+          assert result["status"] == "verified_internal_consistency"
+          print("Offline bundle verification:", result["status"])
           PY
       - name: Retain independently validated source and joined artifacts
         uses: actions/upload-artifact@v4
