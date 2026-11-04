@@ -1,5 +1,6 @@
 """Build an auditable, non-predictive JSON research view."""
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 from .assemble import assemble
 from .feed_audit import audit
@@ -12,6 +13,12 @@ def validate_view(view):
     """Fail closed when ring counts, evidence, or claim boundaries disagree."""
     if view.get("schema") != "amalgam.research.v1":
         raise ValueError("unsupported research schema")
+    try:
+        stamp = datetime.fromisoformat(view["generated_utc"].replace("Z", "+00:00"))
+        if stamp.tzinfo is None or stamp.utcoffset() is None:
+            raise ValueError("timezone missing")
+    except (KeyError, ValueError, TypeError, AttributeError) as exc:
+        raise ValueError("missing or invalid research generation timestamp") from exc
     observations = view.get("observations")
     counts = view.get("domains")
     if not isinstance(observations, list) or not isinstance(counts, dict):
@@ -41,12 +48,14 @@ def validate_view(view):
 
 
 def build(snapshot, alerts, now=None):
+    now = now or datetime.now(timezone.utc)
     result = assemble(snapshot, alerts, now)
     counts = {domain: 0 for domain in DOMAINS}
     for event in result["observations"]:
         counts[event["domain"]] += 1
     view = {
         "schema": "amalgam.research.v1",
+        "generated_utc": now.astimezone(timezone.utc).isoformat(),
         "generated_from": snapshot.get("generated_utc"),
         "domains": counts,
         "observations": result["observations"],
