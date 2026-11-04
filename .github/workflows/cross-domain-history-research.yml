@@ -8,6 +8,8 @@ on:
       - 'tests/test_cross_domain_history.py'
       - 'intelligence/point_in_time.py'
       - 'tests/test_point_in_time.py'
+      - 'intelligence/audit_validation.py'
+      - 'tests/test_audit_validation.py'
   workflow_dispatch: {}
 permissions:
   contents: read
@@ -23,7 +25,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Test historical cross-domain alignment
-        run: python -m unittest tests.test_cross_domain_history tests.test_eia_history tests.test_treasury_history tests.test_point_in_time -v
+        run: python -m unittest tests.test_cross_domain_history tests.test_eia_history tests.test_treasury_history tests.test_point_in_time tests.test_audit_validation -v
       - name: Retrieve 2025 EIA and Treasury observations
         env:
           EIA_API_KEY: ${{ secrets.EIA_API_KEY }}
@@ -49,6 +51,9 @@ jobs:
           assert gate["usable_count"] == 0, "Unverified publication timestamps must fail closed"
           assert gate["source_observation_count"] == len(data["observations"])
           assert len(gate["source_observations_sha256"]) == 64
+          from intelligence.audit_validation import validate_audit
+          verdict = validate_audit(data, gate)
+          print("Audit internal consistency:", verdict["status"])
           PY
       - name: Retain independent source and joined artifacts
         uses: actions/upload-artifact@v4
