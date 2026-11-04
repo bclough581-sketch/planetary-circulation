@@ -29,6 +29,28 @@ class DecisionScheduleTests(unittest.TestCase):
         self.assertEqual(len(result["invalid_dates"]), 2)
         self.assertEqual(result["extra_dates"], ["2025-01-04"])
 
+    def test_invalid_panel_date_rejected_even_without_schedule(self):
+        self.panel["observations"][0]["date"] = "2025-02-30"
+        with self.assertRaisesRegex(ValueError, "invalid panel observation date"):
+            audit_decision_schedule(self.panel, {})
+
+    def test_noncanonical_panel_date_rejected(self):
+        self.panel["observations"][0]["date"] = "20250102"
+        with self.assertRaisesRegex(ValueError, "invalid panel observation date"):
+            audit_decision_schedule(self.panel, {})
+
+    def test_malformed_panel_records_rejected(self):
+        self.panel["observations"].append(None)
+        with self.assertRaisesRegex(ValueError, "list of records"):
+            audit_decision_schedule(self.panel, {})
+
+    def test_timezone_naive_decision_is_invalid(self):
+        result = audit_decision_schedule(self.panel, {
+            "2025-01-02": "2025-01-02T20:00:00",
+            "2025-01-03": "2025-01-03T20:00:00Z"})
+        self.assertEqual(result["invalid_dates"], ["2025-01-02"])
+        self.assertFalse(result["schedule_complete"])
+
     def test_unsupported_claim_rejected(self):
         self.panel["predictive_advantage"] = "established"
         with self.assertRaisesRegex(ValueError, "predictive"):
