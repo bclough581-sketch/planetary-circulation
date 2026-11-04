@@ -20,10 +20,10 @@ class BundleVerificationTests(unittest.TestCase):
                  "observations": [{"date": "2025-01-02", "wti_usd_per_barrel": 70,
                                    "brent_usd_per_barrel": 75, "treasury_10y_percent": 4.4}]}
         audit = None
-        energy = {"schema": "amalgam.eia-history.v1", "source": "EIA", "source_url": "https://www.eia.gov/opendata/", "retrieved_utc": "2026-11-04T00:00:00Z", "predictive_advantage": "not_established",
+        energy = {"requested_start": "2025-01-01", "requested_end": "2025-12-31", "schema": "amalgam.eia-history.v1", "source": "EIA", "source_url": "https://www.eia.gov/opendata/", "retrieved_utc": "2026-11-04T00:00:00Z", "predictive_advantage": "not_established",
                   "observations": [{"series": "RWTC", "date": "2025-01-02", "value": 70},
                                    {"series": "RBRTE", "date": "2025-01-02", "value": 75}]}
-        treasury = {"schema": "amalgam.treasury-history.v1", "source": "Treasury", "source_url": "https://home.treasury.gov/", "retrieved_utc": "2026-11-04T00:00:00Z", "predictive_advantage": "not_established",
+        treasury = {"requested_year": 2025, "schema": "amalgam.treasury-history.v1", "source": "Treasury", "source_url": "https://home.treasury.gov/", "retrieved_utc": "2026-11-04T00:00:00Z", "predictive_advantage": "not_established",
                     "observations": [{"date": "2025-01-02", "ten_year_yield_percent": 4.4}]}
         from intelligence.cross_domain_history import build as rebuild_panel
         panel = rebuild_panel(energy, treasury)
@@ -187,6 +187,26 @@ class BundleVerificationTests(unittest.TestCase):
         self.manifest["files"][path.name] = hashlib.sha256(path.read_bytes()).hexdigest()
         self.save_manifest()
         with self.assertRaisesRegex(ValueError, "source observation date"):
+            verify_bundle(self.root)
+
+    def test_eia_date_outside_requested_window_rejected(self):
+        path = self.root / "eia-history-research.json"
+        source = json.loads(path.read_text())
+        source["requested_start"] = "2025-02-01"
+        path.write_text(json.dumps(source), encoding="utf-8")
+        self.manifest["files"][path.name] = hashlib.sha256(path.read_bytes()).hexdigest()
+        self.save_manifest()
+        with self.assertRaisesRegex(ValueError, "outside requested date window"):
+            verify_bundle(self.root)
+
+    def test_treasury_date_outside_requested_year_rejected(self):
+        path = self.root / "treasury-history-research.json"
+        source = json.loads(path.read_text())
+        source["requested_year"] = 2024
+        path.write_text(json.dumps(source), encoding="utf-8")
+        self.manifest["files"][path.name] = hashlib.sha256(path.read_bytes()).hexdigest()
+        self.save_manifest()
+        with self.assertRaisesRegex(ValueError, "outside requested year"):
             verify_bundle(self.root)
 
     def test_tampered_file(self):
