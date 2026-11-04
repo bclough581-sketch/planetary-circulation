@@ -22,6 +22,18 @@ def eligible(event, snapshot, now=None):
         age_days = (now - timestamp).total_seconds() / 86400
     except (KeyError, ValueError, TypeError):
         return False, 'invalid observation timestamp'
+    if event.get('domain') == 'weather' and source == 'NOAA National Weather Service':
+        expires = event.get('metadata', {}).get('expires')
+        if not expires:
+            return False, 'missing alert expiry'
+        try:
+            expiry = datetime.fromisoformat(expires.replace('Z', '+00:00'))
+            if expiry.tzinfo is None:
+                raise ValueError('timezone missing')
+        except (ValueError, TypeError, AttributeError):
+            return False, 'invalid alert expiry'
+        if expiry <= now:
+            return False, 'alert expired'
     if age_days < -1 or age_days > MAX_AGE_DAYS.get(event.get('domain'), 1):
         return False, 'outside freshness window'
     return True, None
