@@ -42,11 +42,18 @@ class HistoricalPanelTests(unittest.TestCase):
         changed = build_panel([first, second])
         self.assertEqual(changed['conflicting_observation_identities'], 1)
         self.assertEqual(changed['revised_identity_versions'], 1)
+        revisions = [x for x in changed['review_exceptions'] if x['type'] == 'revised_identity']
+        self.assertEqual(len(revisions), 1)
+        self.assertEqual(len(revisions[0]['records'][0]['captures']), 2)
+        self.assertTrue(all(len(x['sha256']) == 64 for x in revisions[0]['records'][0]['captures']))
         self.assertEqual(changed['possible_alias_groups'], 0)
         second['observations'][0]['id'] = 'different-id-same-source-time'
         second['relationship_readiness'] = audit_readiness(second)
         alias = build_panel([first, second])
         self.assertEqual(alias['possible_alias_groups'], 1)
+        aliases = [x for x in alias['review_exceptions'] if x['type'] == 'possible_alias']
+        self.assertEqual(len(aliases), 1)
+        self.assertEqual(len(aliases[0]['records']), 2)
         self.assertEqual(alias['unique_observation_identities'], 2)
         self.assertEqual(alias['repeated_observation_appearances'], 0)
 
