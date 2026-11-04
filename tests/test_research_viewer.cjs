@@ -31,9 +31,9 @@ const loadAudit=async data=>{
  await document.getElementById('audit-file').handlers.change({target:{files:[{text:async()=>JSON.stringify(data)}]}});
 };
 (async()=>{
- const panel={schema:'amalgam.cross-domain-observation-panel.v1',observations:[{date:'2025-01-02',wti_usd_per_barrel:70,brent_usd_per_barrel:75,treasury_10y_percent:4.4}]};
- const fingerprint=createHash('sha256').update(JSON.stringify(panel.observations[0] ? [{brent_usd_per_barrel:75,date:'2025-01-02',treasury_10y_percent:4.4,wti_usd_per_barrel:70}] : [])).digest('hex');
- const audit={source_panel_schema:panel.schema,source_observation_count:1,source_observations_sha256:fingerprint,status:'blocked',decision_utc:'2026-11-04T00:00:00Z',usable_count:0,blocked_count:2,
+ const panel={schema:'amalgam.cross-domain-observation-panel.v1',observations:[{date:'2025-01-02',wti_usd_per_barrel:70,brent_usd_per_barrel:75,treasury_10y_percent:4.4},{date:'2025-01-03',wti_usd_per_barrel:71,brent_usd_per_barrel:76,treasury_10y_percent:4.5}]};
+ const fingerprint=createHash('sha256').update(JSON.stringify([{brent_usd_per_barrel:75,date:'2025-01-02',treasury_10y_percent:4.4,wti_usd_per_barrel:70},{brent_usd_per_barrel:76,date:'2025-01-03',treasury_10y_percent:4.5,wti_usd_per_barrel:71}])).digest('hex');
+ const audit={source_panel_schema:panel.schema,source_observation_count:2,source_observations_sha256:fingerprint,status:'blocked',decision_utc:'2026-11-04T00:00:00Z',usable_count:0,blocked_count:2,
    blocked:[{date:'2025-01-02',reason:'missing_independent_availability_evidence'},
             {date:'2025-01-03',reason:'missing_independent_availability_evidence'}],
    predictive_advantage:'not_established'};
@@ -41,6 +41,9 @@ const loadAudit=async data=>{
  await loadAudit(audit);
  assert.match(document.getElementById('historical-status').textContent,/fingerprint MATCH/);
  assert.match(document.getElementById('audit-status').textContent,/2 excluded/);
+ await loadAudit({...audit,blocked:[{date:'2025-01-02',reason:'missing_independent_availability_evidence'},{date:'2025-01-03',reason:'publication_record_not_independently_authenticated'}]});
+ assert.match(document.getElementById('historical-status').textContent,/cannot be independently reproduced/);
+ await loadAudit(audit);
  assert.match(document.getElementById('audit-reasons').children[0].textContent,/2 blocked/);
  await loadAudit({...audit,source_observations_sha256:'0'.repeat(64)});
  assert.match(document.getElementById('historical-status').textContent,/fingerprint mismatch/);
