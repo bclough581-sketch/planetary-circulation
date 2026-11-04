@@ -25,6 +25,9 @@ def build_panel(views):
     by_domain = defaultdict(set)
     unique_evidence = {}
     conflicting_evidence = set()
+    source_event_ids = defaultdict(set)
+    id_source_keys = defaultdict(set)
+    version_digests = defaultdict(set)
     repeated_appearances = 0
     total_appearances = 0
     for view in views:
@@ -43,6 +46,10 @@ def build_panel(views):
             identity = (event["domain"], event["id"], event["observed_at"], event["source"]["name"], event["source"]["url"])
             payload = json.dumps(event, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
             digest = sha256(payload.encode("utf-8")).hexdigest()
+            source_key = (event['domain'], event['source']['name'], event['source']['url'], event['observed_at'])
+            source_event_ids[source_key].add(event['id'])
+            id_source_keys[(event['domain'], event['id'])].add(source_key)
+            version_digests[identity].add(digest)
             if identity in unique_evidence:
                 repeated_appearances += 1
                 if unique_evidence[identity] != digest:
@@ -59,11 +66,14 @@ def build_panel(views):
         "unique_observation_identities": len(unique_evidence),
         "repeated_observation_appearances": repeated_appearances,
         "conflicting_observation_identities": len(conflicting_evidence),
+        "revised_identity_versions": sum(len(digests) - 1 for digests in version_digests.values()),
+        "possible_alias_groups": sum(len(ids) > 1 for ids in source_event_ids.values()),
+        "reused_ids_across_source_keys": sum(len(keys) > 1 for keys in id_source_keys.values()),
         "captures": captures,
         "capture_dates_by_domain": {key: len(value) for key, value in sorted(by_domain.items())},
         "relationships": [],
         "predictive_advantage": "not_established",
-        "warning": "Repeated observation identities are not independent evidence. Conflicts require source-level review. Capture counts are not aligned time series or predictive validation. Original artifacts must be retained.",
+        "warning": "Repeated observation identities are not independent evidence. Possible aliases and revisions are diagnostic flags, not confirmed duplicate events. Conflicts require source-level review. Capture counts are not aligned time series or predictive validation. Original artifacts must be retained.",
     }
 
 
