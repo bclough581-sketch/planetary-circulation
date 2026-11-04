@@ -26,7 +26,22 @@ const names=['weather','geopolitics','maritime','aviation','energy','commodities
 const empty=()=>Object.fromEntries(names.map(x=>[x,0]));
 const event={id:'one',domain:'weather',title:'Test',observed_at:'2026-11-04T12:00:00Z',source:{name:'NOAA National Weather Service',url:'https://www.weather.gov/documentation/services-web-api'}};
 const good={schema:'amalgam.research.v1',observations:[event],excluded:[],relationships:[],domains:{...empty(),weather:1},predictive_advantage:'not_established',generated_utc:'2026-11-04T19:00:00Z',licensing:{portwatch_commercial_reuse:'permission_not_verified'},feed_health:[{feed:'eia',condition:'eligible_source'}],relationship_readiness:{status:'not_ready',historical_relationships_validated:0,predictive_advantage:'not_established',distinct_observation_dates:{weather:1},blocking_reasons:['No historical panel']}};
+const loadAudit=async data=>{
+ await document.getElementById('audit-file').handlers.change({target:{files:[{text:async()=>JSON.stringify(data)}]}});
+};
 (async()=>{
+ const audit={status:'blocked',decision_utc:'2026-11-04T00:00:00Z',usable_count:0,blocked_count:2,
+   blocked:[{date:'2025-01-02',reason:'missing_independent_availability_evidence'},
+            {date:'2025-01-03',reason:'missing_independent_availability_evidence'}],
+   predictive_advantage:'not_established'};
+ await loadAudit(audit);
+ assert.match(document.getElementById('audit-status').textContent,/2 excluded/);
+ assert.match(document.getElementById('audit-reasons').children[0].textContent,/2 blocked/);
+ await loadAudit({...audit,usable_count:1,status:'eligible_for_asof_analysis'});
+ assert.match(document.getElementById('audit-status').textContent,/Audit rejected/);
+ await loadAudit({...audit,blocked_count:3});
+ assert.match(document.getElementById('audit-status').textContent,/Audit rejected/);
+
  await load(good);
  assert.equal(document.getElementById('count').textContent,1);
  assert.equal(document.getElementById('link-count').textContent,'0 validated links');
