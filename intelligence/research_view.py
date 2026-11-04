@@ -2,6 +2,7 @@
 import json
 from pathlib import Path
 from .assemble import assemble
+from .feed_audit import audit
 
 
 def build(snapshot, alerts, now=None):
@@ -17,9 +18,11 @@ def build(snapshot, alerts, now=None):
         "domains": counts,
         "observations": result["observations"],
         "excluded": result["excluded"],
+        "feed_health": audit(snapshot, now),
+        "licensing": {"portwatch_commercial_reuse": "permission_not_verified"},
         "relationships": [],
         "predictive_advantage": "not_established",
-        "message": "This view displays source observations only; no relationship or trading edge has been validated.",
+        "message": "This view displays source observations only; no relationship or trading edge has been validated. Feed health does not establish commercial reuse rights.",
     }
 
 
