@@ -7,7 +7,7 @@ class FreshnessTests(unittest.TestCase):
     def setUp(self):
         self.now = datetime(2026, 11, 4, 12, tzinfo=timezone.utc)
         self.snapshot = {"status": {"eia": {"ok": True}, "portwatch": {"ok": False}},
-                         "hubs": {"HOU": {"src": "eia"}}}
+                         "hubs": {"HOU": {"src": "eia", "asof": "2026-11-03", "price": 72}}}
 
     def weather(self, expires):
         return {"domain": "weather", "observed_at": "2026-11-04T11:00:00Z",
@@ -55,11 +55,29 @@ class FreshnessTests(unittest.TestCase):
         event["observed_at"] = "2026-11-04T11:00:00"
         self.assertEqual(eligible(event, self.snapshot, self.now)[1], "invalid observation timestamp")
 
+    def energy(self):
+        return {"domain": "energy", "observed_at": "2026-11-03T00:00:00Z",
+                "source": {"name": "U.S. Energy Information Administration"},
+                "metadata": {"hub": "HOU", "asof": "2026-11-03"}, "value": 72}
+
     def test_current_energy_allowed(self):
-        event = {"domain": "energy", "observed_at": "2026-11-03T00:00:00Z",
-                 "source": {"name": "U.S. Energy Information Administration"},
-                 "metadata": {"hub": "HOU"}}
+        event = self.energy()
         self.assertEqual(eligible(event, self.snapshot, self.now), (True, None))
+
+    def test_missing_hub_rejected(self):
+        event = self.energy()
+        event["metadata"].pop("hub")
+        self.assertEqual(eligible(event, self.snapshot, self.now)[1], "missing hub provenance")
+
+    def test_date_mismatch_rejected(self):
+        event = self.energy()
+        event["metadata"]["asof"] = "2026-11-02"
+        self.assertEqual(eligible(event, self.snapshot, self.now)[1], "source provenance mismatch")
+
+    def test_value_mismatch_rejected(self):
+        event = self.energy()
+        event["value"] = 900
+        self.assertEqual(eligible(event, self.snapshot, self.now)[1], "source value mismatch")
 
     def test_failed_portwatch_excluded(self):
         event = {"domain": "maritime", "observed_at": "2026-11-04T00:00:00Z",
@@ -67,14 +85,12 @@ class FreshnessTests(unittest.TestCase):
         self.assertEqual(eligible(event, self.snapshot, self.now)[1], "source collector failed")
 
     def test_old_energy_excluded(self):
-        event = {"domain": "energy", "observed_at": "2026-10-20T00:00:00Z",
-                 "source": {"name": "U.S. Energy Information Administration"}}
+        event = self.energy()
+        event["observed_at"] = "2026-10-20T00:00:00Z"
         self.assertEqual(eligible(event, self.snapshot, self.now)[1], "outside freshness window")
 
     def test_provenance_mismatch_excluded(self):
-        event = {"domain": "energy", "observed_at": "2026-11-03T00:00:00Z",
-                 "source": {"name": "U.S. Energy Information Administration"},
-                 "metadata": {"hub": "HOU"}}
+        event = self.energy()
         self.snapshot["hubs"]["HOU"]["src"] = "ecb"
         self.assertEqual(eligible(event, self.snapshot, self.now)[1], "source provenance mismatch")
 
