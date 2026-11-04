@@ -41,6 +41,14 @@ class HistoricalPanelTests(unittest.TestCase):
         second['relationship_readiness'] = audit_readiness(second)
         changed = build_panel([first, second])
         self.assertEqual(changed['conflicting_observation_identities'], 1)
+        self.assertEqual(changed['revised_identity_versions'], 1)
+        self.assertEqual(changed['possible_alias_groups'], 0)
+        second['observations'][0]['id'] = 'different-id-same-source-time'
+        second['relationship_readiness'] = audit_readiness(second)
+        alias = build_panel([first, second])
+        self.assertEqual(alias['possible_alias_groups'], 1)
+        self.assertEqual(alias['unique_observation_identities'], 2)
+        self.assertEqual(alias['repeated_observation_appearances'], 0)
 
     def test_duplicate_capture_rejected(self):
         with self.assertRaisesRegex(ValueError, "duplicate capture"):
