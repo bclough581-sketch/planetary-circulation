@@ -11,8 +11,6 @@ on:
       - 'tests/test_energy_overlay.py'
       - 'tests/test_eia_research_snapshot.py'
   workflow_dispatch: {}
-  schedule:
-    - cron: '17 12 * * *'  # Daily 12:17 UTC; research-only, never production deployment
 permissions:
   contents: read
 jobs:
