@@ -135,6 +135,20 @@ class BundleVerificationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "coverage report"):
             verify_bundle(self.root)
 
+    def test_forged_joined_value_with_recomputed_hashes_rejected(self):
+        path = self.root / "cross-domain-observation-panel.json"
+        panel = json.loads(path.read_text())
+        panel["observations"][0]["wti_usd_per_barrel"] = 999
+        path.write_text(json.dumps(panel), encoding="utf-8")
+        self.manifest["files"][path.name] = hashlib.sha256(path.read_bytes()).hexdigest()
+        audit_path = self.root / "point-in-time-audit.json"
+        audit = assess_asof(panel, "2026-11-04T00:00:00Z")
+        audit_path.write_text(json.dumps(audit), encoding="utf-8")
+        self.manifest["files"][audit_path.name] = hashlib.sha256(audit_path.read_bytes()).hexdigest()
+        self.save_manifest()
+        with self.assertRaisesRegex(ValueError, "joined numerical observations"):
+            verify_bundle(self.root)
+
     def test_tampered_file(self):
         (self.root / "point-in-time-audit.json").write_text("{}", encoding="utf-8")
         with self.assertRaisesRegex(ValueError, "checksum mismatch"):
