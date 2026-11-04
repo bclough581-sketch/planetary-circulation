@@ -4,15 +4,42 @@ from pathlib import Path
 from .assemble import assemble
 from .feed_audit import audit
 
+DOMAINS = ("weather", "geopolitics", "maritime", "aviation", "energy",
+           "commodities", "economics", "markets", "corporate")
+
+
+def validate_view(view):
+    """Fail closed when ring counts, evidence, or claim boundaries disagree."""
+    if view.get("schema") != "amalgam.research.v1":
+        raise ValueError("unsupported research schema")
+    observations = view.get("observations")
+    counts = view.get("domains")
+    if not isinstance(observations, list) or not isinstance(counts, dict):
+        raise ValueError("missing observations or domain counts")
+    expected = {domain: 0 for domain in DOMAINS}
+    seen = set()
+    for event in observations:
+        if not isinstance(event, dict) or event.get("domain") not in expected:
+            raise ValueError("unknown observation domain")
+        if not event.get("id") or event["id"] in seen:
+            raise ValueError("missing or duplicate observation ID")
+        seen.add(event["id"])
+        if not isinstance(event.get("source"), dict) or not event["source"].get("url") or not event.get("observed_at"):
+            raise ValueError("observation missing provenance")
+        expected[event["domain"]] += 1
+    if counts != expected:
+        raise ValueError("domain counts disagree with evidence")
+    if view.get("relationships") != [] or view.get("predictive_advantage") != "not_established":
+        raise ValueError("unsupported convergence or predictive claim")
+    return True
+
 
 def build(snapshot, alerts, now=None):
     result = assemble(snapshot, alerts, now)
-    domains = ("weather", "geopolitics", "maritime", "aviation", "energy",
-               "commodities", "economics", "markets", "corporate")
-    counts = {domain: 0 for domain in domains}
+    counts = {domain: 0 for domain in DOMAINS}
     for event in result["observations"]:
         counts[event["domain"]] += 1
-    return {
+    view = {
         "schema": "amalgam.research.v1",
         "generated_from": snapshot.get("generated_utc"),
         "domains": counts,
@@ -24,6 +51,8 @@ def build(snapshot, alerts, now=None):
         "predictive_advantage": "not_established",
         "message": "This view displays source observations only; no relationship or trading edge has been validated. Feed health does not establish commercial reuse rights.",
     }
+    validate_view(view)
+    return view
 
 
 def main():
