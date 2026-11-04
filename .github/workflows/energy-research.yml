@@ -17,6 +17,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Test freshness acceptance and rejection
+        run: python -m unittest tests.test_eia_research_snapshot
       - name: Fetch current EIA data without altering production snapshot
         env:
           EIA_API_KEY: ${{ secrets.EIA_API_KEY }}
