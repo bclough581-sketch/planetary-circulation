@@ -28,7 +28,7 @@ class ResearchViewTests(unittest.TestCase):
                     "status": {"eia": {"ok": True}}}
         good = build(snapshot, {"features": []}, now)
         self.assertTrue(validate_view(good))
-        for mutation in ("count", "duplicate", "claim", "source"):
+        for mutation in ("count", "duplicate", "claim", "source", "license", "health"):
             bad = deepcopy(good)
             if mutation == "count":
                 bad["domains"]["energy"] = 20
@@ -37,6 +37,10 @@ class ResearchViewTests(unittest.TestCase):
                 bad["domains"]["energy"] += 1
             elif mutation == "claim":
                 bad["predictive_advantage"] = "established"
+            elif mutation == "license":
+                bad["licensing"]["portwatch_commercial_reuse"] = "permitted"
+            elif mutation == "health":
+                bad.pop("feed_health")
             else:
                 bad["observations"][0]["source"]["url"] = ""
             with self.subTest(mutation=mutation), self.assertRaises(ValueError):
