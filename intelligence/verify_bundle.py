@@ -150,7 +150,8 @@ def verify_bundle(directory):
 def verify_github_run(directory, fetch_json=None, artifact_zip=None):
     """Cross-check claimed run metadata with GitHub's public Actions API.
 
-    This verifies run identity, not the authenticity of downloaded artifact bytes.
+    Without artifact_zip this verifies metadata only. With artifact_zip it also
+    compares ZIP bytes against GitHub's published digest and extracted files.
     """
     root = Path(directory)
     manifest = json.loads((root / "research-artifact-manifest.json").read_text(encoding="utf-8"))
@@ -207,7 +208,7 @@ def verify_github_run(directory, fetch_json=None, artifact_zip=None):
     return {"status": "github_artifact_zip_digest_matched" if artifact_zip is not None else "github_run_and_artifact_metadata_matched",
             "workflow_run_id": run_id,
             "artifact_id": matching[0].get("id"),
-            "warning": "Run and artifact listing matched GitHub; local artifact bytes are NOT authenticated by this check."}
+            "warning": ("ZIP bytes matched GitHub-published digest and extracted files; this does not establish original upstream data authenticity or historical publication times." if artifact_zip is not None else "Run and artifact listing matched GitHub; local artifact bytes are NOT authenticated by this check.")}
 
 
 def main():
