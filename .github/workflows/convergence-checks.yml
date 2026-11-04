@@ -1,0 +1,36 @@
+name: convergence-checks
+on:
+  push:
+    branches: [amalgam-convergence-v1]
+  pull_request:
+    paths:
+      - 'convergence.js'
+      - 'evidence.js'
+      - 'tests/test_convergence.cjs'
+      - 'tests/test_evidence.cjs'
+      - 'fetch_data.py'
+      - 'tests/test_portwatch_quota.py'
+  workflow_dispatch: {}
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check JavaScript syntax
+        run: |
+          node --check convergence.js
+          node --check evidence.js
+      - name: Test evidence and convergence
+        run: |
+          node tests/test_convergence.cjs
+          node tests/test_evidence.cjs
+      - name: Python regression tests
+        run: python -m unittest discover -s tests -v
