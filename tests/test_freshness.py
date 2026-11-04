@@ -26,6 +26,21 @@ class FreshnessTests(unittest.TestCase):
     def test_invalid_noaa_expiry_rejected(self):
         self.assertEqual(eligible(self.weather("bad"), self.snapshot, self.now)[1], "invalid alert expiry")
 
+    def test_unknown_source_rejected(self):
+        event = self.weather("2026-11-04T13:00:00Z")
+        event["source"]["name"] = "Unverified feed"
+        self.assertEqual(eligible(event, self.snapshot, self.now)[1], "unrecognized source")
+
+    def test_noaa_wrong_domain_rejected(self):
+        event = self.weather("2026-11-04T13:00:00Z")
+        event["domain"] = "markets"
+        self.assertEqual(eligible(event, self.snapshot, self.now)[1], "source domain mismatch")
+
+    def test_timezone_free_timestamp_rejected(self):
+        event = self.weather("2026-11-04T13:00:00Z")
+        event["observed_at"] = "2026-11-04T11:00:00"
+        self.assertEqual(eligible(event, self.snapshot, self.now)[1], "invalid observation timestamp")
+
     def test_current_energy_allowed(self):
         event = {"domain": "energy", "observed_at": "2026-11-03T00:00:00Z",
                  "source": {"name": "U.S. Energy Information Administration"},
