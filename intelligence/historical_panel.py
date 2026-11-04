@@ -80,8 +80,23 @@ def build_panel(views):
         if len(source_keys) > 1:
             add_exception("reused_event_id", [identity for identity in unique_evidence
                                               if (identity[0], identity[1]) == key])
+    blockers = []
+    if len(captures) < 2:
+        blockers.append("fewer_than_two_captures")
+    if len({item["captured_utc"][:10] for item in captures}) < 2:
+        blockers.append("fewer_than_two_capture_dates")
+    if len(by_domain) < 2:
+        blockers.append("fewer_than_two_observed_domains")
+    if conflicting_evidence:
+        blockers.append("unresolved_revised_observations")
+    if any(len(ids) > 1 for ids in source_event_ids.values()):
+        blockers.append("unresolved_possible_aliases")
+    if any(len(keys) > 1 for keys in id_source_keys.values()):
+        blockers.append("unresolved_reused_event_ids")
+    blockers.append("no_time_aligned_independent_outcomes_or_predeclared_test")
     return {
         "schema": "amalgam.historical-panel-manifest.v1",
+        "analysis_readiness": {"status": "not_ready", "blocking_reasons": blockers},
         "capture_count": len(captures),
         "observation_appearances": total_appearances,
         "unique_observation_identities": len(unique_evidence),
