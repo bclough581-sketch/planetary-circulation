@@ -11,6 +11,7 @@ from zipfile import ZipFile
 
 from intelligence.audit_validation import validate_audit
 from intelligence.coverage_audit import coverage_report
+from intelligence.cross_domain_history import build as rebuild_cross_domain_panel
 
 EXPECTED = {
     "eia-history-research.json",
@@ -57,6 +58,15 @@ def verify_bundle(directory):
     saved_coverage = json.loads((root / "historical-coverage-audit.json").read_text(encoding="utf-8"))
     if saved_coverage != coverage_report(energy, treasury, panel):
         raise ValueError("historical coverage report does not match source files")
+    reconstructed = rebuild_cross_domain_panel(energy, treasury)
+    if panel.get("observations") != reconstructed["observations"]:
+        raise ValueError("joined numerical observations do not match source files")
+    if panel.get("source_artifacts") != reconstructed["source_artifacts"]:
+        raise ValueError("joined panel provenance does not match source files")
+    for field in ("alignment", "publication_time_verified", "point_in_time_tradability",
+                  "relationships", "predictive_advantage"):
+        if panel.get(field) != reconstructed[field]:
+            raise ValueError("joined panel research safeguard mismatch: " + field)
     return {"status": "verified_internal_consistency", "files": len(files),
             "observations": verdict["observations"], "workflow_run_id": manifest["workflow_run_id"],
             "warning": "File integrity and audit consistency only; provenance identity is self-reported and not authenticated against GitHub."}
