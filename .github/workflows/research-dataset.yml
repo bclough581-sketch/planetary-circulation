@@ -18,7 +18,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Validate research energy overlay isolation
-        run: python -m unittest tests.test_energy_overlay tests.test_eia_research_snapshot
+        run: python -m unittest tests.test_energy_overlay tests.test_eia_research_snapshot tests.test_freshness tests.test_research_view
       - name: Fetch live NOAA alerts and assemble research view
         env:
           EIA_API_KEY: ${{ secrets.EIA_API_KEY }}
@@ -47,6 +47,7 @@ jobs:
           print("Eligible observations:", len(result["observations"]))
           print("Excluded observations:", len(result["excluded"]))
           print("Expired NOAA alerts:", sum(x["reason"] == "alert expired" for x in result["excluded"]))
+          print("Provenance exclusions:", [(x["reason"], sum(y["reason"] == x["reason"] for y in result["excluded"])) for x in result["excluded"] if x["reason"] in {"missing hub provenance", "source provenance mismatch", "source value mismatch"}][:12])
           assert not any(x["source"]["name"] == "NOAA National Weather Service" and not x["metadata"].get("expires") for x in result["observations"])
           print("By domain:", result["domains"])
           print("Relationships:", len(result["relationships"]))
