@@ -31,6 +31,10 @@ jobs:
           import json
           from pathlib import Path
           result = json.loads(Path("eia-history-research.json").read_text(encoding="utf-8"))
+          from intelligence.eia_history import aligned_price_dates
+          paired = aligned_price_dates(result["observations"])
+          print("Exact-date WTI/Brent pairs:", len(paired))
+          assert len(paired) >= 150, "Insufficient aligned historical dates"
           counts = {series: sum(x["series"] == series for x in result["observations"]) for series in ("RWTC", "RBRTE")}
           print("Historical series counts:", counts)
           print("Earliest:", min(x["date"] for x in result["observations"]))
