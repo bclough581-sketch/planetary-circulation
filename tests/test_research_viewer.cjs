@@ -52,7 +52,7 @@ const good={schema:'amalgam.research.v1',observations:[event],excluded:[],relati
   assert.match(document.getElementById('status').textContent,/Unable to load file/,name);
   await load(good);
  }
- const stale=JSON.parse(JSON.stringify(good));stale.generated_utc='2026-11-02T12:00:00Z';
+ const stale=JSON.parse(JSON.stringify(good));stale.generated_utc='2026-11-02T12:00:00Z';stale.observations[0].observed_at='2026-11-02T11:00:00Z';
  await load(stale);
  assert.match(document.getElementById('status').textContent,/STALE DATASET/);
  assert.match(document.getElementById('status').textContent,/observations exceed their domain freshness window/);
