@@ -1,5 +1,5 @@
 {
- "generated_utc": "2026-11-03T22:29:20Z",
+ "generated_utc": "2026-11-04T02:10:55Z",
  "hubs": {
   "GRU": {
    "price": 6.1411,
@@ -6440,28 +6440,28 @@
  "status": {
   "ecb": {
    "ok": true,
-   "ran_utc": "2026-11-03T22:29:20Z",
-   "last_ok_utc": "2026-11-03T22:29:20Z"
+   "ran_utc": "2026-11-04T02:10:55Z",
+   "last_ok_utc": "2026-11-04T02:10:55Z"
   },
   "ust": {
    "ok": true,
-   "ran_utc": "2026-11-03T22:29:20Z",
-   "last_ok_utc": "2026-11-03T22:29:20Z"
+   "ran_utc": "2026-11-04T02:10:55Z",
+   "last_ok_utc": "2026-11-04T02:10:55Z"
   },
   "eia": {
    "ok": true,
-   "ran_utc": "2026-11-03T22:29:20Z",
-   "last_ok_utc": "2026-11-03T22:29:20Z"
+   "ran_utc": "2026-11-04T02:10:55Z",
+   "last_ok_utc": "2026-11-04T02:10:55Z"
   },
   "portwatch": {
    "ok": false,
-   "error": "PortWatch all variants failed: v0 a0 portid,portname: {\"code\": 429, \"message\": \"Unable to perform query. Too many requests.\", \"details\": [\"API calls quota exceeded (6176 request units)! maximum allowe",
+   "error": "PortWatch all variants failed: v0 a0 portid,portname: {\"code\": 400, \"message\": \"Invalid URL\", \"details\": [\"Invalid URL\"]} | v0 a1 portid,portname: {\"code\": 400, \"message\": \"Invalid URL\", \"details\": [\"",
    "last_ok_utc": "2026-11-03T03:26:51Z"
   },
   "tic": {
    "ok": true,
-   "ran_utc": "2026-11-03T22:29:20Z",
-   "last_ok_utc": "2026-11-03T22:29:20Z"
+   "ran_utc": "2026-11-04T02:10:55Z",
+   "last_ok_utc": "2026-11-04T02:10:55Z"
   }
  }
 }
