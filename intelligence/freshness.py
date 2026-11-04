@@ -12,6 +12,11 @@ def eligible(event, snapshot, now=None):
     key = {'ECB statistics': 'ecb', 'U.S. Treasury': 'ust',
            'U.S. Energy Information Administration': 'eia',
            'IMF PortWatch': 'portwatch'}.get(source)
+    if source not in {'NOAA National Weather Service', 'ECB statistics', 'U.S. Treasury',
+                      'U.S. Energy Information Administration', 'IMF PortWatch'}:
+        return False, 'unrecognized source'
+    if source == 'NOAA National Weather Service' and event.get('domain') != 'weather':
+        return False, 'source domain mismatch'
     if key and not snapshot.get('status', {}).get(key, {}).get('ok', False):
         return False, 'source collector failed'
     hub = event.get('metadata', {}).get('hub')
@@ -19,6 +24,8 @@ def eligible(event, snapshot, now=None):
         return False, 'source provenance mismatch'
     try:
         timestamp = datetime.fromisoformat(event['observed_at'].replace('Z', '+00:00'))
+        if timestamp.tzinfo is None:
+            raise ValueError('timezone missing')
         age_days = (now - timestamp).total_seconds() / 86400
     except (KeyError, ValueError, TypeError):
         return False, 'invalid observation timestamp'
