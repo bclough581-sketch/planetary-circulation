@@ -1,5 +1,11 @@
 name: intelligence-historical-eia-research
 on:
+  push:
+    branches: [amalgam-event-foundation]
+    paths:
+      - '.github/workflows/historical-eia-research.yml'
+      - 'intelligence/eia_history.py'
+      - 'tests/test_eia_history.py'
   workflow_dispatch: {}
 permissions:
   contents: read
