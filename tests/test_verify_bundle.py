@@ -20,11 +20,11 @@ class BundleVerificationTests(unittest.TestCase):
                  "observations": [{"date": "2025-01-02", "wti_usd_per_barrel": 70,
                                    "brent_usd_per_barrel": 75, "treasury_10y_percent": 4.4}]}
         audit = None
-        energy = {"requested_start": "2025-01-01", "requested_end": "2025-12-31", "schema": "amalgam.eia-history.v1", "source": "EIA", "source_url": "https://www.eia.gov/opendata/", "retrieved_utc": "2026-11-04T00:00:00Z", "predictive_advantage": "not_established",
+        energy = {"requested_start": "2025-01-01", "requested_end": "2025-12-31", "schema": "amalgam.eia-history.v1", "source": "U.S. Energy Information Administration", "source_url": "https://www.eia.gov/opendata/", "endpoint": "https://api.eia.gov/v2/petroleum/pri/spt/data/", "frequency": "daily", "unit": "USD_per_barrel", "relationships": [], "retrieved_utc": "2026-11-04T00:00:00Z", "predictive_advantage": "not_established",
                   "observations": [{"series": "RWTC", "date": "2025-01-02", "value": 70},
                                    {"series": "RBRTE", "date": "2025-01-02", "value": 75}],
                   "aligned_prices": [{"date": "2025-01-02", "wti": 70, "brent": 75}]}
-        treasury = {"requested_year": 2025, "schema": "amalgam.treasury-history.v1", "source": "Treasury", "source_url": "https://home.treasury.gov/", "retrieved_utc": "2026-11-04T00:00:00Z", "predictive_advantage": "not_established",
+        treasury = {"requested_year": 2025, "schema": "amalgam.treasury-history.v1", "source": "U.S. Department of the Treasury", "source_url": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml", "frequency": "business_day", "unit": "percent_per_year", "relationships": [], "retrieved_utc": "2026-11-04T00:00:00Z", "predictive_advantage": "not_established",
                     "observations": [{"date": "2025-01-02", "ten_year_yield_percent": 4.4}]}
         from intelligence.cross_domain_history import build as rebuild_panel
         panel = rebuild_panel(energy, treasury)
@@ -218,6 +218,26 @@ class BundleVerificationTests(unittest.TestCase):
         self.manifest["files"][path.name] = hashlib.sha256(path.read_bytes()).hexdigest()
         self.save_manifest()
         with self.assertRaisesRegex(ValueError, "aligned prices"):
+            verify_bundle(self.root)
+
+    def test_forged_source_unit_rejected_with_updated_hash(self):
+        path = self.root / "eia-history-research.json"
+        source = json.loads(path.read_text())
+        source["unit"] = "EUR_per_barrel"
+        path.write_text(json.dumps(source), encoding="utf-8")
+        self.manifest["files"][path.name] = hashlib.sha256(path.read_bytes()).hexdigest()
+        self.save_manifest()
+        with self.assertRaisesRegex(ValueError, "source identity or units"):
+            verify_bundle(self.root)
+
+    def test_forged_source_predictive_claim_rejected_with_updated_hash(self):
+        path = self.root / "treasury-history-research.json"
+        source = json.loads(path.read_text())
+        source["predictive_advantage"] = "established"
+        path.write_text(json.dumps(source), encoding="utf-8")
+        self.manifest["files"][path.name] = hashlib.sha256(path.read_bytes()).hexdigest()
+        self.save_manifest()
+        with self.assertRaisesRegex(ValueError, "source-level predictive"):
             verify_bundle(self.root)
 
     def test_tampered_file(self):
