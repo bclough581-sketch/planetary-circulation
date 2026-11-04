@@ -22,6 +22,8 @@ class HistoricalPanelTests(unittest.TestCase):
                         panel["captures"][1]["captured_utc"])
         self.assertEqual(panel["relationships"], [])
         self.assertEqual(panel["predictive_advantage"], "not_established")
+        self.assertEqual(panel["analysis_readiness"]["status"], "not_ready")
+        self.assertIn("no_time_aligned_independent_outcomes_or_predeclared_test", panel["analysis_readiness"]["blocking_reasons"])
 
     def test_repeated_evidence_is_not_counted_as_independent(self):
         first, second = self.view(3), self.view(4)
@@ -42,6 +44,7 @@ class HistoricalPanelTests(unittest.TestCase):
         changed = build_panel([first, second])
         self.assertEqual(changed['conflicting_observation_identities'], 1)
         self.assertEqual(changed['revised_identity_versions'], 1)
+        self.assertIn('unresolved_revised_observations', changed['analysis_readiness']['blocking_reasons'])
         revisions = [x for x in changed['review_exceptions'] if x['type'] == 'revised_identity']
         self.assertEqual(len(revisions), 1)
         self.assertEqual(len(revisions[0]['records'][0]['captures']), 2)
@@ -51,6 +54,7 @@ class HistoricalPanelTests(unittest.TestCase):
         second['relationship_readiness'] = audit_readiness(second)
         alias = build_panel([first, second])
         self.assertEqual(alias['possible_alias_groups'], 1)
+        self.assertIn('unresolved_possible_aliases', alias['analysis_readiness']['blocking_reasons'])
         aliases = [x for x in alias['review_exceptions'] if x['type'] == 'possible_alias']
         self.assertEqual(len(aliases), 1)
         self.assertEqual(len(aliases[0]['records']), 2)
