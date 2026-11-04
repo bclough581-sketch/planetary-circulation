@@ -30,6 +30,7 @@ class EIAHistoryTests(unittest.TestCase):
         self.assertEqual(result["relationships"], [])
         self.assertEqual(result["observations"][0]["value"], 72)
         self.assertEqual(result["frequency"], "daily")
+        self.assertEqual(result["aligned_prices"], [])
 
     def test_exact_date_pairs_do_not_fill_missing_days(self):
         rows = [{'date': '2025-01-02', 'series': 'RWTC', 'value': 70},
