@@ -88,7 +88,7 @@ jobs:
               "warning": "Capture time is not historical publication time. Artifact retention is 30 days."
           }
           Path("research-artifact-manifest.json").write_text(
-              json.dumps(manifest, indent=2) + "\\n", encoding="utf-8")
+              json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
           for name, expected in manifest["files"].items():
               assert hashlib.sha256(Path(name).read_bytes()).hexdigest() == expected
           print("Manifest verified for", len(manifest["files"]), "research files")
