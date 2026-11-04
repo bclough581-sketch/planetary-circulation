@@ -31,6 +31,14 @@ def verify_bundle(directory):
         raise ValueError("manifest must enumerate exactly five research files")
     if manifest.get("predictive_advantage") != "not_established":
         raise ValueError("unsupported predictive claim")
+    schedule = manifest.get("historical_decision_schedule")
+    if schedule != {
+        "status": "not_supplied",
+        "scheduled_observations": 0,
+        "asof_eligible_observations": 0,
+        "note": "No historical decision timestamps were provided or inferred."
+    }:
+        raise ValueError("unsupported or inconsistent historical decision schedule disclosure")
     if not isinstance(manifest.get("workflow_run_id"), str) or not manifest["workflow_run_id"].isdigit():
         raise ValueError("missing workflow run identity")
     if not isinstance(manifest.get("commit_sha"), str) or len(manifest["commit_sha"]) != 40:
