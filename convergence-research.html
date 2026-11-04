@@ -52,7 +52,22 @@ async function verifyHistoricalPair(){
   const digest=await globalThis.crypto.subtle.digest('SHA-256',bytes);
   const actual=Array.from(new Uint8Array(digest)).map(x=>x.toString(16).padStart(2,'0')).join('');
   if(actual!==historicalAudit.source_observations_sha256)throw Error('Panel fingerprint mismatch');
-  status.textContent='Panel/audit fingerprint MATCH. File pairing verified; original source authenticity and publication timing NOT verified.';
+  if(historicalAudit.blocked_count!==historicalPanel.observations.length||
+     historicalAudit.usable_count!==0)throw Error('Audit coverage does not match historical panel');
+  const exclusions=new Map();
+  for(const item of historicalAudit.blocked){
+   if(exclusions.has(item.date))throw Error('Repeated audit date');
+   exclusions.set(item.date,item.reason);
+  }
+  for(const row of historicalPanel.observations){
+   if(typeof row.date!=='string'||!exclusions.has(row.date))throw Error('Audit date does not match panel');
+   // The only independently reproducible exclusion in the current panel
+   // is missing publication evidence. Other decisions require a trusted verifier.
+   if(row.availability_evidence!==undefined||
+      exclusions.get(row.date)!=='missing_independent_availability_evidence')
+      throw Error('Audit exclusion cannot be independently reproduced');
+  }
+  status.textContent='Panel fingerprint MATCH; all missing-evidence exclusions independently reproduced. Source authenticity and publication timing NOT verified.';
  }catch(err){status.textContent='Panel/audit verification FAILED: '+err.message;}
 }
 document.getElementById('historical-file').addEventListener('change',async e=>{
