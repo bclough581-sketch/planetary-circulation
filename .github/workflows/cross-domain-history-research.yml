@@ -47,6 +47,8 @@ jobs:
           print("As-of usable observations:", gate["usable_count"])
           print("As-of blocked observations:", gate["blocked_count"])
           assert gate["usable_count"] == 0, "Unverified publication timestamps must fail closed"
+          assert gate["source_observation_count"] == len(data["observations"])
+          assert len(gate["source_observations_sha256"]) == 64
           PY
       - name: Retain independent source and joined artifacts
         uses: actions/upload-artifact@v4
