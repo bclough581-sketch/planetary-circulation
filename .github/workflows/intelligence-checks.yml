@@ -11,6 +11,7 @@ on:
       - 'tests/test_feed_audit.py'
       - 'tests/test_historical_panel.py'
       - 'tests/test_eia_history.py'
+      - 'tests/test_audit_validation.py'
       - 'convergence-research.html'
       - 'tests/test_research_viewer.cjs'
       - '.github/workflows/intelligence-checks.yml'
@@ -28,6 +29,8 @@ jobs:
           python-version: '3.12'
       - name: Run intelligence unit tests
         run: python -m unittest discover -s tests -p 'test_intelligence.py' -v && python -m unittest discover -s tests -p 'test_ingest.py' -v && python -m unittest discover -s tests -p 'test_freshness.py' -v && python -m unittest discover -s tests -p 'test_research_view.py' -v && python -m unittest discover -s tests -p 'test_feed_audit.py' -v && python -m unittest discover -s tests -p 'test_historical_panel.py' -v && python -m unittest discover -s tests -p 'test_eia_history.py' -v
+      - name: Verify independent historical audit consistency tests
+        run: python -m unittest tests.test_audit_validation -v
       - name: Verify browser viewer JavaScript import behavior
         run: node tests/test_research_viewer.cjs
       - name: Check snapshot normalization
