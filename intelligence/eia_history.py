@@ -77,6 +77,7 @@ def build(start, end, key=None, fetch=None):
             "requested_start": start, "requested_end": end,
             "frequency": "daily", "unit": "USD_per_barrel",
             "observations": observations,
+            "aligned_prices": aligned_price_dates(observations),
             "relationships": [], "predictive_advantage": "not_established",
             "warning": "Historical oil prices alone do not establish a cross-domain signal or tradable edge."}
 
