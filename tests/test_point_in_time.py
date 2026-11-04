@@ -32,6 +32,18 @@ class PointInTimeTests(unittest.TestCase):
         result = assess_asof(self.panel, "2025-01-03T12:00:00Z")
         self.assertEqual(result["blocked"][0]["reason"], "published_after_decision")
 
+    def test_self_attested_publication_cannot_pass(self):
+        row = self.panel["observations"][0]
+        row["availability_evidence"] = {
+            field: {"available_utc": "2025-01-02T12:00:00Z",
+                    "source_url": "https://home.treasury.gov/",
+                    "verification": "independent_publication_record"}
+            for field in ("wti_usd_per_barrel", "brent_usd_per_barrel", "treasury_10y_percent")}
+        result = assess_asof(self.panel, "2025-01-03T12:00:00Z")
+        self.assertEqual(result["usable_count"], 0)
+        self.assertEqual(result["blocked"][0]["reason"],
+                         "publication_record_not_independently_authenticated")
+
     def test_timezone_required(self):
         with self.assertRaisesRegex(ValueError, "timezone"):
             parse_instant("2025-01-03T12:00:00")
