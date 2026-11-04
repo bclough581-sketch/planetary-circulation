@@ -45,7 +45,7 @@ document.getElementById('audit-file').addEventListener('change',async e=>{
      !Number.isFinite(Date.parse(audit.decision_utc)))throw Error('Unsupported or inconsistent audit');
   const summary=new Map();
   for(const item of audit.blocked){
-   if(!item||typeof item.date!=='string'||!/^\\d{4}-\\d{2}-\\d{2}$/.test(item.date)||
+   if(!item||typeof item.date!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(item.date)||
       typeof item.reason!=='string'||!item.reason)throw Error('Invalid exclusion entry');
    summary.set(item.reason,(summary.get(item.reason)||0)+1);
   }
