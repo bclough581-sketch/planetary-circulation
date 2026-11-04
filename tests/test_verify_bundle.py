@@ -169,6 +169,26 @@ class BundleVerificationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "invalid Treasury source value"):
             verify_bundle(self.root)
 
+    def test_impossible_eia_date_rejected_with_updated_hash(self):
+        path = self.root / "eia-history-research.json"
+        source = json.loads(path.read_text())
+        source["observations"][0]["date"] = "2025-02-30"
+        path.write_text(json.dumps(source), encoding="utf-8")
+        self.manifest["files"][path.name] = hashlib.sha256(path.read_bytes()).hexdigest()
+        self.save_manifest()
+        with self.assertRaisesRegex(ValueError, "invalid source observation date"):
+            verify_bundle(self.root)
+
+    def test_noncanonical_treasury_date_rejected_with_updated_hash(self):
+        path = self.root / "treasury-history-research.json"
+        source = json.loads(path.read_text())
+        source["observations"][0]["date"] = "2025-1-2"
+        path.write_text(json.dumps(source), encoding="utf-8")
+        self.manifest["files"][path.name] = hashlib.sha256(path.read_bytes()).hexdigest()
+        self.save_manifest()
+        with self.assertRaisesRegex(ValueError, "source observation date"):
+            verify_bundle(self.root)
+
     def test_tampered_file(self):
         (self.root / "point-in-time-audit.json").write_text("{}", encoding="utf-8")
         with self.assertRaisesRegex(ValueError, "checksum mismatch"):
