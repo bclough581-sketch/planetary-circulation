@@ -11,7 +11,7 @@ not-ok and keeps its previous values (never silently shows a stale number as
 fresh: every series carries its own as-of date and the page enforces age limits).
 Stdlib only. Exits non-zero if EVERY source failed, so the Action goes red.
 """
-import csv, io, json, os, re, statistics, sys, time, urllib.parse, urllib.request, zipfile
+import csv, io, json, os, re, statistics, sys, time, urllib.parse, urllib.request, urllib.error, zipfile
 from datetime import date, datetime, timedelta, timezone
 
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data.json")
@@ -142,7 +142,7 @@ CHOKES = [  # (key, lat, lon, label, substrings to match portname)
 PW = "https://services9.arcgis.com/weJ1QsnbMYJlCHdG/ArcGIS/rest/services/Daily_Chokepoints_Data/FeatureServer/0/query"
 
 
-PW_VARIANTS = [PW, PW.replace("/ArcGIS/", "/arcgis/")]
+PW_VARIANTS = [PW]  # same endpoint; avoid duplicate quota usage
 _pw_good = [None]
 
 
@@ -156,11 +156,20 @@ def _pw(q):
                 time.sleep(4 * attempt)
             try:
                 js = json.loads(get(PW_VARIANTS[i] + "?" + urllib.parse.urlencode(q), 90))
+            except urllib.error.HTTPError as e:
+                if e.code in (429, 403):
+                    raise RuntimeError("PortWatch quota/access blocked (HTTP %d); no retries" % e.code) from e
+                errs.append("v%d a%d: %s" % (i, attempt, str(e)[:80]))
+                continue
             except Exception as e:
                 errs.append("v%d a%d: %s" % (i, attempt, str(e)[:80]))
                 continue
             if "error" in js:
-                errs.append("v%d a%d %s: %s" % (i, attempt, q.get("outFields"), json.dumps(js["error"])[:160]))
+                err = js["error"]
+                msg = json.dumps(err)[:240]
+                if err.get("code") in (429, 403) or "quota" in msg.lower() or "too many requests" in msg.lower():
+                    raise RuntimeError("PortWatch quota/access blocked: " + msg)
+                errs.append("v%d a%d %s: %s" % (i, attempt, q.get("outFields"), msg[:160]))
                 continue
             _pw_good[0] = i
             return js.get("features", [])
@@ -194,8 +203,10 @@ def fetch_portwatch():
                 parts = [r.get(k) for k in ("n_container", "n_dry_bulk", "n_general_cargo", "n_roro", "n_tanker")]
                 r["n_total"] = sum(x for x in parts if isinstance(x, (int, float))) if any(isinstance(x, (int, float)) for x in parts) else None
             rows.append(r)
-        if len(feats) < 1000 or offset > 20000:
+        if len(feats) < 1000:
             break
+        if offset >= 5000:
+            raise RuntimeError("PortWatch exceeded 6000 rows; refusing incomplete history")
         offset += 1000
     out = []
     for key, lat, lon, label, subs in CHOKES:
@@ -322,9 +333,25 @@ def main():
     data = {"generated_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "hubs": dict(prev.get("hubs", {})), "chokepoints": prev.get("chokepoints", []),
             "status": {}}
-    jobs = [("ecb", fetch_ecb), ("ust", fetch_ust), ("eia", fetch_eia), ("portwatch", fetch_portwatch), ("tic", fetch_tic)]
+    # Respect source quotas: a failed quota call enters a seven-day cooldown.
+    pw_last = prev.get("status", {}).get("portwatch", {})
+    blocked = any(x in pw_last.get("error", "").lower() for x in ("quota", "too many requests"))
+    last_try = pw_last.get("attempt_utc") or pw_last.get("ran_utc") or prev.get("generated_utc", "")
+    try:
+        since = datetime.now(timezone.utc) - datetime.strptime(last_try, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+        skip_pw = blocked and since < timedelta(days=7)
+    except (ValueError, TypeError):
+        skip_pw = False
+    jobs = [("ecb", fetch_ecb), ("ust", fetch_ust), ("eia", fetch_eia),
+            ("portwatch", None if skip_pw else fetch_portwatch), ("tic", fetch_tic)]
     ok = 0
     for name, fn in jobs:
+        if fn is None:
+            data["status"][name] = {**pw_last, "ok": False,
+                                    "error": "PortWatch quota cooldown; last failure: " + pw_last.get("error", "")[:130],
+                                    "cooldown_until_utc": (datetime.strptime(last_try, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc) + timedelta(days=7)).strftime("%Y-%m-%dT%H:%M:%SZ")}
+            print("SKIP", name, "quota cooldown")
+            continue
         try:
             res = fn()
             if name == "ecb":
@@ -336,12 +363,14 @@ def main():
             elif name == "portwatch":
                 data["chokepoints"] = res
             # "tic" writes tic.json itself
-            data["status"][name] = {"ok": True, "ran_utc": data["generated_utc"]}
+            data["status"][name] = {"ok": True, "ran_utc": data["generated_utc"],
+                                    "attempt_utc": data["generated_utc"]}
             if name != "tic":
                 ok += 1
             print("ok  ", name, res if name == "tic" else "")
         except Exception as e:                      # keep previous values; page will age them out
             data["status"][name] = {"ok": False, "error": str(e)[:200],
+                                    "attempt_utc": data["generated_utc"],
                                     "last_ok_utc": prev.get("status", {}).get(name, {}).get("last_ok_utc") or
                                                    prev.get("status", {}).get(name, {}).get("ran_utc")}
             print("FAIL", name, e, file=sys.stderr)
