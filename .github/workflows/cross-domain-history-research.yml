@@ -58,6 +58,39 @@ jobs:
           assert verdict["status"] == "verified_internal_consistency"
           print("Retained-file audit consistency:", verdict["status"])
           PY
+      - name: Record artifact provenance and file checksums
+        env:
+          RESEARCH_RUN_ID: ${{ github.run_id }}
+          RESEARCH_COMMIT: ${{ github.sha }}
+          RESEARCH_REPOSITORY: ${{ github.repository }}
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          import os
+          from datetime import datetime, timezone
+          from pathlib import Path
+          names = ("eia-history-research.json", "treasury-history-research.json",
+                   "cross-domain-observation-panel.json", "point-in-time-audit.json")
+          manifest = {
+              "schema": "amalgam.research-artifact-manifest.v1",
+              "captured_utc": datetime.now(timezone.utc).isoformat(),
+              "repository": os.environ["RESEARCH_REPOSITORY"],
+              "commit_sha": os.environ["RESEARCH_COMMIT"],
+              "workflow_run_id": os.environ["RESEARCH_RUN_ID"],
+              "workflow_url": "https://github.com/" + os.environ["RESEARCH_REPOSITORY"] +
+                              "/actions/runs/" + os.environ["RESEARCH_RUN_ID"],
+              "files": {name: hashlib.sha256(Path(name).read_bytes()).hexdigest()
+                        for name in names},
+              "predictive_advantage": "not_established",
+              "warning": "Capture time is not historical publication time. Artifact retention is 30 days."
+          }
+          Path("research-artifact-manifest.json").write_text(
+              json.dumps(manifest, indent=2) + "\\n", encoding="utf-8")
+          for name, expected in manifest["files"].items():
+              assert hashlib.sha256(Path(name).read_bytes()).hexdigest() == expected
+          print("Manifest verified for", len(manifest["files"]), "research files")
+          PY
       - name: Retain independently validated source and joined artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -67,4 +100,5 @@ jobs:
             treasury-history-research.json
             cross-domain-observation-panel.json
             point-in-time-audit.json
+            research-artifact-manifest.json
           retention-days: 30
