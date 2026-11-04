@@ -25,11 +25,12 @@ const load=async data=>{
 const names=['weather','geopolitics','maritime','aviation','energy','commodities','economics','markets','corporate'];
 const empty=()=>Object.fromEntries(names.map(x=>[x,0]));
 const event={id:'one',domain:'weather',title:'Test',observed_at:'2026-11-04T12:00:00Z',source:{name:'NOAA National Weather Service',url:'https://www.weather.gov/documentation/services-web-api'}};
-const good={schema:'amalgam.research.v1',observations:[event],excluded:[],relationships:[],domains:{...empty(),weather:1},predictive_advantage:'not_established',generated_utc:'2026-11-04T19:00:00Z',licensing:{portwatch_commercial_reuse:'permission_not_verified'},feed_health:[{feed:'eia',condition:'eligible_source'}]};
+const good={schema:'amalgam.research.v1',observations:[event],excluded:[],relationships:[],domains:{...empty(),weather:1},predictive_advantage:'not_established',generated_utc:'2026-11-04T19:00:00Z',licensing:{portwatch_commercial_reuse:'permission_not_verified'},feed_health:[{feed:'eia',condition:'eligible_source'}],relationship_readiness:{status:'not_ready',historical_relationships_validated:0,predictive_advantage:'not_established',distinct_observation_dates:{weather:1},blocking_reasons:['No historical panel']}};
 (async()=>{
  await load(good);
  assert.equal(document.getElementById('count').textContent,1);
  assert.equal(document.getElementById('link-count').textContent,'0 validated links');
+ assert.match(document.getElementById('readiness').children[0].textContent,/NOT READY/);
  for(const [name,change] of [
   ['inflated count',x=>x.domains.weather=20],
   ['duplicate',x=>{x.observations.push({...event});x.domains.weather=2;}],
@@ -38,6 +39,8 @@ const good={schema:'amalgam.research.v1',observations:[event],excluded:[],relati
   ['forged source URL',x=>x.observations[0].source.url='https://example.com/forged'],
   ['wrong source domain',x=>{x.observations[0].domain='markets';x.domains.weather=0;x.domains.markets=1;}],
   ['missing generation time',x=>delete x.generated_utc],
+  ['missing readiness',x=>delete x.relationship_readiness],
+  ['false historical validation',x=>x.relationship_readiness.historical_relationships_validated=1],
   ['future generation time',x=>x.generated_utc='2026-11-05T00:00:00Z'],
   ['future observation time',x=>x.observations[0].observed_at='2026-11-05T00:00:00Z'],
   ['invalid observation time',x=>x.observations[0].observed_at='not-a-date'],
@@ -56,5 +59,5 @@ const good={schema:'amalgam.research.v1',observations:[event],excluded:[],relati
  await load(stale);
  assert.match(document.getElementById('status').textContent,/STALE DATASET/);
  assert.match(document.getElementById('status').textContent,/observations exceed their domain freshness window/);
- console.log('Viewer JavaScript interaction checks passed: valid load + 13 rejected imports + stale warning');
+ console.log('Viewer JavaScript interaction checks passed: valid load + 15 rejected imports + stale warning');
 })().catch(err=>{console.error(err);process.exitCode=1;});
