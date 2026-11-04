@@ -9,6 +9,23 @@ class FreshnessTests(unittest.TestCase):
         self.snapshot = {"status": {"eia": {"ok": True}, "portwatch": {"ok": False}},
                          "hubs": {"HOU": {"src": "eia"}}}
 
+    def weather(self, expires):
+        return {"domain": "weather", "observed_at": "2026-11-04T11:00:00Z",
+                "source": {"name": "NOAA National Weather Service"},
+                "metadata": {"expires": expires}}
+
+    def test_active_noaa_alert_accepted(self):
+        self.assertEqual(eligible(self.weather("2026-11-04T13:00:00Z"), self.snapshot, self.now), (True, None))
+
+    def test_expired_noaa_alert_rejected(self):
+        self.assertEqual(eligible(self.weather("2026-11-04T11:30:00Z"), self.snapshot, self.now)[1], "alert expired")
+
+    def test_missing_noaa_expiry_rejected(self):
+        self.assertEqual(eligible(self.weather(None), self.snapshot, self.now)[1], "missing alert expiry")
+
+    def test_invalid_noaa_expiry_rejected(self):
+        self.assertEqual(eligible(self.weather("bad"), self.snapshot, self.now)[1], "invalid alert expiry")
+
     def test_current_energy_allowed(self):
         event = {"domain": "energy", "observed_at": "2026-11-03T00:00:00Z",
                  "source": {"name": "U.S. Energy Information Administration"},
