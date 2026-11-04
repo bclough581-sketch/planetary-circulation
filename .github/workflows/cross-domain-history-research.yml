@@ -45,17 +45,20 @@ jobs:
           assert data["predictive_advantage"] == "not_established"
           from intelligence.point_in_time import assess_asof
           gate = assess_asof(data, "2026-11-04T00:00:00Z")
-          Path("point-in-time-audit.json").write_text(json.dumps(gate, indent=2) + "\\n", encoding="utf-8")
+          Path("point-in-time-audit.json").write_text(json.dumps(gate, indent=2) + "\n", encoding="utf-8")
           print("As-of usable observations:", gate["usable_count"])
           print("As-of blocked observations:", gate["blocked_count"])
           assert gate["usable_count"] == 0, "Unverified publication timestamps must fail closed"
           assert gate["source_observation_count"] == len(data["observations"])
           assert len(gate["source_observations_sha256"]) == 64
           from intelligence.audit_validation import validate_audit
-          verdict = validate_audit(data, gate)
-          print("Audit internal consistency:", verdict["status"])
+          saved_panel = json.loads(Path("cross-domain-observation-panel.json").read_text(encoding="utf-8"))
+          saved_audit = json.loads(Path("point-in-time-audit.json").read_text(encoding="utf-8"))
+          verdict = validate_audit(saved_panel, saved_audit)
+          assert verdict["status"] == "verified_internal_consistency"
+          print("Retained-file audit consistency:", verdict["status"])
           PY
-      - name: Retain independent source and joined artifacts
+      - name: Retain independently validated source and joined artifacts
         uses: actions/upload-artifact@v4
         with:
           name: amalgam-cross-domain-history-${{ github.run_id }}
