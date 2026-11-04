@@ -28,8 +28,39 @@ button:focus-visible{outline:2px solid white} .domain{display:flex;justify-conte
 <h3>Historical relationship readiness</h3><div id="readiness">No dataset loaded.</div>
 <h3>Source health and limitations</h3><div id="source-health">Load a dataset to inspect feed status.</div>
 <h3>Exclusion reasons</h3><div id="exclusion-reasons">No dataset loaded.</div>
-<div id="details"></div></section>
+<div id="details"></div></section>\n<section class="panel"><h2>Historical point-in-time exclusion audit</h2><p>Import point-in-time-audit.json from the cross-domain development workflow. This is separate from the live observation evidence ledger.</p><label for="audit-file">Select point-in-time-audit.json</label> <input type="file" id="audit-file" accept=".json,application/json"><p id="audit-status" class="warn">No historical audit loaded.</p><div id="audit-reasons"></div><div id="audit-dates"></div><p class="warn">Local imports are not authenticated. This display does not certify publication timing or trading eligibility.</p></section>
 <script>
+document.getElementById('audit-file').addEventListener('change',async e=>{
+ const file=e.target.files[0];if(!file)return;
+ const status=document.getElementById('audit-status');
+ const reasons=document.getElementById('audit-reasons');
+ const dates=document.getElementById('audit-dates');
+ reasons.replaceChildren();dates.replaceChildren();
+ try{
+  const audit=JSON.parse(await file.text());
+  if(audit.predictive_advantage!=='not_established'||audit.status!=='blocked'||
+     !Array.isArray(audit.blocked)||!Number.isSafeInteger(audit.blocked_count)||
+     !Number.isSafeInteger(audit.usable_count)||audit.usable_count!==0||
+     audit.blocked_count!==audit.blocked.length||audit.blocked_count<1||
+     !Number.isFinite(Date.parse(audit.decision_utc)))throw Error('Unsupported or inconsistent audit');
+  const summary=new Map();
+  for(const item of audit.blocked){
+   if(!item||typeof item.date!=='string'||!/^\\d{4}-\\d{2}-\\d{2}$/.test(item.date)||
+      typeof item.reason!=='string'||!item.reason)throw Error('Invalid exclusion entry');
+   summary.set(item.reason,(summary.get(item.reason)||0)+1);
+  }
+  status.textContent='Historical as-of gate: BLOCKED | '+audit.blocked_count+' excluded | 0 usable | decision '+audit.decision_utc;
+  for(const [reason,count] of summary){
+   const p=document.createElement('p');p.textContent=count+' blocked: '+reason;reasons.append(p);
+  }
+  const detail=document.createElement('details');const heading=document.createElement('summary');
+  heading.textContent='Inspect excluded dates ('+audit.blocked.length+')';detail.append(heading);
+  for(const item of audit.blocked.slice(0,300)){
+   const p=document.createElement('p');p.textContent=item.date+' | '+item.reason;detail.append(p);
+  }
+  dates.append(detail);
+ }catch(err){status.textContent='Audit rejected: '+err.message;reasons.replaceChildren();dates.replaceChildren();}
+});
 const domains=['weather','geopolitics','maritime','aviation','energy','commodities','economics','markets','corporate'];
 document.getElementById('file').addEventListener('change',async e=>{
  const file=e.target.files[0];if(!file)return;
