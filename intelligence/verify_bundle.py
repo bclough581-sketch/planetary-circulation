@@ -6,7 +6,7 @@ import argparse
 import hashlib
 import json
 import math
-from datetime import date
+from datetime import date, datetime, timezone
 from pathlib import Path
 from urllib.request import Request, urlopen
 from zipfile import ZipFile
@@ -66,6 +66,23 @@ def verify_bundle(directory):
         raise ValueError("unsupported Treasury source identity or units")
     if energy.get("predictive_advantage") != "not_established" or treasury.get("predictive_advantage") != "not_established" or energy.get("relationships") != [] or treasury.get("relationships") != []:
         raise ValueError("unsupported source-level predictive or relationship claim")
+    # Collection timestamps establish ordering only, never historical availability.
+    def utc_instant(value):
+        if not isinstance(value, str):
+            raise ValueError("missing collection timestamp")
+        try:
+            parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        except ValueError as exc:
+            raise ValueError("invalid collection timestamp") from exc
+        if parsed.tzinfo is None or parsed.utcoffset() is None:
+            raise ValueError("timezone-naive collection timestamp")
+        return parsed.astimezone(timezone.utc)
+
+    captured = utc_instant(manifest.get("captured_utc"))
+    for source in (energy, treasury):
+        if utc_instant(source.get("retrieved_utc")) > captured:
+            raise ValueError("source retrieval occurs after manifest capture")
+
     # Source dates must be canonical calendar days, not merely matching strings.
     def canonical_day(value):
         if not isinstance(value, str):
