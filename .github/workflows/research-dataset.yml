@@ -2,7 +2,14 @@ name: intelligence-research-dataset
 on:
   push:
     branches: [amalgam-event-foundation]
-    paths: ['.github/workflows/research-dataset.yml']
+    paths:
+      - '.github/workflows/research-dataset.yml'
+      - 'intelligence/**'
+      - 'fetch_data.py'
+      - 'tests/test_freshness.py'
+      - 'tests/test_research_view.py'
+      - 'tests/test_energy_overlay.py'
+      - 'tests/test_eia_research_snapshot.py'
   workflow_dispatch: {}
 permissions:
   contents: read
