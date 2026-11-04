@@ -7,6 +7,8 @@ on:
       - 'tests/test_intelligence.py'
       - 'tests/test_ingest.py'
       - 'tests/test_freshness.py'
+      - 'tests/test_research_view.py'
+      - 'convergence-research.html'
       - '.github/workflows/intelligence-checks.yml'
   workflow_dispatch: {}
 permissions:
@@ -21,7 +23,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Run intelligence unit tests
-        run: python -m unittest discover -s tests -p 'test_intelligence.py' -v && python -m unittest discover -s tests -p 'test_ingest.py' -v && python -m unittest discover -s tests -p 'test_freshness.py' -v
+        run: python -m unittest discover -s tests -p 'test_intelligence.py' -v && python -m unittest discover -s tests -p 'test_ingest.py' -v && python -m unittest discover -s tests -p 'test_freshness.py' -v && python -m unittest discover -s tests -p 'test_research_view.py' -v
       - name: Check snapshot normalization
         run: |
           python - <<'PY'
