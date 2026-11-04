@@ -6,6 +6,7 @@ import unittest
 from pathlib import Path
 
 from intelligence.point_in_time import assess_asof
+from intelligence.coverage_audit import coverage_report
 from intelligence.verify_bundle import verify_bundle, verify_github_run
 
 
@@ -18,8 +19,14 @@ class BundleVerificationTests(unittest.TestCase):
                  "observations": [{"date": "2025-01-02", "wti_usd_per_barrel": 70,
                                    "brent_usd_per_barrel": 75, "treasury_10y_percent": 4.4}]}
         audit = assess_asof(panel, "2026-11-04T00:00:00Z")
-        values = {"eia-history-research.json": {"schema": "test"},
-                  "treasury-history-research.json": {"schema": "test"},
+        energy = {"predictive_advantage": "not_established",
+                  "observations": [{"series": "RWTC", "date": "2025-01-02"},
+                                   {"series": "RBRTE", "date": "2025-01-02"}]}
+        treasury = {"predictive_advantage": "not_established",
+                    "observations": [{"date": "2025-01-02"}]}
+        values = {"eia-history-research.json": energy,
+                  "treasury-history-research.json": treasury,
+                  "historical-coverage-audit.json": coverage_report(energy, treasury, panel),
                   "cross-domain-observation-panel.json": panel,
                   "point-in-time-audit.json": audit}
         hashes = {}
@@ -102,6 +109,16 @@ class BundleVerificationTests(unittest.TestCase):
                     "html_url": self.manifest["workflow_url"]}
         with self.assertRaisesRegex(ValueError, "mismatch"):
             verify_github_run(self.root, fake_fetch)
+
+    def test_forged_coverage_report_rejected_even_with_updated_manifest(self):
+        path = self.root / "historical-coverage-audit.json"
+        report = json.loads(path.read_text())
+        report["exact_three_series_dates"] = 999
+        path.write_text(json.dumps(report), encoding="utf-8")
+        self.manifest["files"][path.name] = hashlib.sha256(path.read_bytes()).hexdigest()
+        self.save_manifest()
+        with self.assertRaisesRegex(ValueError, "coverage report"):
+            verify_bundle(self.root)
 
     def test_tampered_file(self):
         (self.root / "point-in-time-audit.json").write_text("{}", encoding="utf-8")
