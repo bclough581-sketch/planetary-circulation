@@ -25,6 +25,7 @@ button:focus-visible{outline:2px solid white} .domain{display:flex;justify-conte
 <input type="file" id="file" accept=".json,application/json">
 <p id="status" class="warn">No data loaded. Nothing here is live.</p>
 <p class="warn">Local JSON imports are checked for internal consistency, not authenticity. This viewer cannot verify that a file came from GitHub Actions or that its source observations are genuine. Use the development workflow artifact as the provenance reference.</p>
+<h3>Historical relationship readiness</h3><div id="readiness">No dataset loaded.</div>
 <h3>Source health and limitations</h3><div id="source-health">Load a dataset to inspect feed status.</div>
 <h3>Exclusion reasons</h3><div id="exclusion-reasons">No dataset loaded.</div>
 <div id="details"></div></section>
@@ -68,6 +69,8 @@ document.getElementById('file').addEventListener('change',async e=>{
   }
   if(!data.domains||Object.keys(data.domains).length!==domains.length||
      domains.some(domain=>data.domains[domain]!==counts[domain]))throw Error('Domain totals do not match observations');
+  const readiness=data.relationship_readiness;
+  if(!readiness||readiness.status!=='not_ready'||readiness.historical_relationships_validated!==0||readiness.predictive_advantage!=='not_established'||!Array.isArray(readiness.blocking_reasons)||!readiness.blocking_reasons.length)throw Error('Missing or unsupported historical readiness assessment');
   const verified=0;
   document.getElementById('count').textContent=data.observations.length;
   document.getElementById('link-count').textContent=verified+' validated links';
@@ -79,6 +82,10 @@ document.getElementById('file').addEventListener('change',async e=>{
    row.append(name,count);target.append(row);
   }
   document.getElementById('status').textContent=(stale?'STALE DATASET ('+Math.floor(ageHours)+' hours old). Not current. ':'Dataset generated '+data.generated_utc+'. ')+(oldObservations?oldObservations+' observations exceed their domain freshness window. ':'')+(data.message||'Research observations only');
+  const readinessPanel=document.getElementById('readiness');readinessPanel.replaceChildren();
+  const verdict=document.createElement('p');verdict.className='warn';verdict.textContent='NOT READY — zero historically validated relationships';readinessPanel.append(verdict);
+  const coverage=document.createElement('p');coverage.textContent='Distinct observation dates by domain: '+JSON.stringify(readiness.distinct_observation_dates||{});readinessPanel.append(coverage);
+  for(const reason of readiness.blocking_reasons){const p=document.createElement('p');p.textContent=reason;readinessPanel.append(p);}
   const health=document.getElementById('source-health');health.replaceChildren();
   for(const feed of (Array.isArray(data.feed_health)?data.feed_health:[])){
    const p=document.createElement('p');
@@ -105,6 +112,6 @@ document.getElementById('file').addEventListener('change',async e=>{
   const excluded=document.createElement('p');
   excluded.className='warn';excluded.textContent=data.excluded.length+' excluded observations (stale, missing or source failure)';
   ledger.prepend(excluded);
- }catch(err){document.getElementById('count').textContent='—';document.getElementById('link-count').textContent='0 validated links';document.getElementById('domains').textContent='Dataset rejected. No evidence displayed.';document.getElementById('details').replaceChildren();document.getElementById('source-health').textContent='Dataset rejected.';document.getElementById('exclusion-reasons').textContent='Dataset rejected.';document.getElementById('status').textContent='Unable to load file: '+err.message;}
+ }catch(err){document.getElementById('count').textContent='—';document.getElementById('link-count').textContent='0 validated links';document.getElementById('domains').textContent='Dataset rejected. No evidence displayed.';document.getElementById('details').replaceChildren();document.getElementById('source-health').textContent='Dataset rejected.';document.getElementById('readiness').textContent='Dataset rejected.';document.getElementById('exclusion-reasons').textContent='Dataset rejected.';document.getElementById('status').textContent='Unable to load file: '+err.message;}
 });
 </script></body></html>
