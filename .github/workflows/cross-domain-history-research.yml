@@ -96,6 +96,12 @@ jobs:
               "files": {name: hashlib.sha256(Path(name).read_bytes()).hexdigest()
                         for name in names},
               "predictive_advantage": "not_established",
+              "historical_decision_schedule": {
+                  "status": "not_supplied",
+                  "scheduled_observations": 0,
+                  "asof_eligible_observations": 0,
+                  "note": "No historical decision timestamps were provided or inferred."
+              },
               "warning": "Capture time is not historical publication time. Artifact retention is 30 days."
           }
           Path("research-artifact-manifest.json").write_text(
