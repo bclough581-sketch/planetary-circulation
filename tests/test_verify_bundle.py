@@ -22,7 +22,8 @@ class BundleVerificationTests(unittest.TestCase):
         audit = None
         energy = {"requested_start": "2025-01-01", "requested_end": "2025-12-31", "schema": "amalgam.eia-history.v1", "source": "EIA", "source_url": "https://www.eia.gov/opendata/", "retrieved_utc": "2026-11-04T00:00:00Z", "predictive_advantage": "not_established",
                   "observations": [{"series": "RWTC", "date": "2025-01-02", "value": 70},
-                                   {"series": "RBRTE", "date": "2025-01-02", "value": 75}]}
+                                   {"series": "RBRTE", "date": "2025-01-02", "value": 75}],
+                  "aligned_prices": [{"date": "2025-01-02", "wti": 70, "brent": 75}]}
         treasury = {"requested_year": 2025, "schema": "amalgam.treasury-history.v1", "source": "Treasury", "source_url": "https://home.treasury.gov/", "retrieved_utc": "2026-11-04T00:00:00Z", "predictive_advantage": "not_established",
                     "observations": [{"date": "2025-01-02", "ten_year_yield_percent": 4.4}]}
         from intelligence.cross_domain_history import build as rebuild_panel
@@ -207,6 +208,16 @@ class BundleVerificationTests(unittest.TestCase):
         self.manifest["files"][path.name] = hashlib.sha256(path.read_bytes()).hexdigest()
         self.save_manifest()
         with self.assertRaisesRegex(ValueError, "outside requested year"):
+            verify_bundle(self.root)
+
+    def test_forged_aligned_prices_rejected_with_updated_hash(self):
+        path = self.root / "eia-history-research.json"
+        source = json.loads(path.read_text())
+        source["aligned_prices"][0]["wti"] = 71
+        path.write_text(json.dumps(source), encoding="utf-8")
+        self.manifest["files"][path.name] = hashlib.sha256(path.read_bytes()).hexdigest()
+        self.save_manifest()
+        with self.assertRaisesRegex(ValueError, "aligned prices"):
             verify_bundle(self.root)
 
     def test_tampered_file(self):
