@@ -16,6 +16,8 @@ class ResearchViewTests(unittest.TestCase):
         self.assertEqual(result["domains"]["energy"], 1)
         self.assertEqual(result["domains"]["maritime"], 0)
         self.assertEqual(result["relationships"], [])
+        self.assertEqual(result["licensing"]["portwatch_commercial_reuse"], "permission_not_verified")
+        self.assertEqual(next(x for x in result["feed_health"] if x["feed"] == "portwatch")["condition"], "collector_failed")
         self.assertTrue(any(x["reason"] == "source collector failed" for x in result["excluded"]))
         self.assertEqual(result["predictive_advantage"], "not_established")
 
