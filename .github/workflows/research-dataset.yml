@@ -27,7 +27,7 @@ jobs:
           import json
           from pathlib import Path
           from datetime import datetime, timezone
-          from intelligence.research_view import build
+          from intelligence.research_view import build, validate_view
           from intelligence.energy_overlay import refresh_energy
           snapshot = json.loads(Path("data.json").read_text(encoding="utf-8"))
           snapshot = refresh_energy(snapshot)  # research-only copy; fail closed on stale EIA
@@ -39,6 +39,7 @@ jobs:
           with urllib.request.urlopen(req, timeout=20) as response:
               alerts = json.load(response)
           result = build(snapshot, alerts, datetime.now(timezone.utc))
+          validate_view(result)
           result["generated_utc"] = datetime.now(timezone.utc).isoformat()
           result["snapshot_status"] = snapshot.get("status", {})
           result["noaa_raw_feature_count"] = len(alerts.get("features", []))
