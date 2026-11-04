@@ -63,7 +63,7 @@ jobs:
           print("Retained-file audit consistency:", verdict["status"])
           PY
       - name: Audit exact-date source coverage
-        run: python -m intelligence.coverage_audit --energy eia-history-research.json --treasury treasury-history-research.json --panel cross-domain-observation-panel.json --output /tmp/historical-coverage-audit.json
+        run: python -m intelligence.coverage_audit --energy eia-history-research.json --treasury treasury-history-research.json --panel cross-domain-observation-panel.json --output historical-coverage-audit.json
       - name: Record artifact provenance and file checksums
         env:
           RESEARCH_RUN_ID: ${{ github.run_id }}
@@ -77,7 +77,8 @@ jobs:
           from datetime import datetime, timezone
           from pathlib import Path
           names = ("eia-history-research.json", "treasury-history-research.json",
-                   "cross-domain-observation-panel.json", "point-in-time-audit.json")
+                   "cross-domain-observation-panel.json", "point-in-time-audit.json",
+                   "historical-coverage-audit.json")
           manifest = {
               "schema": "amalgam.research-artifact-manifest.v1",
               "captured_utc": datetime.now(timezone.utc).isoformat(),
@@ -110,5 +111,6 @@ jobs:
             treasury-history-research.json
             cross-domain-observation-panel.json
             point-in-time-audit.json
+            historical-coverage-audit.json
             research-artifact-manifest.json
           retention-days: 30
