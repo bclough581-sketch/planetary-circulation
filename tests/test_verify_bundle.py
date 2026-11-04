@@ -156,7 +156,7 @@ class BundleVerificationTests(unittest.TestCase):
         path.write_text(json.dumps(source), encoding="utf-8")
         self.manifest["files"][path.name] = hashlib.sha256(path.read_bytes()).hexdigest()
         self.save_manifest()
-        with self.assertRaisesRegex(ValueError, "duplicate EIA"):
+        with self.assertRaisesRegex(ValueError, "duplicate (EIA|energy series-date)"):
             verify_bundle(self.root)
 
     def test_invalid_source_value_rejected_even_with_updated_hash(self):
