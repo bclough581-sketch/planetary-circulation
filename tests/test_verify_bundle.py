@@ -1,4 +1,5 @@
 import hashlib
+from zipfile import ZipFile
 import json
 import tempfile
 import unittest
@@ -54,6 +55,31 @@ class BundleVerificationTests(unittest.TestCase):
                     "html_url": self.manifest["workflow_url"]}
         self.assertEqual(verify_github_run(self.root, fake_fetch)["status"],
                          "github_run_and_artifact_metadata_matched")
+
+    def test_github_artifact_zip_digest_and_contents(self):
+        archive = self.root / "artifact.zip"
+        with ZipFile(archive, "w") as zipfile:
+            for name in sorted(self.manifest["files"]):
+                zipfile.write(self.root / name, arcname=name)
+            zipfile.write(self.root / "research-artifact-manifest.json",
+                          arcname="research-artifact-manifest.json")
+        digest = "sha256:" + hashlib.sha256(archive.read_bytes()).hexdigest()
+        def fake_fetch(url):
+            if "/artifacts?" in url:
+                return {"artifacts": [{"id": 12, "name": "amalgam-cross-domain-history-41925963100",
+                                       "expired": False, "digest": digest,
+                                       "workflow_run": {"id": 41925963100, "head_sha": "a" * 40}}]}
+            return {"id": 41925963100, "head_sha": "a" * 40,
+                    "head_branch": "amalgam-event-foundation",
+                    "status": "completed", "conclusion": "success",
+                    "name": "intelligence-cross-domain-history-research",
+                    "html_url": self.manifest["workflow_url"]}
+        self.assertEqual(verify_github_run(self.root, fake_fetch, archive)["status"],
+                         "github_artifact_zip_digest_matched")
+        with archive.open("ab") as stream:
+            stream.write(b"tamper")
+        with self.assertRaisesRegex(ValueError, "digest mismatch"):
+            verify_github_run(self.root, fake_fetch, archive)
 
     def test_github_artifact_missing_rejected(self):
         def fake_fetch(url):
