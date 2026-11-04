@@ -77,9 +77,22 @@ def verify_github_run(directory, fetch_json=None):
         raise ValueError("GitHub run identity or success status mismatch")
     if manifest.get("workflow_url") != run.get("html_url"):
         raise ValueError("workflow URL does not match GitHub")
-    return {"status": "github_run_metadata_matched",
+    artifact_response = fetch_json(url + "/artifacts?per_page=100")
+    artifacts = artifact_response.get("artifacts")
+    if not isinstance(artifacts, list):
+        raise ValueError("GitHub artifact listing unavailable")
+    expected_name = "amalgam-cross-domain-history-" + run_id
+    matching = [item for item in artifacts if item.get("name") == expected_name
+                and item.get("expired") is False]
+    if len(matching) != 1:
+        raise ValueError("expected unexpired artifact not found in GitHub run")
+    attached = matching[0].get("workflow_run")
+    if not isinstance(attached, dict) or str(attached.get("id")) != run_id or attached.get("head_sha") != sha:
+        raise ValueError("artifact run/commit attachment mismatch")
+    return {"status": "github_run_and_artifact_metadata_matched",
             "workflow_run_id": run_id,
-            "warning": "Run identity verified against GitHub; artifact bytes are not authenticated by this check."}
+            "artifact_id": matching[0].get("id"),
+            "warning": "Run and artifact listing matched GitHub; local artifact bytes are NOT authenticated by this check."}
 
 
 def main():
