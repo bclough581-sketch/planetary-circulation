@@ -70,8 +70,9 @@ class BundleVerificationTests(unittest.TestCase):
                     "status": "completed", "conclusion": "success",
                     "name": "intelligence-cross-domain-history-research",
                     "html_url": self.manifest["workflow_url"]}
-        self.assertEqual(verify_github_run(self.root, fake_fetch)["status"],
-                         "github_run_and_artifact_metadata_matched")
+        result = verify_github_run(self.root, fake_fetch)
+        self.assertEqual(result["status"], "github_run_and_artifact_metadata_matched")
+        self.assertIn("NOT authenticated", result["warning"])
 
     def test_github_artifact_zip_digest_and_contents(self):
         archive = self.root / "artifact.zip"
@@ -91,8 +92,10 @@ class BundleVerificationTests(unittest.TestCase):
                     "status": "completed", "conclusion": "success",
                     "name": "intelligence-cross-domain-history-research",
                     "html_url": self.manifest["workflow_url"]}
-        self.assertEqual(verify_github_run(self.root, fake_fetch, archive)["status"],
-                         "github_artifact_zip_digest_matched")
+        result = verify_github_run(self.root, fake_fetch, archive)
+        self.assertEqual(result["status"], "github_artifact_zip_digest_matched")
+        self.assertIn("ZIP bytes matched", result["warning"])
+        self.assertNotIn("NOT authenticated", result["warning"])
         with archive.open("ab") as stream:
             stream.write(b"tamper")
         with self.assertRaisesRegex(ValueError, "digest mismatch"):
