@@ -1,6 +1,7 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
+const {webcrypto,createHash} = require('node:crypto');
 const html = fs.readFileSync('convergence-research.html','utf8');
 const script = html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
 assert.ok(script, 'viewer script missing');
@@ -18,7 +19,7 @@ const document = {
   getElementById(id){if(!elements.has(id))elements.set(id,new Element());return elements.get(id);},
   createElement(){return new Element();}
 };
-vm.runInNewContext(script,{document,Map,Set,Object,Error,Array,String,Date:FixedDate,Number,Math});
+vm.runInNewContext(script,{document,Map,Set,Object,Error,Array,String,Date:FixedDate,Number,Math,crypto:webcrypto,TextEncoder,Uint8Array});
 const load=async data=>{
   await document.getElementById('file').handlers.change({target:{files:[{text:async()=>JSON.stringify(data)}]}});
 };
@@ -30,13 +31,19 @@ const loadAudit=async data=>{
  await document.getElementById('audit-file').handlers.change({target:{files:[{text:async()=>JSON.stringify(data)}]}});
 };
 (async()=>{
- const audit={status:'blocked',decision_utc:'2026-11-04T00:00:00Z',usable_count:0,blocked_count:2,
+ const panel={schema:'amalgam.cross-domain-observation-panel.v1',observations:[{date:'2025-01-02',wti_usd_per_barrel:70,brent_usd_per_barrel:75,treasury_10y_percent:4.4}]};
+ const fingerprint=createHash('sha256').update(JSON.stringify(panel.observations[0] ? [{brent_usd_per_barrel:75,date:'2025-01-02',treasury_10y_percent:4.4,wti_usd_per_barrel:70}] : [])).digest('hex');
+ const audit={source_panel_schema:panel.schema,source_observation_count:1,source_observations_sha256:fingerprint,status:'blocked',decision_utc:'2026-11-04T00:00:00Z',usable_count:0,blocked_count:2,
    blocked:[{date:'2025-01-02',reason:'missing_independent_availability_evidence'},
             {date:'2025-01-03',reason:'missing_independent_availability_evidence'}],
    predictive_advantage:'not_established'};
+ await document.getElementById('historical-file').handlers.change({target:{files:[{text:async()=>JSON.stringify(panel)}]}});
  await loadAudit(audit);
+ assert.match(document.getElementById('historical-status').textContent,/fingerprint MATCH/);
  assert.match(document.getElementById('audit-status').textContent,/2 excluded/);
  assert.match(document.getElementById('audit-reasons').children[0].textContent,/2 blocked/);
+ await loadAudit({...audit,source_observations_sha256:'0'.repeat(64)});
+ assert.match(document.getElementById('historical-status').textContent,/fingerprint mismatch/);
  await loadAudit({...audit,usable_count:1,status:'eligible_for_asof_analysis'});
  assert.match(document.getElementById('audit-status').textContent,/Audit rejected/);
  await loadAudit({...audit,blocked_count:3});
