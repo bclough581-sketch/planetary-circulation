@@ -1,4 +1,9 @@
 import unittest
+import json
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
 from copy import deepcopy
 from datetime import datetime, timezone
 from intelligence.research_view import build
@@ -27,6 +32,17 @@ class HistoricalPanelTests(unittest.TestCase):
         view["relationship_readiness"]["status"] = "ready"
         with self.assertRaisesRegex(ValueError, "readiness"):
             build_panel([view])
+
+    def test_cli_builds_manifest_from_actual_files(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            first, second, output = root / 'first.json', root / 'second.json', root / 'manifest.json'
+            first.write_text(json.dumps(self.view(3)), encoding='utf-8')
+            second.write_text(json.dumps(self.view(4)), encoding='utf-8')
+            subprocess.run([sys.executable, '-m', 'intelligence.historical_panel', str(first), str(second), '--output', str(output)], check=True, capture_output=True)
+            manifest = json.loads(output.read_text(encoding='utf-8'))
+            self.assertEqual(manifest['capture_count'], 2)
+            self.assertEqual(manifest['predictive_advantage'], 'not_established')
 
     def test_empty_panel_rejected(self):
         with self.assertRaises(ValueError):
