@@ -44,10 +44,10 @@ def assess_asof(panel, decision_utc):
         except (KeyError, TypeError, ValueError):
             blocked.append({"date": day, "reason": "invalid_or_incomplete_availability_evidence"})
             continue
-        usable.append(row)
+        # A JSON assertion is not independent verification. No trusted archival\n        # publication verifier is connected, so even plausible records fail closed.\n        blocked.append({"date": day, "reason": "publication_record_not_independently_authenticated"})
     return {"status": "eligible_for_asof_analysis" if usable else "blocked",
             "decision_utc": decision.isoformat(),
             "usable_count": len(usable), "blocked_count": len(blocked),
             "blocked": blocked,
             "predictive_advantage": "not_established",
-            "warning": "Publication eligibility alone does not validate an outcome, signal, or statistical edge."}
+            "warning": "No trusted archival publication verifier is connected. User-supplied publication claims never grant as-of eligibility."}
