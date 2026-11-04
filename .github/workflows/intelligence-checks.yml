@@ -1,0 +1,52 @@
+name: intelligence-foundation-checks
+on:
+  push:
+    branches: [amalgam-event-foundation]
+    paths:
+      - 'intelligence/**'
+      - 'tests/test_intelligence.py'
+      - 'tests/test_ingest.py'
+      - '.github/workflows/intelligence-checks.yml'
+  workflow_dispatch: {}
+permissions:
+  contents: read
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run intelligence unit tests
+        run: python -m unittest discover -s tests -p 'test_intelligence.py' -v && python -m unittest discover -s tests -p 'test_ingest.py' -v
+      - name: Check snapshot normalization
+        run: |
+          python - <<'PY'
+          import json
+          from intelligence.ingest import existing_observations
+          with open("data.json", encoding="utf-8") as f:
+              snapshot = json.load(f)
+          events, excluded = existing_observations(snapshot)
+          print("Normalized:", len(events), "Excluded:", len(excluded))
+          assert events, "No observations normalized"
+          for e in events:
+              assert e["source"]["url"] and e["observed_at"]
+          PY
+  noaa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Probe live NOAA active-alert feed
+        run: |
+          python - <<'PY'
+          from intelligence.noaa import fetch_active_alerts
+          observations, excluded = fetch_active_alerts()
+          print("NOAA normalized:", len(observations), "Excluded:", len(excluded))
+          assert observations or excluded, "No NOAA alert features received"
+          PY
