@@ -29,6 +29,7 @@ def build_panel(views):
     id_source_keys = defaultdict(set)
     version_digests = defaultdict(set)
     repeated_appearances = 0
+    evidence_locations = defaultdict(list)
     total_appearances = 0
     for view in views:
         validate_view(view)
@@ -50,6 +51,7 @@ def build_panel(views):
             source_event_ids[source_key].add(event['id'])
             id_source_keys[(event['domain'], event['id'])].add(source_key)
             version_digests[identity].add(digest)
+            evidence_locations[identity].append({"captured_utc": captured.isoformat(), "sha256": digest})
             if identity in unique_evidence:
                 repeated_appearances += 1
                 if unique_evidence[identity] != digest:
@@ -59,6 +61,25 @@ def build_panel(views):
             by_domain[event["domain"]].add(captured.date().isoformat())
         captures.append({"captured_utc": captured.isoformat(), "observation_counts": counts})
     captures.sort(key=lambda item: item["captured_utc"])
+    exceptions = []
+    def add_exception(kind, identities):
+        references = []
+        for identity in sorted(identities):
+            domain, event_id, observed_at, source_name, source_url = identity
+            references.append({"domain": domain, "event_id": event_id, "observed_at": observed_at,
+                               "source_name": source_name, "source_url": source_url,
+                               "captures": sorted(evidence_locations[identity], key=lambda x: x["captured_utc"])})
+        exceptions.append({"type": kind, "records": references})
+    for identity in sorted(conflicting_evidence):
+        add_exception("revised_identity", [identity])
+    for key, ids in sorted(source_event_ids.items()):
+        if len(ids) > 1:
+            add_exception("possible_alias", [identity for identity in unique_evidence
+                                             if (identity[0], identity[3], identity[4], identity[2]) == key])
+    for key, source_keys in sorted(id_source_keys.items()):
+        if len(source_keys) > 1:
+            add_exception("reused_event_id", [identity for identity in unique_evidence
+                                              if (identity[0], identity[1]) == key])
     return {
         "schema": "amalgam.historical-panel-manifest.v1",
         "capture_count": len(captures),
@@ -70,6 +91,7 @@ def build_panel(views):
         "possible_alias_groups": sum(len(ids) > 1 for ids in source_event_ids.values()),
         "reused_ids_across_source_keys": sum(len(keys) > 1 for keys in id_source_keys.values()),
         "captures": captures,
+        "review_exceptions": exceptions,
         "capture_dates_by_domain": {key: len(value) for key, value in sorted(by_domain.items())},
         "relationships": [],
         "predictive_advantage": "not_established",
