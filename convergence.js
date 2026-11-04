@@ -17,6 +17,14 @@ function analyze(data,now){
   const age=days(x.asof,now),ok=age>=0&&age<=MAX.oil&&status.eia?.ok!==false;
   if(Math.abs(+x.chg)>=2)push({id:'oil-'+key,domain:'Energy',title:label,detail:(+x.chg>0?'+':'')+(+x.chg).toFixed(2)+'% latest reported change',direction:+x.chg>0?'up':'down',strength:Math.abs(+x.chg)/3,asof:x.asof,age,usable:ok,reason:ok?'Daily spot change':status.eia?.ok===false?'EIA refresh failed':'Outside 12-day freshness window',source:'U.S. EIA',commercial:true,region:'Global',value:+x.chg});
  });
+ // ECB reference rates: quoted as local currency per euro, NOT a USD index.
+ // Large moves are observations only; do not infer capital flight or causation.
+ const fxLabels={GRU:'Brazilian real / EUR',LON:'Pound / EUR',FRA:'U.S. dollar / EUR',ZRH:'Swiss franc / EUR',JNB:'South African rand / EUR',BOM:'Indian rupee / EUR',SHA:'Chinese yuan / EUR',TYO:'Japanese yen / EUR',SYD:'Australian dollar / EUR'};
+ Object.entries(fxLabels).forEach(([key,label])=>{
+  const x=h[key];if(!x||!Number.isFinite(+x.chg)||Math.abs(+x.chg)<.75)return;
+  const age=days(x.asof,now),ok=age>=0&&age<=MAX.fx&&status.ecb?.ok!==false;
+  push({id:'fx-'+key,domain:'FX',title:label,detail:(+x.chg>0?'+':'')+(+x.chg).toFixed(2)+'% change in local currency per EUR',direction:+x.chg>0?'higher quote':'lower quote',strength:Math.abs(+x.chg),asof:x.asof,age,usable:ok,reason:ok?'ECB daily reference rate':status.ecb?.ok===false?'ECB refresh failed':'Outside 5-day freshness window',source:'European Central Bank',commercial:true,region:key==='GRU'?'South America':key==='JNB'?'Africa':key==='BOM'||key==='SHA'||key==='TYO'?'Asia':'Global',value:+x.chg});
+ });
  const y=h.NYC;if(y&&Number.isFinite(+y.chg)&&Math.abs(+y.chg)>=5){
   const age=days(y.asof,now),ok=age>=0&&age<=MAX.treasury&&status.ust?.ok!==false;
   push({id:'rates-nyc',domain:'Rates',title:'U.S. 10-year yield',detail:(+y.chg>0?'+':'')+(+y.chg).toFixed(1)+' bp latest reported change',direction:+y.chg>0?'up':'down',strength:Math.abs(+y.chg)/10,asof:y.asof,age,usable:ok,reason:ok?'Daily yield change':status.ust?.ok===false?'Treasury refresh failed':'Outside 5-day freshness window',source:'U.S. Treasury',commercial:true,region:'Global',value:+y.chg});
