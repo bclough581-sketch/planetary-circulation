@@ -6,6 +6,7 @@ import argparse
 import hashlib
 import json
 import math
+from datetime import date
 from pathlib import Path
 from urllib.request import Request, urlopen
 from zipfile import ZipFile
@@ -59,9 +60,22 @@ def verify_bundle(directory):
     saved_coverage = json.loads((root / "historical-coverage-audit.json").read_text(encoding="utf-8"))
     if saved_coverage != coverage_report(energy, treasury, panel):
         raise ValueError("historical coverage report does not match source files")
+    # Source dates must be canonical calendar days, not merely matching strings.
+    def canonical_day(value):
+        if not isinstance(value, str):
+            raise ValueError("invalid source observation date")
+        try:
+            parsed = date.fromisoformat(value)
+        except ValueError as exc:
+            raise ValueError("invalid source observation date") from exc
+        if parsed.isoformat() != value:
+            raise ValueError("noncanonical source observation date")
+        return parsed
+
     # Validate retained source records independently of their manifest hashes.
     energy_seen = set()
     for record in energy.get("observations", []):
+        canonical_day(record.get("date"))
         key = (record.get("series"), record.get("date"))
         if key in energy_seen:
             raise ValueError("duplicate EIA source observation")
@@ -74,6 +88,7 @@ def verify_bundle(directory):
     treasury_seen = set()
     for record in treasury.get("observations", []):
         day = record.get("date")
+        canonical_day(day)
         if day in treasury_seen:
             raise ValueError("duplicate Treasury source observation")
         treasury_seen.add(day)
