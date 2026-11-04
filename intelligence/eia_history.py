@@ -81,6 +81,24 @@ def build(start, end, key=None, fetch=None):
             "warning": "Historical oil prices alone do not establish a cross-domain signal or tradable edge."}
 
 
+
+def aligned_price_dates(observations):
+    """Return exact-date WTI/Brent pairs, without interpolation or forward filling."""
+    dates = {}
+    for row in observations:
+        sid = row["series"]
+        if sid not in SERIES:
+            continue
+        date_key = row["date"]
+        value = float(row["value"])
+        existing = dates.setdefault(date_key, {})
+        if sid in existing and existing[sid] != value:
+            raise ValueError("conflicting aligned price observation")
+        existing[sid] = value
+    return [{"date": day, "wti": values["RWTC"], "brent": values["RBRTE"]}
+            for day, values in sorted(dates.items())
+            if "RWTC" in values and "RBRTE" in values]
+
 def main():
     import argparse
     parser = argparse.ArgumentParser()
