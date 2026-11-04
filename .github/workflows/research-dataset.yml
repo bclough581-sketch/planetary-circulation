@@ -45,6 +45,8 @@ jobs:
           Path("research-view.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
           print("Eligible observations:", len(result["observations"]))
           print("Excluded observations:", len(result["excluded"]))
+          print("Expired NOAA alerts:", sum(x["reason"] == "alert expired" for x in result["excluded"]))
+          assert not any(x["source"]["name"] == "NOAA National Weather Service" and not x["metadata"].get("expires") for x in result["observations"])
           print("By domain:", result["domains"])
           print("Relationships:", len(result["relationships"]))
           assert result["domains"]["energy"] == 2, "Expected two fresh EIA observations"
