@@ -29,6 +29,9 @@ jobs:
       - name: Isolate PortWatch parameter failures
         continue-on-error: true
         run: python -m intelligence.portwatch_parameter_probe
+      - name: Compare PortWatch queries against working baseline
+        continue-on-error: true
+        run: python -m intelligence.portwatch_working_baseline_probe
       - name: Inspect EIA latest publication dates
         continue-on-error: true
         env:
