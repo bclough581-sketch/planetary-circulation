@@ -19,12 +19,15 @@ class BundleVerificationTests(unittest.TestCase):
                  "predictive_advantage": "not_established",
                  "observations": [{"date": "2025-01-02", "wti_usd_per_barrel": 70,
                                    "brent_usd_per_barrel": 75, "treasury_10y_percent": 4.4}]}
-        audit = assess_asof(panel, "2026-11-04T00:00:00Z")
-        energy = {"predictive_advantage": "not_established",
+        audit = None
+        energy = {"schema": "amalgam.eia-history.v1", "source": "EIA", "source_url": "https://www.eia.gov/opendata/", "retrieved_utc": "2026-11-04T00:00:00Z", "predictive_advantage": "not_established",
                   "observations": [{"series": "RWTC", "date": "2025-01-02"},
                                    {"series": "RBRTE", "date": "2025-01-02"}]}
-        treasury = {"predictive_advantage": "not_established",
+        treasury = {"schema": "amalgam.treasury-history.v1", "source": "Treasury", "source_url": "https://home.treasury.gov/", "retrieved_utc": "2026-11-04T00:00:00Z", "predictive_advantage": "not_established",
                     "observations": [{"date": "2025-01-02"}]}
+        from intelligence.cross_domain_history import build as rebuild_panel
+        panel = rebuild_panel(energy, treasury)
+        audit = assess_asof(panel, "2026-11-04T00:00:00Z")
         values = {"eia-history-research.json": energy,
                   "treasury-history-research.json": treasury,
                   "historical-coverage-audit.json": coverage_report(energy, treasury, panel),
