@@ -23,7 +23,7 @@ const load=async data=>{
 const names=['weather','geopolitics','maritime','aviation','energy','commodities','economics','markets','corporate'];
 const empty=()=>Object.fromEntries(names.map(x=>[x,0]));
 const event={id:'one',domain:'weather',title:'Test',observed_at:'2026-11-04T12:00:00Z',source:{name:'NOAA',url:'https://weather.gov'}};
-const good={schema:'amalgam.research.v1',observations:[event],excluded:[],relationships:[],domains:{...empty(),weather:1},predictive_advantage:'not_established'};
+const good={schema:'amalgam.research.v1',observations:[event],excluded:[],relationships:[],domains:{...empty(),weather:1},predictive_advantage:'not_established',licensing:{portwatch_commercial_reuse:'permission_not_verified'},feed_health:[{feed:'eia',condition:'eligible_source'}]};
 (async()=>{
  await load(good);
  assert.equal(document.getElementById('count').textContent,1);
@@ -34,6 +34,8 @@ const good={schema:'amalgam.research.v1',observations:[event],excluded:[],relati
   ['unsupported claim',x=>x.predictive_advantage='established'],
   ['missing source',x=>x.observations[0].source.url=''],
   ['unvalidated relationship',x=>x.relationships.push({status:'proposed'})],
+  ['false reuse permission',x=>x.licensing.portwatch_commercial_reuse='permitted'],
+  ['missing feed health',x=>delete x.feed_health],
  ]) {
   const bad=JSON.parse(JSON.stringify(good));change(bad);
   await load(bad);
@@ -42,5 +44,5 @@ const good={schema:'amalgam.research.v1',observations:[event],excluded:[],relati
   assert.match(document.getElementById('status').textContent,/Unable to load file/,name);
   await load(good);
  }
- console.log('Viewer JavaScript interaction checks passed: valid load + 5 rejected imports');
+ console.log('Viewer JavaScript interaction checks passed: valid load + 7 rejected imports');
 })().catch(err=>{console.error(err);process.exitCode=1;});
