@@ -129,7 +129,7 @@ class BundleVerificationTests(unittest.TestCase):
     def test_missing_file_entry(self):
         self.manifest["files"].pop("point-in-time-audit.json")
         self.save_manifest()
-        with self.assertRaisesRegex(ValueError, "exactly four"):
+        with self.assertRaisesRegex(ValueError, "exactly five"):
             verify_bundle(self.root)
 
     def test_forged_audit_with_recomputed_checksum(self):
