@@ -40,7 +40,7 @@ class BundleVerificationTests(unittest.TestCase):
             path.write_text(json.dumps(value), encoding="utf-8")
             hashes[name] = hashlib.sha256(path.read_bytes()).hexdigest()
         self.manifest = {"schema": "amalgam.research-artifact-manifest.v1",
-                         "files": hashes, "workflow_run_id": "41925963100",
+                         "files": hashes, "captured_utc": "2026-11-04T00:00:00Z", "workflow_run_id": "41925963100",
                          "commit_sha": "a" * 40, "repository": "bclough581-sketch/planetary-circulation",
                          "workflow_url": "https://github.com/bclough581-sketch/planetary-circulation/actions/runs/41925963100",
                          "predictive_advantage": "not_established",
@@ -238,6 +238,22 @@ class BundleVerificationTests(unittest.TestCase):
         self.manifest["files"][path.name] = hashlib.sha256(path.read_bytes()).hexdigest()
         self.save_manifest()
         with self.assertRaisesRegex(ValueError, "source-level predictive"):
+            verify_bundle(self.root)
+
+    def test_future_source_retrieval_rejected_with_updated_hash(self):
+        path = self.root / "treasury-history-research.json"
+        source = json.loads(path.read_text())
+        source["retrieved_utc"] = "2026-11-05T00:00:00Z"
+        path.write_text(json.dumps(source), encoding="utf-8")
+        self.manifest["files"][path.name] = hashlib.sha256(path.read_bytes()).hexdigest()
+        self.save_manifest()
+        with self.assertRaisesRegex(ValueError, "retrieval occurs after"):
+            verify_bundle(self.root)
+
+    def test_naive_manifest_capture_rejected(self):
+        self.manifest["captured_utc"] = "2026-11-04T00:00:00"
+        self.save_manifest()
+        with self.assertRaisesRegex(ValueError, "timezone-naive"):
             verify_bundle(self.root)
 
     def test_tampered_file(self):
