@@ -3,6 +3,8 @@
 No synthetic history, inferred relationships, or predictive scoring.
 """
 from collections import defaultdict
+from hashlib import sha256
+import json
 from datetime import datetime, timezone
 from .research_view import validate_view
 
@@ -21,6 +23,10 @@ def build_panel(views):
     captures = []
     capture_times = set()
     by_domain = defaultdict(set)
+    unique_evidence = {}
+    conflicting_evidence = set()
+    repeated_appearances = 0
+    total_appearances = 0
     for view in views:
         validate_view(view)
         captured = _parse(view["generated_utc"])
@@ -33,17 +39,31 @@ def build_panel(views):
             if observed > captured:
                 raise ValueError("observation postdates capture")
             counts[event["domain"]] += 1
+            total_appearances += 1
+            identity = (event["domain"], event["id"], event["observed_at"], event["source"]["name"], event["source"]["url"])
+            payload = json.dumps(event, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+            digest = sha256(payload.encode("utf-8")).hexdigest()
+            if identity in unique_evidence:
+                repeated_appearances += 1
+                if unique_evidence[identity] != digest:
+                    conflicting_evidence.add(identity)
+            else:
+                unique_evidence[identity] = digest
             by_domain[event["domain"]].add(captured.date().isoformat())
         captures.append({"captured_utc": captured.isoformat(), "observation_counts": counts})
     captures.sort(key=lambda item: item["captured_utc"])
     return {
         "schema": "amalgam.historical-panel-manifest.v1",
         "capture_count": len(captures),
+        "observation_appearances": total_appearances,
+        "unique_observation_identities": len(unique_evidence),
+        "repeated_observation_appearances": repeated_appearances,
+        "conflicting_observation_identities": len(conflicting_evidence),
         "captures": captures,
         "capture_dates_by_domain": {key: len(value) for key, value in sorted(by_domain.items())},
         "relationships": [],
         "predictive_advantage": "not_established",
-        "warning": "Capture counts are not independent observations, aligned time series, or predictive validation. Original artifacts must be retained.",
+        "warning": "Repeated observation identities are not independent evidence. Conflicts require source-level review. Capture counts are not aligned time series or predictive validation. Original artifacts must be retained.",
     }
 
 
