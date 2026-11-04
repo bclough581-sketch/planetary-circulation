@@ -38,10 +38,23 @@ document.getElementById('file').addEventListener('change',async e=>{
   if(data.predictive_advantage!=='not_established'||data.relationships.length!==0)throw Error('Unsupported predictive or relationship claim');
   if(data.licensing?.portwatch_commercial_reuse!=='permission_not_verified')throw Error('Unsupported PortWatch reuse claim');
   if(!Array.isArray(data.feed_health)||data.feed_health.some(row=>!row||!row.feed||!row.condition))throw Error('Invalid feed health metadata');
+  const sourceUrls={
+   'NOAA National Weather Service':'https://www.weather.gov/documentation/services-web-api',
+   'ECB statistics':'https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/',
+   'U.S. Treasury':'https://home.treasury.gov/resource-center/data-chart-center/interest-rates',
+   'U.S. Energy Information Administration':'https://www.eia.gov/opendata/',
+   'IMF PortWatch':'https://portwatch.imf.org/'
+  };
+  const sourceDomains={
+   'NOAA National Weather Service':'weather','ECB statistics':'economics',
+   'U.S. Treasury':'economics','U.S. Energy Information Administration':'energy',
+   'IMF PortWatch':'maritime'
+  };
   const counts=Object.fromEntries(domains.map(domain=>[domain,0]));
   const ids=new Set();
   for(const event of data.observations){
    if(!Object.hasOwn(counts,event.domain)||!event.id||ids.has(event.id)||!event.source?.url||!event.observed_at)throw Error('Invalid or duplicate observation evidence');
+   if(sourceUrls[event.source?.name]!==event.source?.url||sourceDomains[event.source?.name]!==event.domain)throw Error('Observation source identity mismatch');
    ids.add(event.id);counts[event.domain]++;
   }
   if(!data.domains||Object.keys(data.domains).length!==domains.length||
