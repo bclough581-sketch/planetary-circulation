@@ -19,6 +19,17 @@ def parse_instant(value):
     return stamp.astimezone(timezone.utc)
 
 
+def _json_number_normalized(value):
+    """Normalize integral floats to browser JSON number representation."""
+    if isinstance(value, dict):
+        return {key: _json_number_normalized(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_json_number_normalized(item) for item in value]
+    if isinstance(value, float) and value.is_integer():
+        return int(value)
+    return value
+
+
 def assess_asof(panel, decision_utc):
     decision = parse_instant(decision_utc)
     if panel.get("schema") != "amalgam.cross-domain-observation-panel.v1":
@@ -29,7 +40,7 @@ def assess_asof(panel, decision_utc):
     days = [row.get("date") for row in rows]
     if any(not isinstance(day, str) for day in days) or len(set(days)) != len(days):
         raise ValueError("invalid or repeated historical observation date")
-    fingerprint = hashlib.sha256(json.dumps(rows, sort_keys=True, separators=(",", ":"), allow_nan=False).encode("utf-8")).hexdigest()
+    fingerprint = hashlib.sha256(json.dumps(_json_number_normalized(rows), sort_keys=True, separators=(",", ":"), allow_nan=False, ensure_ascii=False).encode("utf-8")).hexdigest()
     required = ("wti_usd_per_barrel", "brent_usd_per_barrel", "treasury_10y_percent")
     usable = []
     blocked = []
