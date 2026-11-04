@@ -1,0 +1,53 @@
+name: intelligence-research-dataset
+on:
+  workflow_dispatch: {}
+permissions:
+  contents: read
+jobs:
+  research-dataset:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: amalgam-event-foundation
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch live NOAA alerts and assemble research view
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from datetime import datetime, timezone
+          from intelligence.noaa import fetch_active_alerts
+          from intelligence.research_view import build
+          snapshot = json.loads(Path("data.json").read_text(encoding="utf-8"))
+          weather, excluded = fetch_active_alerts()
+          # Convert the validated observations to the input schema expected by the view.
+          # The view normalizes the raw NOAA features, so obtain raw GeoJSON separately.
+          import urllib.request
+          req = urllib.request.Request("https://api.weather.gov/alerts/active",
+              headers={"User-Agent": "Amalgam research prototype (github.com/bclough581-sketch/planetary-circulation)",
+                       "Accept": "application/geo+json"})
+          with urllib.request.urlopen(req, timeout=20) as response:
+              alerts = json.load(response)
+          result = build(snapshot, alerts, datetime.now(timezone.utc))
+          result["generated_utc"] = datetime.now(timezone.utc).isoformat()
+          result["snapshot_status"] = snapshot.get("status", {})
+          result["noaa_normalized_first_pass"] = len(weather)
+          result["noaa_excluded_first_pass"] = len(excluded)
+          Path("research-view.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
+          print("Eligible observations:", len(result["observations"]))
+          print("Excluded observations:", len(result["excluded"]))
+          print("By domain:", result["domains"])
+          print("Relationships:", len(result["relationships"]))
+          assert result["relationships"] == []
+          assert all(x["source"]["url"] and x["observed_at"] for x in result["observations"])
+          PY
+      - name: Upload research dataset (not deployed)
+        uses: actions/upload-artifact@v4
+        with:
+          name: amalgam-research-view
+          path: research-view.json
+          retention-days: 7
