@@ -5,6 +5,7 @@ Checks file integrity and audit consistency, not external source authenticity.
 import argparse
 import hashlib
 import json
+import math
 from pathlib import Path
 from urllib.request import Request, urlopen
 from zipfile import ZipFile
@@ -58,6 +59,27 @@ def verify_bundle(directory):
     saved_coverage = json.loads((root / "historical-coverage-audit.json").read_text(encoding="utf-8"))
     if saved_coverage != coverage_report(energy, treasury, panel):
         raise ValueError("historical coverage report does not match source files")
+    # Validate retained source records independently of their manifest hashes.
+    energy_seen = set()
+    for record in energy.get("observations", []):
+        key = (record.get("series"), record.get("date"))
+        if key in energy_seen:
+            raise ValueError("duplicate EIA source observation")
+        energy_seen.add(key)
+        if key[0] not in ("RWTC", "RBRTE"):
+            raise ValueError("unsupported EIA source series")
+        value = record.get("value")
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or not 0 < value < 10000:
+            raise ValueError("invalid EIA source value")
+    treasury_seen = set()
+    for record in treasury.get("observations", []):
+        day = record.get("date")
+        if day in treasury_seen:
+            raise ValueError("duplicate Treasury source observation")
+        treasury_seen.add(day)
+        value = record.get("ten_year_yield_percent")
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or not 0 <= value <= 100:
+            raise ValueError("invalid Treasury source value")
     reconstructed = rebuild_cross_domain_panel(energy, treasury)
     if panel.get("observations") != reconstructed["observations"]:
         raise ValueError("joined numerical observations do not match source files")
