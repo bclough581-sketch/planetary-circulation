@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from .assemble import assemble
 from .feed_audit import audit
+from .relationship_readiness import audit_readiness
 
 DOMAINS = ("weather", "geopolitics", "maritime", "aviation", "energy",
            "commodities", "economics", "markets", "corporate")
@@ -42,6 +43,9 @@ def validate_view(view):
         raise ValueError("missing feed health")
     if any(not isinstance(row, dict) or not row.get("feed") or not row.get("condition") for row in view["feed_health"]):
         raise ValueError("invalid feed health record")
+    readiness = view.get("relationship_readiness")
+    if not isinstance(readiness, dict) or readiness != audit_readiness(view):
+        raise ValueError("historical readiness assessment missing or inconsistent")
     if view.get("relationships") != [] or view.get("predictive_advantage") != "not_established":
         raise ValueError("unsupported convergence or predictive claim")
     return True
@@ -66,6 +70,7 @@ def build(snapshot, alerts, now=None):
         "predictive_advantage": "not_established",
         "message": "This view displays source observations only; no relationship or trading edge has been validated. Feed health does not establish commercial reuse rights.",
     }
+    view["relationship_readiness"] = audit_readiness(view)
     validate_view(view)
     return view
 
