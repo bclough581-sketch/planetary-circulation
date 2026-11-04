@@ -3,6 +3,8 @@
 Observation dates do not imply publication or availability timestamps.
 """
 from datetime import datetime, timezone
+import hashlib
+import json
 
 
 def parse_instant(value):
@@ -21,10 +23,17 @@ def assess_asof(panel, decision_utc):
     decision = parse_instant(decision_utc)
     if panel.get("schema") != "amalgam.cross-domain-observation-panel.v1":
         raise ValueError("unsupported historical panel")
+    rows = panel.get("observations")
+    if not isinstance(rows, list):
+        raise ValueError("missing historical observations")
+    days = [row.get("date") for row in rows]
+    if any(not isinstance(day, str) for day in days) or len(set(days)) != len(days):
+        raise ValueError("invalid or repeated historical observation date")
+    fingerprint = hashlib.sha256(json.dumps(rows, sort_keys=True, separators=(",", ":"), allow_nan=False).encode("utf-8")).hexdigest()
     required = ("wti_usd_per_barrel", "brent_usd_per_barrel", "treasury_10y_percent")
     usable = []
     blocked = []
-    for row in panel.get("observations", []):
+    for row in rows:
         day = row.get("date")
         evidence = row.get("availability_evidence")
         if not isinstance(evidence, dict):
@@ -49,6 +58,9 @@ def assess_asof(panel, decision_utc):
         blocked.append({"date": day, "reason": "publication_record_not_independently_authenticated"})
     return {"status": "eligible_for_asof_analysis" if usable else "blocked",
             "decision_utc": decision.isoformat(),
+            "source_panel_schema": panel["schema"],
+            "source_observation_count": len(rows),
+            "source_observations_sha256": fingerprint,
             "usable_count": len(usable), "blocked_count": len(blocked),
             "blocked": blocked,
             "predictive_advantage": "not_established",
