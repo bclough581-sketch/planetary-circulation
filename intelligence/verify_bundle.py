@@ -7,6 +7,7 @@ import hashlib
 import json
 from pathlib import Path
 from urllib.request import Request, urlopen
+from zipfile import ZipFile
 
 from intelligence.audit_validation import validate_audit
 
@@ -46,7 +47,7 @@ def verify_bundle(directory):
             "warning": "File integrity and audit consistency only; provenance identity is self-reported and not authenticated against GitHub."}
 
 
-def verify_github_run(directory, fetch_json=None):
+def verify_github_run(directory, fetch_json=None, artifact_zip=None):
     """Cross-check claimed run metadata with GitHub's public Actions API.
 
     This verifies run identity, not the authenticity of downloaded artifact bytes.
@@ -89,7 +90,21 @@ def verify_github_run(directory, fetch_json=None):
     attached = matching[0].get("workflow_run")
     if not isinstance(attached, dict) or str(attached.get("id")) != run_id or attached.get("head_sha") != sha:
         raise ValueError("artifact run/commit attachment mismatch")
-    return {"status": "github_run_and_artifact_metadata_matched",
+    if artifact_zip is not None:
+        digest = matching[0].get("digest")
+        if not isinstance(digest, str) or not digest.startswith("sha256:"):
+            raise ValueError("GitHub artifact digest unavailable")
+        actual_digest = hashlib.sha256(Path(artifact_zip).read_bytes()).hexdigest()
+        if actual_digest != digest.removeprefix("sha256:"):
+            raise ValueError("GitHub artifact ZIP digest mismatch")
+        with ZipFile(artifact_zip) as archive:
+            names = archive.namelist()
+            if len(names) != len(EXPECTED) + 1 or set(names) != EXPECTED | {"research-artifact-manifest.json"}:
+                raise ValueError("GitHub artifact ZIP file listing mismatch")
+            for name in names:
+                if archive.read(name) != (root / name).read_bytes():
+                    raise ValueError("GitHub artifact ZIP contents mismatch: " + name)
+    return {"status": "github_artifact_zip_digest_matched" if artifact_zip is not None else "github_run_and_artifact_metadata_matched",
             "workflow_run_id": run_id,
             "artifact_id": matching[0].get("id"),
             "warning": "Run and artifact listing matched GitHub; local artifact bytes are NOT authenticated by this check."}
@@ -99,10 +114,11 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("directory", help="Directory containing downloaded research JSON files")
     parser.add_argument("--check-github", action="store_true", help="Also check run metadata against GitHub API")
+    parser.add_argument("--artifact-zip", help="Original GitHub artifact ZIP; verify GitHub SHA-256 digest and contents")
     args = parser.parse_args()
     result = verify_bundle(args.directory)
-    if args.check_github:
-        result["github_run"] = verify_github_run(args.directory)
+    if args.check_github or args.artifact_zip:
+        result["github_run"] = verify_github_run(args.directory, artifact_zip=args.artifact_zip)
     print(json.dumps(result, indent=2))
 
 
