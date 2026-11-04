@@ -28,14 +28,46 @@ button:focus-visible{outline:2px solid white} .domain{display:flex;justify-conte
 <h3>Historical relationship readiness</h3><div id="readiness">No dataset loaded.</div>
 <h3>Source health and limitations</h3><div id="source-health">Load a dataset to inspect feed status.</div>
 <h3>Exclusion reasons</h3><div id="exclusion-reasons">No dataset loaded.</div>
-<div id="details"></div></section>\n<section class="panel"><h2>Historical point-in-time exclusion audit</h2><p>Import point-in-time-audit.json from the cross-domain development workflow. This is separate from the live observation evidence ledger.</p><label for="audit-file">Select point-in-time-audit.json</label> <input type="file" id="audit-file" accept=".json,application/json"><p id="audit-status" class="warn">No historical audit loaded.</p><div id="audit-reasons"></div><div id="audit-dates"></div><p class="warn">Local imports are not authenticated. This display does not certify publication timing or trading eligibility.</p></section>
+<div id="details"></div></section>\n<section class="panel"><h2>Historical point-in-time exclusion audit</h2><p>Import point-in-time-audit.json from the cross-domain development workflow. This is separate from the live observation evidence ledger.</p><label for="historical-file">Select cross-domain-observation-panel.json</label> <input type="file" id="historical-file" accept=".json,application/json"><p id="historical-status">No historical panel loaded.</p><label for="audit-file">Select point-in-time-audit.json</label> <input type="file" id="audit-file" accept=".json,application/json"><p id="audit-status" class="warn">No historical audit loaded.</p><div id="audit-reasons"></div><div id="audit-dates"></div><p class="warn">Local imports are not authenticated. This display does not certify publication timing or trading eligibility.</p></section>
 <script>
+let historicalPanel=null;
+let historicalAudit=null;
+const canonicalJson=value=>{
+ if(Array.isArray(value))return '['+value.map(canonicalJson).join(',')+']';
+ if(value&&typeof value==='object')return '{'+Object.keys(value).sort().map(key=>JSON.stringify(key)+':'+canonicalJson(value[key])).join(',')+'}';
+ return JSON.stringify(value);
+};
+async function verifyHistoricalPair(){
+ const status=document.getElementById('historical-status');
+ if(!historicalPanel||!historicalAudit){status.textContent='Load both historical panel and audit to verify their binding.';return;}
+ try{
+  if(historicalPanel.schema!=='amalgam.cross-domain-observation-panel.v1'||
+     !Array.isArray(historicalPanel.observations)||
+     historicalAudit.source_panel_schema!==historicalPanel.schema||
+     historicalAudit.source_observation_count!==historicalPanel.observations.length||
+     !/^[a-f0-9]{64}$/.test(historicalAudit.source_observations_sha256))throw Error('Missing or inconsistent panel binding');
+  if(!globalThis.crypto?.subtle)throw Error('SHA-256 verification unavailable in this browser');
+  const canonical=canonicalJson(historicalPanel.observations);
+  const bytes=new TextEncoder().encode(canonical);
+  const digest=await globalThis.crypto.subtle.digest('SHA-256',bytes);
+  const actual=Array.from(new Uint8Array(digest)).map(x=>x.toString(16).padStart(2,'0')).join('');
+  if(actual!==historicalAudit.source_observations_sha256)throw Error('Panel fingerprint mismatch');
+  status.textContent='Panel/audit fingerprint MATCH. File pairing verified; original source authenticity and publication timing NOT verified.';
+ }catch(err){status.textContent='Panel/audit verification FAILED: '+err.message;}
+}
+document.getElementById('historical-file').addEventListener('change',async e=>{
+ const file=e.target.files[0];if(!file)return;
+ historicalPanel=null;
+ try{const data=JSON.parse(await file.text());if(data.schema!=='amalgam.cross-domain-observation-panel.v1'||!Array.isArray(data.observations))throw Error('Invalid historical panel');historicalPanel=data;}
+ catch(err){document.getElementById('historical-status').textContent='Historical panel rejected: '+err.message;return;}
+ await verifyHistoricalPair();
+});
 document.getElementById('audit-file').addEventListener('change',async e=>{
  const file=e.target.files[0];if(!file)return;
  const status=document.getElementById('audit-status');
  const reasons=document.getElementById('audit-reasons');
  const dates=document.getElementById('audit-dates');
- reasons.replaceChildren();dates.replaceChildren();
+ reasons.replaceChildren();dates.replaceChildren();historicalAudit=null;
  try{
   const audit=JSON.parse(await file.text());
   if(audit.predictive_advantage!=='not_established'||audit.status!=='blocked'||
@@ -58,7 +90,7 @@ document.getElementById('audit-file').addEventListener('change',async e=>{
   for(const item of audit.blocked.slice(0,300)){
    const p=document.createElement('p');p.textContent=item.date+' | '+item.reason;detail.append(p);
   }
-  dates.append(detail);
+  dates.append(detail);historicalAudit=audit;await verifyHistoricalPair();
  }catch(err){status.textContent='Audit rejected: '+err.message;reasons.replaceChildren();dates.replaceChildren();}
 });
 const domains=['weather','geopolitics','maritime','aviation','energy','commodities','economics','markets','corporate'];
