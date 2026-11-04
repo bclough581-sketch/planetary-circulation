@@ -14,6 +14,7 @@ from zipfile import ZipFile
 from intelligence.audit_validation import validate_audit
 from intelligence.coverage_audit import coverage_report
 from intelligence.cross_domain_history import build as rebuild_cross_domain_panel
+from intelligence.eia_history import aligned_price_dates
 
 EXPECTED = {
     "eia-history-research.json",
@@ -93,6 +94,8 @@ def verify_bundle(directory):
         value = record.get("value")
         if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or not 0 < value < 10000:
             raise ValueError("invalid EIA source value")
+    if energy.get("aligned_prices") != aligned_price_dates(energy["observations"]):
+        raise ValueError("EIA aligned prices do not match source observations")
     treasury_seen = set()
     for record in treasury.get("observations", []):
         day = record.get("date")
