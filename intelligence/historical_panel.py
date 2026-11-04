@@ -45,3 +45,22 @@ def build_panel(views):
         "predictive_advantage": "not_established",
         "warning": "Capture counts are not independent observations, aligned time series, or predictive validation. Original artifacts must be retained.",
     }
+
+
+def main():
+    """Build a local manifest from explicitly supplied, downloaded artifacts."""
+    import argparse
+    import json
+    from pathlib import Path
+    parser = argparse.ArgumentParser(description="Audit independently captured research-view JSON files")
+    parser.add_argument("captures", nargs="+", type=Path, help="Downloaded research-view JSON files")
+    parser.add_argument("--output", type=Path, default=Path("historical-panel-manifest.json"))
+    args = parser.parse_args()
+    views = [json.loads(path.read_text(encoding="utf-8")) for path in args.captures]
+    manifest = build_panel(views)
+    args.output.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    print(f"Audited {manifest['capture_count']} captures; no predictive claim.")
+
+
+if __name__ == "__main__":
+    main()
