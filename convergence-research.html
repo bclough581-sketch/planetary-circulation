@@ -35,6 +35,8 @@ document.getElementById('file').addEventListener('change',async e=>{
   const data=JSON.parse(await file.text());
   if(data.schema!=='amalgam.research.v1'||!Array.isArray(data.observations)||!Array.isArray(data.excluded)||!Array.isArray(data.relationships))throw Error('Unsupported research-view schema');
   if(data.predictive_advantage!=='not_established'||data.relationships.length!==0)throw Error('Unsupported predictive or relationship claim');
+  if(data.licensing?.portwatch_commercial_reuse!=='permission_not_verified')throw Error('Unsupported PortWatch reuse claim');
+  if(!Array.isArray(data.feed_health)||data.feed_health.some(row=>!row||!row.feed||!row.condition))throw Error('Invalid feed health metadata');
   const counts=Object.fromEntries(domains.map(domain=>[domain,0]));
   const ids=new Set();
   for(const event of data.observations){
