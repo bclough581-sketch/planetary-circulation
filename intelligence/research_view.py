@@ -29,6 +29,12 @@ def validate_view(view):
         expected[event["domain"]] += 1
     if counts != expected:
         raise ValueError("domain counts disagree with evidence")
+    if view.get("licensing", {}).get("portwatch_commercial_reuse") != "permission_not_verified":
+        raise ValueError("unsupported PortWatch reuse claim")
+    if not isinstance(view.get("feed_health"), list):
+        raise ValueError("missing feed health")
+    if any(not isinstance(row, dict) or not row.get("feed") or not row.get("condition") for row in view["feed_health"]):
+        raise ValueError("invalid feed health record")
     if view.get("relationships") != [] or view.get("predictive_advantage") != "not_established":
         raise ValueError("unsupported convergence or predictive claim")
     return True
