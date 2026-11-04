@@ -21,10 +21,10 @@ class BundleVerificationTests(unittest.TestCase):
                                    "brent_usd_per_barrel": 75, "treasury_10y_percent": 4.4}]}
         audit = None
         energy = {"schema": "amalgam.eia-history.v1", "source": "EIA", "source_url": "https://www.eia.gov/opendata/", "retrieved_utc": "2026-11-04T00:00:00Z", "predictive_advantage": "not_established",
-                  "observations": [{"series": "RWTC", "date": "2025-01-02"},
-                                   {"series": "RBRTE", "date": "2025-01-02"}]}
+                  "observations": [{"series": "RWTC", "date": "2025-01-02", "value": 70},
+                                   {"series": "RBRTE", "date": "2025-01-02", "value": 75}]}
         treasury = {"schema": "amalgam.treasury-history.v1", "source": "Treasury", "source_url": "https://home.treasury.gov/", "retrieved_utc": "2026-11-04T00:00:00Z", "predictive_advantage": "not_established",
-                    "observations": [{"date": "2025-01-02"}]}
+                    "observations": [{"date": "2025-01-02", "ten_year_yield_percent": 4.4}]}
         from intelligence.cross_domain_history import build as rebuild_panel
         panel = rebuild_panel(energy, treasury)
         audit = assess_asof(panel, "2026-11-04T00:00:00Z")
