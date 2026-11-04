@@ -36,6 +36,20 @@ class FreshnessTests(unittest.TestCase):
         event["domain"] = "markets"
         self.assertEqual(eligible(event, self.snapshot, self.now)[1], "source domain mismatch")
 
+    def test_other_sources_cannot_claim_unrelated_domains(self):
+        cases = [
+            ("U.S. Energy Information Administration", "markets"),
+            ("ECB statistics", "geopolitics"),
+            ("U.S. Treasury", "energy"),
+            ("IMF PortWatch", "weather"),
+        ]
+        for source, domain in cases:
+            with self.subTest(source=source):
+                event = {"domain": domain, "observed_at": "2026-11-04T11:00:00Z",
+                         "source": {"name": source}}
+                self.assertEqual(eligible(event, self.snapshot, self.now)[1],
+                                 "source domain mismatch")
+
     def test_timezone_free_timestamp_rejected(self):
         event = self.weather("2026-11-04T13:00:00Z")
         event["observed_at"] = "2026-11-04T11:00:00"
