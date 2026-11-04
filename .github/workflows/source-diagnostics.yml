@@ -20,6 +20,9 @@ jobs:
       - name: Inspect PortWatch service metadata
         continue-on-error: true
         run: python -m intelligence.portwatch_diagnostic
+      - name: Probe PortWatch query API
+        continue-on-error: true
+        run: python -m intelligence.portwatch_query_probe
       - name: Inspect EIA latest publication dates
         continue-on-error: true
         env:
