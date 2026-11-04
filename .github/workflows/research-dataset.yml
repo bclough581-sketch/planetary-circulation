@@ -17,14 +17,20 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Validate research energy overlay isolation
+        run: python -m unittest tests.test_energy_overlay tests.test_eia_research_snapshot
       - name: Fetch live NOAA alerts and assemble research view
+        env:
+          EIA_API_KEY: ${{ secrets.EIA_API_KEY }}
         run: |
           python - <<'PY'
           import json
           from pathlib import Path
           from datetime import datetime, timezone
           from intelligence.research_view import build
+          from intelligence.energy_overlay import refresh_energy
           snapshot = json.loads(Path("data.json").read_text(encoding="utf-8"))
+          snapshot = refresh_energy(snapshot)  # research-only copy; fail closed on stale EIA
           # Fetch NOAA once to keep all counts based on the same response.
           import urllib.request
           req = urllib.request.Request("https://api.weather.gov/alerts/active",
@@ -41,6 +47,7 @@ jobs:
           print("Excluded observations:", len(result["excluded"]))
           print("By domain:", result["domains"])
           print("Relationships:", len(result["relationships"]))
+          assert result["domains"]["energy"] == 2, "Expected two fresh EIA observations"
           print("Feed health:", [(x["feed"], x["condition"]) for x in result["feed_health"]])
           print("PortWatch reuse:", result["licensing"]["portwatch_commercial_reuse"])
           assert result["relationships"] == []
