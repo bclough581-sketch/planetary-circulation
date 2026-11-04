@@ -38,6 +38,10 @@ document.getElementById('file').addEventListener('change',async e=>{
   if(data.predictive_advantage!=='not_established'||data.relationships.length!==0)throw Error('Unsupported predictive or relationship claim');
   if(data.licensing?.portwatch_commercial_reuse!=='permission_not_verified')throw Error('Unsupported PortWatch reuse claim');
   if(!Array.isArray(data.feed_health)||data.feed_health.some(row=>!row||!row.feed||!row.condition))throw Error('Invalid feed health metadata');
+  const generated=Date.parse(data.generated_utc);
+  if(!Number.isFinite(generated)||generated>Date.now()+5*60*1000)throw Error('Missing or invalid dataset generation time');
+  const ageHours=(Date.now()-generated)/3600000;
+  const stale=ageHours>24;
   const sourceUrls={
    'NOAA National Weather Service':'https://www.weather.gov/documentation/services-web-api',
    'ECB statistics':'https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/',
@@ -69,7 +73,7 @@ document.getElementById('file').addEventListener('change',async e=>{
    const count=document.createElement('strong');count.textContent=String(data.domains?.[domain]??0);
    row.append(name,count);target.append(row);
   }
-  document.getElementById('status').textContent=data.message||'Research observations only';
+  document.getElementById('status').textContent=(stale?'STALE DATASET ('+Math.floor(ageHours)+' hours old). Not current. ':'Dataset generated '+data.generated_utc+'. ')+(data.message||'Research observations only');
   const health=document.getElementById('source-health');health.replaceChildren();
   for(const feed of (Array.isArray(data.feed_health)?data.feed_health:[])){
    const p=document.createElement('p');
