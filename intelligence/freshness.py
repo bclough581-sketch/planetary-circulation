@@ -19,6 +19,11 @@ def eligible(event, snapshot, now=None):
                         'ECB statistics': 'economics', 'U.S. Treasury': 'economics',
                         'U.S. Energy Information Administration': 'energy',
                         'IMF PortWatch': 'maritime'}
+    from .ingest import SOURCES
+    expected_urls = {name: url for name, url in SOURCES.values()}
+    expected_urls['NOAA National Weather Service'] = 'https://www.weather.gov/documentation/services-web-api'
+    if event.get('source', {}).get('url') != expected_urls[source]:
+        return False, 'source URL mismatch'
     if event.get('domain') != expected_domains[source]:
         return False, 'source domain mismatch'
     if key and not snapshot.get('status', {}).get(key, {}).get('ok', False):
