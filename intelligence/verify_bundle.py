@@ -70,10 +70,20 @@ def verify_bundle(directory):
             raise ValueError("noncanonical source observation date")
         return parsed
 
+    start = canonical_day(energy.get("requested_start"))
+    end = canonical_day(energy.get("requested_end"))
+    if start > end:
+        raise ValueError("invalid EIA requested date window")
+    year = treasury.get("requested_year")
+    if isinstance(year, bool) or not isinstance(year, int) or not 1990 <= year <= 2100:
+        raise ValueError("invalid Treasury requested year")
+
     # Validate retained source records independently of their manifest hashes.
     energy_seen = set()
     for record in energy.get("observations", []):
-        canonical_day(record.get("date"))
+        observation_day = canonical_day(record.get("date"))
+        if not start <= observation_day <= end:
+            raise ValueError("EIA observation outside requested date window")
         key = (record.get("series"), record.get("date"))
         if key in energy_seen:
             raise ValueError("duplicate EIA source observation")
@@ -86,7 +96,8 @@ def verify_bundle(directory):
     treasury_seen = set()
     for record in treasury.get("observations", []):
         day = record.get("date")
-        canonical_day(day)
+        if canonical_day(day).year != year:
+            raise ValueError("Treasury observation outside requested year")
         if day in treasury_seen:
             raise ValueError("duplicate Treasury source observation")
         treasury_seen.add(day)
