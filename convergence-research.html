@@ -34,7 +34,16 @@ document.getElementById('file').addEventListener('change',async e=>{
  try{
   const data=JSON.parse(await file.text());
   if(data.schema!=='amalgam.research.v1'||!Array.isArray(data.observations)||!Array.isArray(data.excluded)||!Array.isArray(data.relationships))throw Error('Unsupported research-view schema');
-  const verified=data.relationships.filter(x=>x.status==='validated').length;
+  if(data.predictive_advantage!=='not_established'||data.relationships.length!==0)throw Error('Unsupported predictive or relationship claim');
+  const counts=Object.fromEntries(domains.map(domain=>[domain,0]));
+  const ids=new Set();
+  for(const event of data.observations){
+   if(!Object.hasOwn(counts,event.domain)||!event.id||ids.has(event.id)||!event.source?.url||!event.observed_at)throw Error('Invalid or duplicate observation evidence');
+   ids.add(event.id);counts[event.domain]++;
+  }
+  if(!data.domains||Object.keys(data.domains).length!==domains.length||
+     domains.some(domain=>data.domains[domain]!==counts[domain]))throw Error('Domain totals do not match observations');
+  const verified=0;
   document.getElementById('count').textContent=data.observations.length;
   document.getElementById('link-count').textContent=verified+' validated links';
   const target=document.getElementById('domains');target.replaceChildren();
@@ -71,6 +80,6 @@ document.getElementById('file').addEventListener('change',async e=>{
   const excluded=document.createElement('p');
   excluded.className='warn';excluded.textContent=data.excluded.length+' excluded observations (stale, missing or source failure)';
   ledger.prepend(excluded);
- }catch(err){document.getElementById('status').textContent='Unable to load file: '+err.message;}
+ }catch(err){document.getElementById('count').textContent='—';document.getElementById('link-count').textContent='0 validated links';document.getElementById('domains').textContent='Dataset rejected. No evidence displayed.';document.getElementById('details').replaceChildren();document.getElementById('source-health').textContent='Dataset rejected.';document.getElementById('exclusion-reasons').textContent='Dataset rejected.';document.getElementById('status').textContent='Unable to load file: '+err.message;}
 });
 </script></body></html>
