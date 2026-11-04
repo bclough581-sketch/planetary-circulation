@@ -14,7 +14,8 @@ from zipfile import ZipFile
 from intelligence.audit_validation import validate_audit
 from intelligence.coverage_audit import coverage_report
 from intelligence.cross_domain_history import build as rebuild_cross_domain_panel
-from intelligence.eia_history import aligned_price_dates
+from intelligence.eia_history import aligned_price_dates, ENDPOINT as EIA_ENDPOINT
+from intelligence.treasury_history import SOURCE as TREASURY_SOURCE
 
 EXPECTED = {
     "eia-history-research.json",
@@ -59,6 +60,12 @@ def verify_bundle(directory):
     energy = json.loads((root / "eia-history-research.json").read_text(encoding="utf-8"))
     treasury = json.loads((root / "treasury-history-research.json").read_text(encoding="utf-8"))
     saved_coverage = json.loads((root / "historical-coverage-audit.json").read_text(encoding="utf-8"))
+    if energy.get("schema") != "amalgam.eia-history.v1" or energy.get("source") != "U.S. Energy Information Administration" or energy.get("source_url") != "https://www.eia.gov/opendata/" or energy.get("endpoint") != EIA_ENDPOINT or energy.get("frequency") != "daily" or energy.get("unit") != "USD_per_barrel":
+        raise ValueError("unsupported EIA source identity or units")
+    if treasury.get("schema") != "amalgam.treasury-history.v1" or treasury.get("source") != "U.S. Department of the Treasury" or treasury.get("source_url") != TREASURY_SOURCE or treasury.get("frequency") != "business_day" or treasury.get("unit") != "percent_per_year":
+        raise ValueError("unsupported Treasury source identity or units")
+    if energy.get("predictive_advantage") != "not_established" or treasury.get("predictive_advantage") != "not_established" or energy.get("relationships") != [] or treasury.get("relationships") != []:
+        raise ValueError("unsupported source-level predictive or relationship claim")
     # Source dates must be canonical calendar days, not merely matching strings.
     def canonical_day(value):
         if not isinstance(value, str):
