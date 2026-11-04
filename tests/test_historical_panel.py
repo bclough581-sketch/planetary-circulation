@@ -23,6 +23,25 @@ class HistoricalPanelTests(unittest.TestCase):
         self.assertEqual(panel["relationships"], [])
         self.assertEqual(panel["predictive_advantage"], "not_established")
 
+    def test_repeated_evidence_is_not_counted_as_independent(self):
+        first, second = self.view(3), self.view(4)
+        event = {'id': 'same-source-event', 'domain': 'weather', 'observed_at': '2026-11-03T09:00:00Z',
+                 'source': {'name': 'NOAA National Weather Service', 'url': 'https://www.weather.gov/documentation/services-web-api'}}
+        from intelligence.relationship_readiness import audit_readiness
+        for view in (first, second):
+            view['observations'] = [deepcopy(event)]
+            view['domains']['weather'] = 1
+            view['relationship_readiness'] = audit_readiness(view)
+        panel = build_panel([first, second])
+        self.assertEqual(panel['observation_appearances'], 2)
+        self.assertEqual(panel['unique_observation_identities'], 1)
+        self.assertEqual(panel['repeated_observation_appearances'], 1)
+        self.assertEqual(panel['conflicting_observation_identities'], 0)
+        second['observations'][0]['title'] = 'Changed title'
+        second['relationship_readiness'] = audit_readiness(second)
+        changed = build_panel([first, second])
+        self.assertEqual(changed['conflicting_observation_identities'], 1)
+
     def test_duplicate_capture_rejected(self):
         with self.assertRaisesRegex(ValueError, "duplicate capture"):
             build_panel([self.view(4), self.view(4)])
