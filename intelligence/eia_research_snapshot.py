@@ -4,9 +4,23 @@ Does not change data.json, production, or the convergence evidence gate.
 """
 import json
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timezone, date
 from pathlib import Path
 from fetch_data import fetch_eia
+
+
+def validate_dates(series, today=None):
+    today = today or datetime.now(timezone.utc).date()
+    for hub in ('HOU', 'DXB'):
+        if hub not in series:
+            raise ValueError(f'Missing EIA hub {hub}')
+        try:
+            observed = date.fromisoformat(series[hub]['asof'])
+        except (KeyError, ValueError, TypeError) as exc:
+            raise ValueError(f'Invalid EIA observation date for {hub}') from exc
+        age = (today - observed).days
+        if not 0 <= age <= 7:
+            raise ValueError(f'EIA {hub} outside 7-day freshness window: {age} days')
 
 
 def build():
@@ -15,6 +29,7 @@ def build():
     missing = [hub for hub in required if hub not in series]
     if missing:
         raise RuntimeError("Missing EIA hubs: " + ", ".join(missing))
+    validate_dates(series)
     return {
         "generated_utc": datetime.now(timezone.utc).isoformat(),
         "source": "U.S. Energy Information Administration",
