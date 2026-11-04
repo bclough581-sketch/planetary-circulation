@@ -50,7 +50,6 @@ jobs:
           validate_view(result)
           result["snapshot_status"] = snapshot.get("status", {})
           result["noaa_raw_feature_count"] = len(alerts.get("features", []))
-          result["relationship_readiness"] = audit_readiness(result)
           validate_view(result)
           Path("research-view.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
           print("Eligible observations:", len(result["observations"]))
