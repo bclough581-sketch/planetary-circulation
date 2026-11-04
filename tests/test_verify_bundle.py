@@ -149,6 +149,26 @@ class BundleVerificationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "joined numerical observations"):
             verify_bundle(self.root)
 
+    def test_duplicate_source_value_rejected_even_with_updated_hash(self):
+        path = self.root / "eia-history-research.json"
+        source = json.loads(path.read_text())
+        source["observations"].append(dict(source["observations"][0]))
+        path.write_text(json.dumps(source), encoding="utf-8")
+        self.manifest["files"][path.name] = hashlib.sha256(path.read_bytes()).hexdigest()
+        self.save_manifest()
+        with self.assertRaisesRegex(ValueError, "duplicate EIA"):
+            verify_bundle(self.root)
+
+    def test_invalid_source_value_rejected_even_with_updated_hash(self):
+        path = self.root / "treasury-history-research.json"
+        source = json.loads(path.read_text())
+        source["observations"][0]["ten_year_yield_percent"] = 999
+        path.write_text(json.dumps(source), encoding="utf-8")
+        self.manifest["files"][path.name] = hashlib.sha256(path.read_bytes()).hexdigest()
+        self.save_manifest()
+        with self.assertRaisesRegex(ValueError, "invalid Treasury source value"):
+            verify_bundle(self.root)
+
     def test_tampered_file(self):
         (self.root / "point-in-time-audit.json").write_text("{}", encoding="utf-8")
         with self.assertRaisesRegex(ValueError, "checksum mismatch"):
