@@ -25,7 +25,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Validate research energy overlay isolation
-        run: python -m unittest tests.test_energy_overlay tests.test_eia_research_snapshot tests.test_freshness tests.test_research_view
+        run: python -m unittest tests.test_energy_overlay tests.test_eia_research_snapshot tests.test_freshness tests.test_research_view tests.test_relationship_readiness
       - name: Fetch live NOAA alerts and assemble research view
         env:
           EIA_API_KEY: ${{ secrets.EIA_API_KEY }}
@@ -35,6 +35,7 @@ jobs:
           from pathlib import Path
           from datetime import datetime, timezone
           from intelligence.research_view import build, validate_view
+          from intelligence.relationship_readiness import audit_readiness
           from intelligence.energy_overlay import refresh_energy
           snapshot = json.loads(Path("data.json").read_text(encoding="utf-8"))
           snapshot = refresh_energy(snapshot)  # research-only copy; fail closed on stale EIA
@@ -49,6 +50,7 @@ jobs:
           validate_view(result)
           result["snapshot_status"] = snapshot.get("status", {})
           result["noaa_raw_feature_count"] = len(alerts.get("features", []))
+          result["relationship_readiness"] = audit_readiness(result)
           validate_view(result)
           Path("research-view.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
           print("Eligible observations:", len(result["observations"]))
@@ -58,6 +60,8 @@ jobs:
           assert not any(x["source"]["name"] == "NOAA National Weather Service" and not x["metadata"].get("expires") for x in result["observations"])
           print("By domain:", result["domains"])
           print("Relationships:", len(result["relationships"]))
+          print("Historical relationship readiness:", result["relationship_readiness"]["status"])
+          print("Distinct observation dates by domain:", result["relationship_readiness"]["distinct_observation_dates"])
           assert result["domains"]["energy"] == 2, "Expected two fresh EIA observations"
           print("Feed health:", [(x["feed"], x["condition"]) for x in result["feed_health"]])
           print("PortWatch reuse:", result["licensing"]["portwatch_commercial_reuse"])
