@@ -44,6 +44,19 @@ class PointInTimeTests(unittest.TestCase):
         self.assertEqual(result["blocked"][0]["reason"],
                          "publication_record_not_independently_authenticated")
 
+    def test_audit_fingerprint_changes_with_source_observations(self):
+        first = assess_asof(self.panel, "2025-01-03T12:00:00Z")
+        self.assertEqual(first["source_observation_count"], 1)
+        self.assertEqual(len(first["source_observations_sha256"]), 64)
+        self.panel["observations"][0]["wti_usd_per_barrel"] = 71
+        second = assess_asof(self.panel, "2025-01-03T12:00:00Z")
+        self.assertNotEqual(first["source_observations_sha256"], second["source_observations_sha256"])
+
+    def test_duplicate_observation_dates_rejected(self):
+        self.panel["observations"].append(dict(self.panel["observations"][0]))
+        with self.assertRaisesRegex(ValueError, "repeated"):
+            assess_asof(self.panel, "2025-01-03T12:00:00Z")
+
     def test_timezone_required(self):
         with self.assertRaisesRegex(ValueError, "timezone"):
             parse_instant("2025-01-03T12:00:00")
