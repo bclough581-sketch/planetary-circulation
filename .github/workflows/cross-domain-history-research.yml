@@ -43,6 +43,7 @@ jobs:
           assert data["predictive_advantage"] == "not_established"
           from intelligence.point_in_time import assess_asof
           gate = assess_asof(data, "2026-11-04T00:00:00Z")
+          Path("point-in-time-audit.json").write_text(json.dumps(gate, indent=2) + "\\n", encoding="utf-8")
           print("As-of usable observations:", gate["usable_count"])
           print("As-of blocked observations:", gate["blocked_count"])
           assert gate["usable_count"] == 0, "Unverified publication timestamps must fail closed"
@@ -55,4 +56,5 @@ jobs:
             eia-history-research.json
             treasury-history-research.json
             cross-domain-observation-panel.json
+            point-in-time-audit.json
           retention-days: 30
