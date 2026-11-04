@@ -41,6 +41,8 @@ jobs:
           print("Excluded observations:", len(result["excluded"]))
           print("By domain:", result["domains"])
           print("Relationships:", len(result["relationships"]))
+          print("Feed health:", [(x["feed"], x["condition"]) for x in result["feed_health"]])
+          print("PortWatch reuse:", result["licensing"]["portwatch_commercial_reuse"])
           assert result["relationships"] == []
           assert all(x["source"]["url"] and x["observed_at"] for x in result["observations"])
           PY
