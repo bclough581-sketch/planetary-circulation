@@ -1,5 +1,5 @@
 import unittest
-from intelligence.eia_history import build, parse_rows
+from intelligence.eia_history import build, parse_rows, aligned_price_dates
 
 
 class EIAHistoryTests(unittest.TestCase):
@@ -30,6 +30,18 @@ class EIAHistoryTests(unittest.TestCase):
         self.assertEqual(result["relationships"], [])
         self.assertEqual(result["observations"][0]["value"], 72)
         self.assertEqual(result["frequency"], "daily")
+
+    def test_exact_date_pairs_do_not_fill_missing_days(self):
+        rows = [{'date': '2025-01-02', 'series': 'RWTC', 'value': 70},
+                {'date': '2025-01-02', 'series': 'RBRTE', 'value': 75},
+                {'date': '2025-01-03', 'series': 'RWTC', 'value': 71}]
+        self.assertEqual(aligned_price_dates(rows), [{'date': '2025-01-02', 'wti': 70, 'brent': 75}])
+
+    def test_conflicting_aligned_values_rejected(self):
+        rows = [{'date': '2025-01-02', 'series': 'RWTC', 'value': 70},
+                {'date': '2025-01-02', 'series': 'RWTC', 'value': 71}]
+        with self.assertRaisesRegex(ValueError, 'conflicting'):
+            aligned_price_dates(rows)
 
     def test_missing_key_rejected(self):
         with self.assertRaisesRegex(ValueError, "required"):
