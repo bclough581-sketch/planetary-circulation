@@ -1,6 +1,7 @@
 import unittest
 from datetime import datetime, timezone
 from intelligence.freshness import eligible
+from intelligence.ingest import SOURCES
 
 
 class FreshnessTests(unittest.TestCase):
@@ -11,7 +12,7 @@ class FreshnessTests(unittest.TestCase):
 
     def weather(self, expires):
         return {"domain": "weather", "observed_at": "2026-11-04T11:00:00Z",
-                "source": {"name": "NOAA National Weather Service"},
+                "source": {"name": "NOAA National Weather Service", "url": "https://www.weather.gov/documentation/services-web-api"},
                 "metadata": {"expires": expires}}
 
     def test_active_noaa_alert_accepted(self):
@@ -31,6 +32,11 @@ class FreshnessTests(unittest.TestCase):
         event["source"]["name"] = "Unverified feed"
         self.assertEqual(eligible(event, self.snapshot, self.now)[1], "unrecognized source")
 
+    def test_source_url_mismatch_rejected(self):
+        event = self.weather("2026-11-04T13:00:00Z")
+        event["source"]["url"] = "https://example.com/unsupported"
+        self.assertEqual(eligible(event, self.snapshot, self.now)[1], "source URL mismatch")
+
     def test_noaa_wrong_domain_rejected(self):
         event = self.weather("2026-11-04T13:00:00Z")
         event["domain"] = "markets"
@@ -46,7 +52,7 @@ class FreshnessTests(unittest.TestCase):
         for source, domain in cases:
             with self.subTest(source=source):
                 event = {"domain": domain, "observed_at": "2026-11-04T11:00:00Z",
-                         "source": {"name": source}}
+                         "source": {"name": source, "url": next(url for name, url in SOURCES.values() if name == source)}}
                 self.assertEqual(eligible(event, self.snapshot, self.now)[1],
                                  "source domain mismatch")
 
@@ -57,7 +63,7 @@ class FreshnessTests(unittest.TestCase):
 
     def energy(self):
         return {"domain": "energy", "observed_at": "2026-11-03T00:00:00Z",
-                "source": {"name": "U.S. Energy Information Administration"},
+                "source": {"name": "U.S. Energy Information Administration", "url": SOURCES["eia"][1]},
                 "metadata": {"hub": "HOU", "asof": "2026-11-03"}, "value": 72}
 
     def test_current_energy_allowed(self):
@@ -81,7 +87,7 @@ class FreshnessTests(unittest.TestCase):
 
     def test_failed_portwatch_excluded(self):
         event = {"domain": "maritime", "observed_at": "2026-11-04T00:00:00Z",
-                 "source": {"name": "IMF PortWatch"}}
+                 "source": {"name": "IMF PortWatch", "url": SOURCES["portwatch"][1]}}
         self.assertEqual(eligible(event, self.snapshot, self.now)[1], "source collector failed")
 
     def test_old_energy_excluded(self):
