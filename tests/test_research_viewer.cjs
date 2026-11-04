@@ -12,18 +12,20 @@ class Element {
   prepend(child){this.children.unshift(child);}
 }
 const elements = new Map();
+const fixedNow=Date.parse('2026-11-04T20:00:00Z');
+class FixedDate extends Date { static now(){return fixedNow;} }
 const document = {
   getElementById(id){if(!elements.has(id))elements.set(id,new Element());return elements.get(id);},
   createElement(){return new Element();}
 };
-vm.runInNewContext(script,{document,Map,Set,Object,Error,Array,String});
+vm.runInNewContext(script,{document,Map,Set,Object,Error,Array,String,Date:FixedDate,Number,Math});
 const load=async data=>{
   await document.getElementById('file').handlers.change({target:{files:[{text:async()=>JSON.stringify(data)}]}});
 };
 const names=['weather','geopolitics','maritime','aviation','energy','commodities','economics','markets','corporate'];
 const empty=()=>Object.fromEntries(names.map(x=>[x,0]));
 const event={id:'one',domain:'weather',title:'Test',observed_at:'2026-11-04T12:00:00Z',source:{name:'NOAA National Weather Service',url:'https://www.weather.gov/documentation/services-web-api'}};
-const good={schema:'amalgam.research.v1',observations:[event],excluded:[],relationships:[],domains:{...empty(),weather:1},predictive_advantage:'not_established',licensing:{portwatch_commercial_reuse:'permission_not_verified'},feed_health:[{feed:'eia',condition:'eligible_source'}]};
+const good={schema:'amalgam.research.v1',observations:[event],excluded:[],relationships:[],domains:{...empty(),weather:1},predictive_advantage:'not_established',generated_utc:'2026-11-04T19:00:00Z',licensing:{portwatch_commercial_reuse:'permission_not_verified'},feed_health:[{feed:'eia',condition:'eligible_source'}]};
 (async()=>{
  await load(good);
  assert.equal(document.getElementById('count').textContent,1);
@@ -35,6 +37,8 @@ const good={schema:'amalgam.research.v1',observations:[event],excluded:[],relati
   ['missing source',x=>x.observations[0].source.url=''],
   ['forged source URL',x=>x.observations[0].source.url='https://example.com/forged'],
   ['wrong source domain',x=>{x.observations[0].domain='markets';x.domains.weather=0;x.domains.markets=1;}],
+  ['missing generation time',x=>delete x.generated_utc],
+  ['future generation time',x=>x.generated_utc='2026-11-05T00:00:00Z'],
   ['unvalidated relationship',x=>x.relationships.push({status:'proposed'})],
   ['false reuse permission',x=>x.licensing.portwatch_commercial_reuse='permitted'],
   ['missing feed health',x=>delete x.feed_health],
@@ -46,5 +50,8 @@ const good={schema:'amalgam.research.v1',observations:[event],excluded:[],relati
   assert.match(document.getElementById('status').textContent,/Unable to load file/,name);
   await load(good);
  }
- console.log('Viewer JavaScript interaction checks passed: valid load + 9 rejected imports');
+ const stale=JSON.parse(JSON.stringify(good));stale.generated_utc='2026-11-02T12:00:00Z';
+ await load(stale);
+ assert.match(document.getElementById('status').textContent,/STALE DATASET/);
+ console.log('Viewer JavaScript interaction checks passed: valid load + 11 rejected imports + stale warning');
 })().catch(err=>{console.error(err);process.exitCode=1;});
