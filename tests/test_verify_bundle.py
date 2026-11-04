@@ -16,6 +16,7 @@ class BundleVerificationTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
         panel = {"schema": "amalgam.cross-domain-observation-panel.v1",
+                 "predictive_advantage": "not_established",
                  "observations": [{"date": "2025-01-02", "wti_usd_per_barrel": 70,
                                    "brent_usd_per_barrel": 75, "treasury_10y_percent": 4.4}]}
         audit = assess_asof(panel, "2026-11-04T00:00:00Z")
