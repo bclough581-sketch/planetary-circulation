@@ -1,0 +1,12 @@
+const assert=require('node:assert/strict');
+const {build,dayDiff}=require('../evidence.js');
+const e=(id,domain,source,asof,direction,commercial=true)=>({id,domain,source,asof,direction,commercial,usable:true,title:id,detail:id,strength:1});
+assert.equal(dayDiff('2026-11-01','2026-11-03'),2);
+let g=build({generated:'2026-11-03',events:[e('s','Shipping','IMF','2026-11-01','below',false),e('o','Energy','EIA','2026-11-03','up')]});
+assert.equal(g.cases.length,1);assert.equal(g.links.length,2);assert.equal(g.cases[0].licenseBlocked,true);assert.equal(g.cases[0].forecast,false);
+assert.equal(build({events:[e('s','Shipping','Same','2026-11-01','below'),e('o','Energy','Same','2026-11-03','up')]}).cases.length,0);
+assert.equal(build({events:[e('s','Shipping','IMF','2026-10-01','below'),e('o','Energy','EIA','2026-11-03','up')]}).cases.length,0);
+assert.equal(build({events:[e('s','Shipping','IMF','2026-11-01','below'),e('o','Energy','EIA','2026-11-03','down')]}).cases.length,0);
+assert.equal(build({events:[{...e('s','Shipping','IMF','2026-11-01','below'),usable:false},e('o','Energy','EIA','2026-11-03','up')]}).cases.length,0);
+assert.equal(build({events:[e('r','Rates','Treasury','2026-11-03','up'),e('f','FX','ECB','2026-11-02','higher quote')]}).cases.length,1);
+console.log('Evidence graph tests passed');
