@@ -58,8 +58,6 @@ def verify_bundle(directory):
     energy = json.loads((root / "eia-history-research.json").read_text(encoding="utf-8"))
     treasury = json.loads((root / "treasury-history-research.json").read_text(encoding="utf-8"))
     saved_coverage = json.loads((root / "historical-coverage-audit.json").read_text(encoding="utf-8"))
-    if saved_coverage != coverage_report(energy, treasury, panel):
-        raise ValueError("historical coverage report does not match source files")
     # Source dates must be canonical calendar days, not merely matching strings.
     def canonical_day(value):
         if not isinstance(value, str):
@@ -95,6 +93,8 @@ def verify_bundle(directory):
         value = record.get("ten_year_yield_percent")
         if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or not 0 <= value <= 100:
             raise ValueError("invalid Treasury source value")
+    if saved_coverage != coverage_report(energy, treasury, panel):
+        raise ValueError("historical coverage report does not match source files")
     reconstructed = rebuild_cross_domain_panel(energy, treasury)
     if panel.get("observations") != reconstructed["observations"]:
         raise ValueError("joined numerical observations do not match source files")
