@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 
 from intelligence.point_in_time import assess_asof
-from intelligence.verify_bundle import verify_bundle
+from intelligence.verify_bundle import verify_bundle, verify_github_run
 
 
 class BundleVerificationTests(unittest.TestCase):
@@ -28,7 +28,9 @@ class BundleVerificationTests(unittest.TestCase):
             hashes[name] = hashlib.sha256(path.read_bytes()).hexdigest()
         self.manifest = {"schema": "amalgam.research-artifact-manifest.v1",
                          "files": hashes, "workflow_run_id": "41925963100",
-                         "commit_sha": "a" * 40, "predictive_advantage": "not_established"}
+                         "commit_sha": "a" * 40, "repository": "bclough581-sketch/planetary-circulation",
+                         "workflow_url": "https://github.com/bclough581-sketch/planetary-circulation/actions/runs/41925963100",
+                         "predictive_advantage": "not_established"}
         self.save_manifest()
 
     def save_manifest(self):
@@ -37,6 +39,27 @@ class BundleVerificationTests(unittest.TestCase):
 
     def test_valid_bundle(self):
         self.assertEqual(verify_bundle(self.root)["observations"], 1)
+
+    def test_github_run_metadata_matches(self):
+        def fake_fetch(url):
+            self.assertTrue(url.endswith("/actions/runs/41925963100"))
+            return {"id": 41925963100, "head_sha": "a" * 40,
+                    "head_branch": "amalgam-event-foundation",
+                    "status": "completed", "conclusion": "success",
+                    "name": "intelligence-cross-domain-history-research",
+                    "html_url": self.manifest["workflow_url"]}
+        self.assertEqual(verify_github_run(self.root, fake_fetch)["status"],
+                         "github_run_metadata_matched")
+
+    def test_github_run_commit_mismatch_rejected(self):
+        def fake_fetch(url):
+            return {"id": 41925963100, "head_sha": "b" * 40,
+                    "head_branch": "amalgam-event-foundation",
+                    "status": "completed", "conclusion": "success",
+                    "name": "intelligence-cross-domain-history-research",
+                    "html_url": self.manifest["workflow_url"]}
+        with self.assertRaisesRegex(ValueError, "mismatch"):
+            verify_github_run(self.root, fake_fetch)
 
     def test_tampered_file(self):
         (self.root / "point-in-time-audit.json").write_text("{}", encoding="utf-8")
