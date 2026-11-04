@@ -72,4 +72,4 @@ jobs:
         with:
           name: amalgam-research-view
           path: research-view.json
-          retention-days: 7
+          retention-days: 30
