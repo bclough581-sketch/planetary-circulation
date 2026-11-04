@@ -42,6 +42,10 @@ class BundleVerificationTests(unittest.TestCase):
 
     def test_github_run_metadata_matches(self):
         def fake_fetch(url):
+            if url.endswith("/artifacts?per_page=100"):
+                return {"artifacts": [{"id": 12, "name": "amalgam-cross-domain-history-41925963100",
+                                       "expired": False, "workflow_run": {"id": 41925963100,
+                                                                         "head_sha": "a" * 40}}]}
             self.assertTrue(url.endswith("/actions/runs/41925963100"))
             return {"id": 41925963100, "head_sha": "a" * 40,
                     "head_branch": "amalgam-event-foundation",
@@ -49,7 +53,19 @@ class BundleVerificationTests(unittest.TestCase):
                     "name": "intelligence-cross-domain-history-research",
                     "html_url": self.manifest["workflow_url"]}
         self.assertEqual(verify_github_run(self.root, fake_fetch)["status"],
-                         "github_run_metadata_matched")
+                         "github_run_and_artifact_metadata_matched")
+
+    def test_github_artifact_missing_rejected(self):
+        def fake_fetch(url):
+            if "/artifacts?" in url:
+                return {"artifacts": []}
+            return {"id": 41925963100, "head_sha": "a" * 40,
+                    "head_branch": "amalgam-event-foundation",
+                    "status": "completed", "conclusion": "success",
+                    "name": "intelligence-cross-domain-history-research",
+                    "html_url": self.manifest["workflow_url"]}
+        with self.assertRaisesRegex(ValueError, "artifact not found"):
+            verify_github_run(self.root, fake_fetch)
 
     def test_github_run_commit_mismatch_rejected(self):
         def fake_fetch(url):
