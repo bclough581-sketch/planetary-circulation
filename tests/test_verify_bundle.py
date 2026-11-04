@@ -39,7 +39,12 @@ class BundleVerificationTests(unittest.TestCase):
                          "files": hashes, "workflow_run_id": "41925963100",
                          "commit_sha": "a" * 40, "repository": "bclough581-sketch/planetary-circulation",
                          "workflow_url": "https://github.com/bclough581-sketch/planetary-circulation/actions/runs/41925963100",
-                         "predictive_advantage": "not_established"}
+                         "predictive_advantage": "not_established",
+                         "historical_decision_schedule": {
+                             "status": "not_supplied",
+                             "scheduled_observations": 0,
+                             "asof_eligible_observations": 0,
+                             "note": "No historical decision timestamps were provided or inferred."}}
         self.save_manifest()
 
     def save_manifest(self):
@@ -110,6 +115,12 @@ class BundleVerificationTests(unittest.TestCase):
                     "html_url": self.manifest["workflow_url"]}
         with self.assertRaisesRegex(ValueError, "mismatch"):
             verify_github_run(self.root, fake_fetch)
+
+    def test_false_decision_schedule_disclosure_rejected(self):
+        self.manifest["historical_decision_schedule"]["status"] = "complete"
+        self.save_manifest()
+        with self.assertRaisesRegex(ValueError, "decision schedule disclosure"):
+            verify_bundle(self.root)
 
     def test_forged_coverage_report_rejected_even_with_updated_manifest(self):
         path = self.root / "historical-coverage-audit.json"
