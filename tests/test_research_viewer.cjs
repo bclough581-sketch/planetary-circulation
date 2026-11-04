@@ -39,6 +39,8 @@ const good={schema:'amalgam.research.v1',observations:[event],excluded:[],relati
   ['wrong source domain',x=>{x.observations[0].domain='markets';x.domains.weather=0;x.domains.markets=1;}],
   ['missing generation time',x=>delete x.generated_utc],
   ['future generation time',x=>x.generated_utc='2026-11-05T00:00:00Z'],
+  ['future observation time',x=>x.observations[0].observed_at='2026-11-05T00:00:00Z'],
+  ['invalid observation time',x=>x.observations[0].observed_at='not-a-date'],
   ['unvalidated relationship',x=>x.relationships.push({status:'proposed'})],
   ['false reuse permission',x=>x.licensing.portwatch_commercial_reuse='permitted'],
   ['missing feed health',x=>delete x.feed_health],
@@ -53,5 +55,6 @@ const good={schema:'amalgam.research.v1',observations:[event],excluded:[],relati
  const stale=JSON.parse(JSON.stringify(good));stale.generated_utc='2026-11-02T12:00:00Z';
  await load(stale);
  assert.match(document.getElementById('status').textContent,/STALE DATASET/);
- console.log('Viewer JavaScript interaction checks passed: valid load + 11 rejected imports + stale warning');
+ assert.match(document.getElementById('status').textContent,/observations exceed their domain freshness window/);
+ console.log('Viewer JavaScript interaction checks passed: valid load + 13 rejected imports + stale warning');
 })().catch(err=>{console.error(err);process.exitCode=1;});
