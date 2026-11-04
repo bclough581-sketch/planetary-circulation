@@ -56,9 +56,14 @@ document.getElementById('file').addEventListener('change',async e=>{
   };
   const counts=Object.fromEntries(domains.map(domain=>[domain,0]));
   const ids=new Set();
+  const maxAgeHours={weather:24,maritime:72,energy:168,economics:168};
+  let oldObservations=0;
   for(const event of data.observations){
    if(!Object.hasOwn(counts,event.domain)||!event.id||ids.has(event.id)||!event.source?.url||!event.observed_at)throw Error('Invalid or duplicate observation evidence');
    if(sourceUrls[event.source?.name]!==event.source?.url||sourceDomains[event.source?.name]!==event.domain)throw Error('Observation source identity mismatch');
+   const observed=Date.parse(event.observed_at);
+   if(!Number.isFinite(observed)||observed>generated+5*60*1000)throw Error('Invalid or future observation time');
+   if((Date.now()-observed)/3600000>(maxAgeHours[event.domain]??24))oldObservations++;
    ids.add(event.id);counts[event.domain]++;
   }
   if(!data.domains||Object.keys(data.domains).length!==domains.length||
@@ -73,7 +78,7 @@ document.getElementById('file').addEventListener('change',async e=>{
    const count=document.createElement('strong');count.textContent=String(data.domains?.[domain]??0);
    row.append(name,count);target.append(row);
   }
-  document.getElementById('status').textContent=(stale?'STALE DATASET ('+Math.floor(ageHours)+' hours old). Not current. ':'Dataset generated '+data.generated_utc+'. ')+(data.message||'Research observations only');
+  document.getElementById('status').textContent=(stale?'STALE DATASET ('+Math.floor(ageHours)+' hours old). Not current. ':'Dataset generated '+data.generated_utc+'. ')+(oldObservations?oldObservations+' observations exceed their domain freshness window. ':'')+(data.message||'Research observations only');
   const health=document.getElementById('source-health');health.replaceChildren();
   for(const feed of (Array.isArray(data.feed_health)?data.feed_health:[])){
    const p=document.createElement('p');
