@@ -15,7 +15,11 @@ def eligible(event, snapshot, now=None):
     if source not in {'NOAA National Weather Service', 'ECB statistics', 'U.S. Treasury',
                       'U.S. Energy Information Administration', 'IMF PortWatch'}:
         return False, 'unrecognized source'
-    if source == 'NOAA National Weather Service' and event.get('domain') != 'weather':
+    expected_domains = {'NOAA National Weather Service': 'weather',
+                        'ECB statistics': 'economics', 'U.S. Treasury': 'economics',
+                        'U.S. Energy Information Administration': 'energy',
+                        'IMF PortWatch': 'maritime'}
+    if event.get('domain') != expected_domains[source]:
         return False, 'source domain mismatch'
     if key and not snapshot.get('status', {}).get(key, {}).get('ok', False):
         return False, 'source collector failed'
