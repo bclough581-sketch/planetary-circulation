@@ -14,9 +14,22 @@ def audit_decision_schedule(panel, schedule):
         raise ValueError("unsupported predictive claim")
     if not isinstance(schedule, dict):
         raise ValueError("decision schedule must be a date-to-UTC-timestamp mapping")
-    dates = [row["date"] for row in panel["observations"]]
+    rows = panel.get("observations")
+    if not isinstance(rows, list) or any(not isinstance(row, dict) for row in rows):
+        raise ValueError("historical observations must be a list of records")
+    dates = [row.get("date") for row in rows]
+    if any(not isinstance(day, str) for day in dates):
+        raise ValueError("panel dates must be strings")
     if len(dates) != len(set(dates)):
         raise ValueError("duplicate panel dates")
+    for day in dates:
+        try:
+            if date.fromisoformat(day).isoformat() != day:
+                raise ValueError("noncanonical date")
+        except ValueError as exc:
+            raise ValueError("invalid panel observation date") from exc
+    if any(not isinstance(day, str) for day in schedule):
+        raise ValueError("schedule keys must be date strings")
     missing = sorted(set(dates) - set(schedule))
     extra = sorted(set(schedule) - set(dates))
     invalid = []
