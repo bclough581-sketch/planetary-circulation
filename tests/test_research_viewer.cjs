@@ -1,0 +1,46 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const vm = require('node:vm');
+const html = fs.readFileSync('convergence-research.html','utf8');
+const script = html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
+assert.ok(script, 'viewer script missing');
+class Element {
+  constructor(){this.textContent='';this.children=[];this.className='';this.handlers={};}
+  addEventListener(type,fn){this.handlers[type]=fn;}
+  replaceChildren(...children){this.children=children;this.textContent='';}
+  append(...children){this.children.push(...children);}
+  prepend(child){this.children.unshift(child);}
+}
+const elements = new Map();
+const document = {
+  getElementById(id){if(!elements.has(id))elements.set(id,new Element());return elements.get(id);},
+  createElement(){return new Element();}
+};
+vm.runInNewContext(script,{document,Map,Set,Object,Error,Array,String});
+const load=async data=>{
+  await document.getElementById('file').handlers.change({target:{files:[{text:async()=>JSON.stringify(data)}]}});
+};
+const names=['weather','geopolitics','maritime','aviation','energy','commodities','economics','markets','corporate'];
+const empty=()=>Object.fromEntries(names.map(x=>[x,0]));
+const event={id:'one',domain:'weather',title:'Test',observed_at:'2026-11-04T12:00:00Z',source:{name:'NOAA',url:'https://weather.gov'}};
+const good={schema:'amalgam.research.v1',observations:[event],excluded:[],relationships:[],domains:{...empty(),weather:1},predictive_advantage:'not_established'};
+(async()=>{
+ await load(good);
+ assert.equal(document.getElementById('count').textContent,1);
+ assert.equal(document.getElementById('link-count').textContent,'0 validated links');
+ for(const [name,change] of [
+  ['inflated count',x=>x.domains.weather=20],
+  ['duplicate',x=>{x.observations.push({...event});x.domains.weather=2;}],
+  ['unsupported claim',x=>x.predictive_advantage='established'],
+  ['missing source',x=>x.observations[0].source.url=''],
+  ['unvalidated relationship',x=>x.relationships.push({status:'proposed'})],
+ ]) {
+  const bad=JSON.parse(JSON.stringify(good));change(bad);
+  await load(bad);
+  assert.equal(document.getElementById('count').textContent,'—',name);
+  assert.equal(document.getElementById('details').children.length,0,name);
+  assert.match(document.getElementById('status').textContent,/Unable to load file/,name);
+  await load(good);
+ }
+ console.log('Viewer JavaScript interaction checks passed: valid load + 5 rejected imports');
+})().catch(err=>{console.error(err);process.exitCode=1;});
