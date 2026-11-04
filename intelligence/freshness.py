@@ -24,8 +24,14 @@ def eligible(event, snapshot, now=None):
     if key and not snapshot.get('status', {}).get(key, {}).get('ok', False):
         return False, 'source collector failed'
     hub = event.get('metadata', {}).get('hub')
-    if hub and snapshot.get('hubs', {}).get(hub, {}).get('src') != key:
-        return False, 'source provenance mismatch'
+    if key in {'ecb', 'ust', 'eia'} and not hub:
+        return False, 'missing hub provenance'
+    if hub:
+        stored = snapshot.get('hubs', {}).get(hub, {})
+        if stored.get('src') != key or stored.get('asof') != event.get('metadata', {}).get('asof'):
+            return False, 'source provenance mismatch'
+        if event.get('value') != stored.get('price'):
+            return False, 'source value mismatch'
     try:
         timestamp = datetime.fromisoformat(event['observed_at'].replace('Z', '+00:00'))
         if timestamp.tzinfo is None:
