@@ -29,7 +29,8 @@ class ResearchViewTests(unittest.TestCase):
         good = build(snapshot, {"features": []}, now)
         self.assertTrue(validate_view(good))
         self.assertEqual(good["generated_utc"], "2026-11-04T12:00:00+00:00")
-        for mutation in ("count", "duplicate", "claim", "source", "license", "health", "timestamp"):
+        self.assertEqual(good["relationship_readiness"]["status"], "not_ready")
+        for mutation in ("count", "duplicate", "claim", "source", "license", "health", "timestamp", "readiness_missing", "readiness_forged", "readiness_dates"):
             bad = deepcopy(good)
             if mutation == "count":
                 bad["domains"]["energy"] = 20
@@ -42,6 +43,12 @@ class ResearchViewTests(unittest.TestCase):
                 bad["licensing"]["portwatch_commercial_reuse"] = "permitted"
             elif mutation == "timestamp":
                 bad.pop("generated_utc")
+            elif mutation == "readiness_missing":
+                bad.pop("relationship_readiness")
+            elif mutation == "readiness_forged":
+                bad["relationship_readiness"]["historical_relationships_validated"] = 1
+            elif mutation == "readiness_dates":
+                bad["relationship_readiness"]["distinct_observation_dates"]["energy"] = 999
             elif mutation == "health":
                 bad.pop("feed_health")
             else:
