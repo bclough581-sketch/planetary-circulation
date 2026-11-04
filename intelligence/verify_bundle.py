@@ -10,12 +10,14 @@ from urllib.request import Request, urlopen
 from zipfile import ZipFile
 
 from intelligence.audit_validation import validate_audit
+from intelligence.coverage_audit import coverage_report
 
 EXPECTED = {
     "eia-history-research.json",
     "treasury-history-research.json",
     "cross-domain-observation-panel.json",
     "point-in-time-audit.json",
+    "historical-coverage-audit.json",
 }
 
 
@@ -26,7 +28,7 @@ def verify_bundle(directory):
         raise ValueError("unsupported manifest schema")
     files = manifest.get("files")
     if not isinstance(files, dict) or set(files) != EXPECTED:
-        raise ValueError("manifest must enumerate exactly four research files")
+        raise ValueError("manifest must enumerate exactly five research files")
     if manifest.get("predictive_advantage") != "not_established":
         raise ValueError("unsupported predictive claim")
     if not isinstance(manifest.get("workflow_run_id"), str) or not manifest["workflow_run_id"].isdigit():
@@ -42,6 +44,11 @@ def verify_bundle(directory):
     panel = json.loads((root / "cross-domain-observation-panel.json").read_text(encoding="utf-8"))
     audit = json.loads((root / "point-in-time-audit.json").read_text(encoding="utf-8"))
     verdict = validate_audit(panel, audit)
+    energy = json.loads((root / "eia-history-research.json").read_text(encoding="utf-8"))
+    treasury = json.loads((root / "treasury-history-research.json").read_text(encoding="utf-8"))
+    saved_coverage = json.loads((root / "historical-coverage-audit.json").read_text(encoding="utf-8"))
+    if saved_coverage != coverage_report(energy, treasury, panel):
+        raise ValueError("historical coverage report does not match source files")
     return {"status": "verified_internal_consistency", "files": len(files),
             "observations": verdict["observations"], "workflow_run_id": manifest["workflow_run_id"],
             "warning": "File integrity and audit consistency only; provenance identity is self-reported and not authenticated against GitHub."}
