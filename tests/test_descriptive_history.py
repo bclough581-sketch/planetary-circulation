@@ -1,3 +1,5 @@
+import hashlib
+import json
 import unittest
 
 from intelligence.descriptive_history import descriptive_report, verify_descriptive_report
@@ -20,6 +22,9 @@ class DescriptiveHistoryTests(unittest.TestCase):
     def test_descriptive_spread_without_predictive_claim(self):
         result = descriptive_report(self.panel)
         self.assertEqual(result["matched_dates"], 2)
+        canonical = json.dumps(self.panel["observations"], sort_keys=True, separators=(",", ":"))
+        self.assertEqual(result["source_observations_sha256"],
+                         hashlib.sha256(canonical.encode("utf-8")).hexdigest())
         self.assertEqual(result["brent_minus_wti_usd_per_barrel"]["mean"], 1)
         self.assertEqual(result["brent_minus_wti_usd_per_barrel"]["median"], 1)
         self.assertEqual(result["brent_minus_wti_usd_per_barrel"]["standard_deviation"], 2.8284)
