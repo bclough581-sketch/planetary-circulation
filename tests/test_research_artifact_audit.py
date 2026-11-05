@@ -24,6 +24,8 @@ class ResearchArtifactAuditTests(unittest.TestCase):
                 "historical_candidate_review": {"blocked": 1},
                 "historical_candidate_block_reasons": {"publication unverified": 1},
                 "blocking_reasons": ["Source publication time is not independently verified."],
+                "publication_claims_after_generation": {"weather": 1},
+                "unverified_publication_timestamp_claims": {"weather": 2},
             },
             "relationships": [],
             "predictive_advantage": "not_established",
@@ -47,6 +49,9 @@ class ResearchArtifactAuditTests(unittest.TestCase):
         self.assertIn("Predictive advantage: not_established", rendered)
         self.assertIn("Point-in-time availability: not_verified", rendered)
         self.assertIn("permission_not_verified", rendered)
+        self.assertIn("PUBLICATION CLAIMS AFTER GENERATION", rendered)
+        self.assertIn("weather: 2", rendered)
+        self.assertEqual(result["relationship_claims"], [])
 
     @patch("intelligence.research_artifact_audit.validate_view", side_effect=ValueError("invalid view"))
     def test_rejects_invalid_research_view(self, _):
