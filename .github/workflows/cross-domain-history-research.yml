@@ -75,7 +75,9 @@ jobs:
           print("Retained-file audit consistency:", verdict["status"])
           PY
       - name: Export descriptive-only historical research summary
-        run: python -m intelligence.descriptive_history --panel cross-domain-observation-panel.json --output descriptive-historical-research.json
+        run: |
+          python -m intelligence.descriptive_history --panel cross-domain-observation-panel.json --output descriptive-historical-research.json
+          python -m intelligence.descriptive_history --panel cross-domain-observation-panel.json --verify-report descriptive-historical-research.json
       - name: Audit exact-date source coverage
         run: python -m intelligence.coverage_audit --energy eia-history-research.json --treasury treasury-history-research.json --panel cross-domain-observation-panel.json --output historical-coverage-audit.json
       - name: Record artifact provenance and file checksums
