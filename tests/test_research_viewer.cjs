@@ -236,6 +236,7 @@ const loadAudit=async data=>{
  await load(expired);
  assert.match(document.getElementById('details').children[1].textContent,/WEATHER ALERT EXPIRED/);
  assert.match(document.getElementById('domains').children[0].children[2].textContent,/0 within freshness window \/ 1 outside/);
+ assert.match(document.getElementById('status').textContent,/1 imported observations are outside viewer-time freshness or have expired/);
  document.getElementById('ledger-freshness').value='within';
  document.getElementById('ledger-freshness').handlers.change();
  assert.equal(document.getElementById('details').children.length,1);
