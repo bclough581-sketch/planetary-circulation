@@ -48,8 +48,9 @@ const loadAudit=async data=>{
  assert.match(document.getElementById('descriptive-status').textContent,/MATCH/);
  assert.match(document.getElementById('descriptive-values').children[1].textContent,/median 5/);
  assert.match(document.getElementById('descriptive-values').children[3].textContent,/2 positive \\| 0 zero \\| 0 negative/);
- assert.match(document.getElementById('descriptive-values').children[4].textContent,/2025-01-02 spread 5/);
- assert.match(document.getElementById('descriptive-values').children[4].textContent,/2025-01-03 spread 5/);
+ assert.match(document.getElementById('descriptive-values').children[4].textContent,/0 calendar gaps longer than 3 days \\| longest 1 days/);
+ assert.match(document.getElementById('descriptive-values').children[5].textContent,/2025-01-02 spread 5/);
+ assert.match(document.getElementById('descriptive-values').children[5].textContent,/2025-01-03 spread 5/);
  let resolveOldReport;
  const delayedReport=new Promise(resolve=>{resolveOldReport=resolve;});
  const oldReportImport=document.getElementById('descriptive-file').handlers.change({target:{files:[{text:()=>delayedReport}]}});
