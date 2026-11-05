@@ -1,0 +1,26 @@
+name: airline-quarterly-research
+on:
+  push:
+    branches: [amalgam-event-foundation]
+    paths: ['intelligence/airline_quarterly.py', 'tests/test_airline_quarterly.py', '.github/workflows/airline-quarterly-research.yml']
+  workflow_dispatch: {}
+permissions:
+  contents: read
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m unittest discover -s tests -p 'test_airline_quarterly.py' -v
+      - run: python -m intelligence.airline_quarterly --output airline-quarterly.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: amalgam-airline-quarterly-${{ github.run_id }}
+          path: airline-quarterly.json
+          retention-days: 30
