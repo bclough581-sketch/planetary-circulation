@@ -205,6 +205,7 @@ document.getElementById('audit-file').addEventListener('change',async e=>{
 });
 const domains=['weather','geopolitics','maritime','aviation','energy','commodities','economics','markets','corporate'];
 let displayedResearch=null;
+let researchImportVersion=0;
 const renderEvidenceLedger=()=>{
  const ledger=document.getElementById('details');ledger.replaceChildren();
  if(!displayedResearch)return;
@@ -242,9 +243,14 @@ document.getElementById('ledger-order').addEventListener('change',renderEvidence
 document.getElementById('ledger-freshness').addEventListener('change',renderEvidenceLedger);
 document.getElementById('ledger-search').addEventListener('input',renderEvidenceLedger);
 document.getElementById('file').addEventListener('change',async e=>{
+ const version=++researchImportVersion;
+ displayedResearch=null;
+ document.getElementById('details').replaceChildren();
  const file=e.target.files[0];if(!file)return;
  try{
-  const data=JSON.parse(await file.text());
+  const content=await file.text();
+  if(version!==researchImportVersion)return;
+  const data=JSON.parse(content);
   if(data.schema!=='amalgam.research.v1'||!Array.isArray(data.observations)||!Array.isArray(data.excluded)||!Array.isArray(data.relationships))throw Error('Unsupported research-view schema');
   if(data.predictive_advantage!=='not_established'||data.relationships.length!==0)throw Error('Unsupported predictive or relationship claim');
   if(data.licensing?.portwatch_commercial_reuse!=='permission_not_verified')throw Error('Unsupported PortWatch reuse claim');
@@ -325,6 +331,6 @@ document.getElementById('file').addEventListener('change',async e=>{
   }
   displayedResearch=data;
   renderEvidenceLedger();
- }catch(err){displayedResearch=null;document.getElementById('count').textContent='—';document.getElementById('link-count').textContent='0 validated links';document.getElementById('domains').textContent='Dataset rejected. No evidence displayed.';document.getElementById('details').replaceChildren();document.getElementById('source-health').textContent='Dataset rejected.';document.getElementById('readiness').textContent='Dataset rejected.';document.getElementById('exclusion-reasons').textContent='Dataset rejected.';document.getElementById('status').textContent='Unable to load file: '+err.message;}
+ }catch(err){if(version!==researchImportVersion)return;displayedResearch=null;document.getElementById('count').textContent='—';document.getElementById('link-count').textContent='0 validated links';document.getElementById('domains').textContent='Dataset rejected. No evidence displayed.';document.getElementById('details').replaceChildren();document.getElementById('source-health').textContent='Dataset rejected.';document.getElementById('readiness').textContent='Dataset rejected.';document.getElementById('exclusion-reasons').textContent='Dataset rejected.';document.getElementById('status').textContent='Unable to load file: '+err.message;}
 });
 </script></body></html>
