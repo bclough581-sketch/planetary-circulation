@@ -122,6 +122,20 @@ class RelationshipReadinessTests(unittest.TestCase):
         self.assertEqual(result["historical_candidate_block_reasons"], {})
         self.assertEqual(result["point_in_time_availability"], "not_verified")
 
+    def test_invalid_generation_cutoff_is_not_assessed(self):
+        view = {"generated_utc": "2026-11-04T12:00:00",
+                "observations": [
+                    {"id": "undated", "domain": "energy",
+                     "observed_at": "2026-11-01T00:00:00Z",
+                     "source": {"url": "https://www.eia.gov/opendata/"},
+                     "metadata": {"published_at": "2026-11-02T00:00:00Z",
+                                  "first_seen_at": "2026-11-03T00:00:00Z"}},
+                ]}
+        result = audit_readiness(view)
+        self.assertEqual(result["historical_candidate_review"], {"not_assessed": 1})
+        self.assertEqual(result["historical_candidate_block_reasons"], {})
+        self.assertEqual(result["point_in_time_availability"], "not_verified")
+
     def test_historical_block_reasons_include_inconsistent_capture_order(self):
         view = {"generated_utc": "2026-11-04T12:00:00Z", "observations": [
             {"id": "early", "domain": "energy",
