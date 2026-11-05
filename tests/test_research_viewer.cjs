@@ -43,7 +43,7 @@ const loadAudit=async data=>{
  const descriptive={schema:'amalgam.descriptive-historical-research.v1',status:'descriptive_only',matched_dates:2,first_date:'2025-01-02',last_date:'2025-01-03',
   brent_minus_wti_usd_per_barrel:{minimum:5,maximum:5,mean:5,median:5,standard_deviation:0,positive_dates:2,zero_dates:0,negative_dates:0},
   treasury_10y_percent:{minimum:4.4,maximum:4.5,mean:4.45,median:4.45,standard_deviation:0.0707},
-  asof_eligible_dates:0,relationships:[],predictive_advantage:'not_established'};
+  asof_eligible_dates:0,relationships:[],predictive_advantage:'not_established',warning:'Descriptive only; no predictive lift is inferred.'};
  await loadDescriptive(descriptive);
  assert.match(document.getElementById('descriptive-status').textContent,/MATCH/);
  assert.match(document.getElementById('descriptive-values').children[1].textContent,/median 5/);
@@ -55,6 +55,11 @@ const loadAudit=async data=>{
  await loadDescriptive(descriptive);
  assert.match(document.getElementById('descriptive-status').textContent,/MATCH/);
  await loadDescriptive({...descriptive,brent_minus_wti_usd_per_barrel:{...descriptive.brent_minus_wti_usd_per_barrel,mean:99}});
+ assert.match(document.getElementById('descriptive-status').textContent,/REJECTED/);
+ await loadDescriptive({...descriptive,brent_minus_wti_usd_per_barrel:{...descriptive.brent_minus_wti_usd_per_barrel,forecast_probability:0.95}});
+ assert.match(document.getElementById('descriptive-status').textContent,/REJECTED/);
+ await loadDescriptive({...descriptive,warning:'Predictive performance is proven.'});
+ assert.match(document.getElementById('descriptive-status').textContent,/REJECTED/);
  assert.match(document.getElementById('descriptive-status').textContent,/REJECTED/);
  assert.equal(document.getElementById('descriptive-values').children.length,0);
  await loadDescriptive(descriptive);
