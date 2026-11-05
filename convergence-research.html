@@ -299,9 +299,9 @@ document.getElementById('file').addEventListener('change',async e=>{
   const populated=domains.filter(domain=>counts[domain]>0);
   const freshDomains=domains.filter(domain=>coverageByDomain[domain].within>0);
   const decision=document.getElementById('decision-boundary');decision.replaceChildren();
-  const verdict=document.createElement('p');verdict.className='warn';
-  verdict.textContent='NO VALIDATED STOCK-SELECTION SIGNAL — '+populated.length+'/9 domains have imported observations; '+freshDomains.length+'/9 have observations within viewer-time freshness windows; 0 validated cross-domain links.';
-  decision.append(verdict);
+  const boundaryVerdict=document.createElement('p');boundaryVerdict.className='warn';
+  boundaryVerdict.textContent='NO VALIDATED STOCK-SELECTION SIGNAL — '+populated.length+'/9 domains have imported observations; '+freshDomains.length+'/9 have observations within viewer-time freshness windows; 0 validated cross-domain links.';
+  decision.append(boundaryVerdict);
   const limit=document.createElement('p');limit.textContent='Evidence breadth and freshness are descriptive, not predictive. Missing domains, unverified historical publication timing, and absent validated outcomes prevent a supported stock ranking or probability estimate.';
   decision.append(limit);
   const verified=0;
