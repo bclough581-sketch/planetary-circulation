@@ -92,7 +92,7 @@ jobs:
               "predictive_advantage": view["predictive_advantage"],
           }
           Path("research-view-manifest.json").write_text(
-              json.dumps(manifest, indent=2) + "\\n", encoding="utf-8")
+              json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
           print("Research dataset SHA-256:", manifest["sha256"])
           PY
       - name: Upload research dataset (not deployed)
