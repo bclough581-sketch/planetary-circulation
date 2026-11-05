@@ -146,6 +146,16 @@ const loadAudit=async data=>{
  document.getElementById('ledger-domain').value='all';
  document.getElementById('ledger-domain').handlers.change();
  assert.match(document.getElementById('details').children[1].textContent,/weather/);
+ const ordered={...good,observations:[event,{...event,id:'two',title:'Earlier',observed_at:'2026-11-03T12:00:00Z'}],domains:{...empty(),weather:2}};
+ await load(ordered);
+ assert.match(document.getElementById('details').children[1].textContent,/Test/);
+ document.getElementById('ledger-order').value='oldest';
+ document.getElementById('ledger-order').handlers.change();
+ assert.match(document.getElementById('details').children[1].textContent,/Earlier/);
+ document.getElementById('ledger-order').value='newest';
+ document.getElementById('ledger-order').handlers.change();
+ assert.match(document.getElementById('details').children[1].textContent,/Test/);
+ await load(good);
  assert.match(document.getElementById('readiness').children[0].textContent,/NOT READY/);
  for(const [name,change] of [
   ['inflated count',x=>x.domains.weather=20],
