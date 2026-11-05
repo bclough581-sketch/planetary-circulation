@@ -203,6 +203,8 @@ const loadAudit=async data=>{
   ['unvalidated relationship',x=>x.relationships.push({status:'proposed'})],
   ['false reuse permission',x=>x.licensing.portwatch_commercial_reuse='permitted'],
   ['missing feed health',x=>delete x.feed_health],
+  ['accepted and excluded simultaneously',x=>x.excluded.push({id:'one',reason:'stale'})],
+  ['excluded evidence missing reason',x=>x.excluded.push({id:'rejected',reason:''})],
   ['event validated without evidence',x=>x.observations[0].status='validated'],
   ['embedded forecast probability',x=>x.observations[0].probability=0.9],
  ]) {
