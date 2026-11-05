@@ -19,6 +19,19 @@ def audit_readiness(view):
             dated.setdefault(event["domain"], set()).add(stamp.astimezone(timezone.utc).date().isoformat())
         except (KeyError, ValueError, TypeError, AttributeError):
             continue
+    # A source-supplied timestamp is an audit lead, never proof of public availability.
+    publication_timestamp_claims = Counter()
+    for event in observations:
+        try:
+            value = event.get("metadata", {}).get("published_at")
+            if not isinstance(value, str):
+                continue
+            published = datetime.fromisoformat(value.replace("Z", "+00:00"))
+            if published.tzinfo is None or published.utcoffset() is None:
+                continue
+            publication_timestamp_claims[event["domain"]] += 1
+        except (KeyError, ValueError, TypeError, AttributeError):
+            continue
     domain_dates = {domain: len(days) for domain, days in sorted(dated.items())}
     multi_day_domains = sorted(domain for domain, days in domain_dates.items() if days >= 2)
     same_utc_date_overlap = {
@@ -35,6 +48,7 @@ def audit_readiness(view):
         "multi_day_domains": multi_day_domains,
         "same_utc_date_overlap": same_utc_date_overlap,
         "point_in_time_availability": "not_verified",
+        "unverified_publication_timestamp_claims": dict(sorted(publication_timestamp_claims.items())),
         "blocking_reasons": [
             "No preregistered historical cross-domain hypothesis, lag, outcome, or control group is present.",
             "No aligned historical panel and out-of-sample evaluation is present.",
