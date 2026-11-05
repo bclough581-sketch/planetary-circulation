@@ -134,6 +134,19 @@ class PointInTimeLedgerRegressionTests(unittest.TestCase):
         self.assertFalse(result["eligible_for_review"])
         self.assertFalse(result["point_in_time_verified"])
 
+    def test_capture_before_publication_is_not_verified(self):
+        from intelligence.point_in_time_ledger import assess_candidate
+        record = {
+            "id": "early-capture", "domain": "energy",
+            "source_url": "https://www.eia.gov/opendata/",
+            "observed_at": "2026-11-01T00:00:00Z",
+            "published_at": "2026-11-03T00:00:00Z",
+            "first_seen_at": "2026-11-02T00:00:00Z",
+        }
+        result = assess_candidate(record, "2026-11-04T12:00:00Z")
+        self.assertFalse(result["point_in_time_verified"])
+        self.assertFalse(result["eligible_for_review"])
+
     def test_plausible_capture_never_verifies_availability(self):
         from intelligence.point_in_time_ledger import assess_candidate
         record = {
