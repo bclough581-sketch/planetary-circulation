@@ -62,6 +62,12 @@ function verifyDescriptive(){
    spreads.push(Math.round((b-w)*1000000)/1000000);yields.push(y);
   }
   const spread=descriptiveStats(spreads),yieldStats=descriptiveStats(yields);
+  const exactly=(obj,keys)=>obj&&typeof obj==='object'&&!Array.isArray(obj)&&
+    Object.keys(obj).length===keys.length&&keys.every(key=>Object.hasOwn(obj,key));
+  if(!exactly(r,['schema','status','matched_dates','first_date','last_date',
+       'brent_minus_wti_usd_per_barrel','treasury_10y_percent','asof_eligible_dates',
+       'relationships','predictive_advantage','warning']))
+    throw Error('Unexpected or missing descriptive report fields');
   const expected={...spread,positive_dates:spreads.filter(x=>x>0).length,zero_dates:spreads.filter(x=>x===0).length,negative_dates:spreads.filter(x=>x<0).length};
   const spreadKeys=Object.keys(expected),yieldKeys=Object.keys(yieldStats);
   if(!r.brent_minus_wti_usd_per_barrel||Object.keys(r.brent_minus_wti_usd_per_barrel).length!==spreadKeys.length||
