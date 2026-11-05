@@ -176,6 +176,18 @@ const loadAudit=async data=>{
  assert.match(document.getElementById('details').children[1].textContent,/evidence gaps: Verified market impact; Independent cross-domain explanation/);
  assert.match(document.getElementById('details').children[1].textContent,/no numeric or text measurement supplied/);
  const measured={...good,observations:[{...event,value:1.23,unit:'baseline ratio',metadata:{...event.metadata,asof:'2026-11-04'}}]};
+ const evidenceRow=document.getElementById('details').children[1];
+ assert.match(evidenceRow.children[0].textContent,/Observation ID: one/);
+ assert.match(evidenceRow.children[0].textContent,/source publication claim: not supplied/);
+ assert.equal(evidenceRow.children[1].href,event.source.url);
+ assert.equal(evidenceRow.children[1].rel,'noopener noreferrer');
+ assert.equal(evidenceRow.children[1].target,'_blank');
+ const claimed={...good,observations:[{...event,metadata:{...event.metadata,published_at:'2026-11-04T11:00:00Z',first_seen_at:'<script>claimed</script>'}}]};
+ await load(claimed);
+ const claimText=document.getElementById('details').children[1].children[0].textContent;
+ assert.match(claimText,/2026-11-04T11:00:00Z/);
+ assert.match(claimText,/<script>claimed<\/script>/);
+ assert.match(claimText,/claims are unverified/);
  await load(measured);
  assert.match(document.getElementById('details').children[1].textContent,/reported value 1.23 baseline ratio/);
  assert.match(document.getElementById('details').children[1].textContent,/source as-of 2026-11-04/);

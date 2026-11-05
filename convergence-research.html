@@ -15,6 +15,7 @@ p,small{color:#a8b9d2} .shell{display:grid;grid-template-columns:minmax(260px,1f
 button{background:#213954;color:#e6eefc;border:1px solid #54718f;border-radius:6px;padding:9px 12px;cursor:pointer}
 button:focus-visible{outline:2px solid white} .domain{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #263c53}
 #details{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.88rem} .warn{color:#ffcf89}
+#details a{color:#9dd8ff;text-decoration:underline}#details a:focus-visible{outline:2px solid white}
 @media(max-width:720px){.shell{grid-template-columns:1fr}}
 </style></head><body>
 <h1>Amalgam — Convergence Research</h1>
@@ -281,7 +282,13 @@ const renderEvidenceLedger=()=>{
   const measurement=hasValue?' | reported value '+String(event.value)+(typeof event.unit==='string'&&event.unit.trim()?' '+event.unit:' (unit not supplied)'):' | no numeric or text measurement supplied';
   const sourceDate=typeof event.metadata?.asof==='string'?' | source as-of '+event.metadata.asof:'';
   p.textContent=event.domain+' | '+event.title+' | observed '+event.observed_at+' | '+freshness+snapshotContext+' | '+event.source.name+' | source '+event.source.url+measurement+sourceDate+' | evidence gaps: '+(missing.length?missing.join('; '):'none recorded (not proof of completeness)');
-  ledger.append(p);
+  const provenance=document.createElement('span');
+  const timestampClaim=key=>typeof event.metadata?.[key]==='string'&&event.metadata[key].trim()?event.metadata[key]:'not supplied';
+  provenance.textContent='\nObservation ID: '+event.id+' | source publication claim: '+timestampClaim('published_at')+' | first-seen claim: '+timestampClaim('first_seen_at')+'. These imported claims are unverified; observation time does not establish historical trading availability. ';
+  const link=document.createElement('a');link.href=event.source.url;link.target='_blank';link.rel='noopener noreferrer';
+  link.textContent='Open '+event.source.name+' source reference (new tab)';
+  link.setAttribute('aria-label','Open source reference for observation '+event.id+' (new tab)');
+  p.append(provenance,link);ledger.append(p);
  }
  if(selected.length>100){const notice=document.createElement('p');notice.className='warn';notice.textContent='Showing first 100 of '+selected.length+' observations in selected domain. Ledger display is truncated; domain totals cover the complete imported dataset.';ledger.prepend(notice);}
  const excluded=document.createElement('p');excluded.className='warn';excluded.textContent='Showing '+Math.min(selected.length,100)+' of '+selected.length+' matching imported observations; '+data.excluded.length+' pipeline-excluded observations are not included. Freshness is reassessed using the viewer clock and does not change pipeline eligibility.';ledger.prepend(excluded);
