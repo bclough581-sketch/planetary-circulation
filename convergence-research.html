@@ -138,6 +138,9 @@ async function verifyHistoricalPair(){
 document.getElementById('historical-file').addEventListener('change',async e=>{
  const file=e.target.files[0];if(!file)return;
  historicalPanel=null;
+ document.getElementById('audit-reasons').replaceChildren();
+ document.getElementById('audit-dates').replaceChildren();
+ document.getElementById('audit-status').textContent='Historical panel changed; prior audit summary cleared pending verification.';
  document.getElementById('descriptive-values').replaceChildren();
  document.getElementById('descriptive-status').textContent='Historical panel changed; descriptive report must be reverified.';
  document.getElementById('historical-status').textContent='Historical panel changed; audit must be reverified.';
@@ -165,7 +168,7 @@ document.getElementById('audit-file').addEventListener('change',async e=>{
       typeof item.reason!=='string'||!item.reason)throw Error('Invalid exclusion entry');
    summary.set(item.reason,(summary.get(item.reason)||0)+1);
   }
-  status.textContent='Historical as-of gate: BLOCKED | '+audit.blocked_count+' excluded | 0 usable | decision '+audit.decision_utc;
+  status.textContent='Imported audit claims BLOCKED | '+audit.blocked_count+' excluded | 0 usable | decision '+audit.decision_utc+' | panel binding must be checked separately.';
   for(const [reason,count] of summary){
    const p=document.createElement('p');p.textContent=count+' blocked: '+reason;reasons.append(p);
   }
