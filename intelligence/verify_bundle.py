@@ -79,9 +79,15 @@ def verify_bundle(directory):
         return parsed.astimezone(timezone.utc)
 
     captured = utc_instant(manifest.get("captured_utc"))
+    generated = utc_instant(panel.get("generated_utc"))
+    if generated > captured:
+        raise ValueError("panel generation occurs after manifest capture")
     for source in (energy, treasury):
-        if utc_instant(source.get("retrieved_utc")) > captured:
+        retrieved = utc_instant(source.get("retrieved_utc"))
+        if retrieved > captured:
             raise ValueError("source retrieval occurs after manifest capture")
+        if retrieved > generated:
+            raise ValueError("source retrieval occurs after panel generation")
 
     # Source dates must be canonical calendar days, not merely matching strings.
     def canonical_day(value):
