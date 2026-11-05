@@ -1,0 +1,29 @@
+name: airline-fuel-research
+on:
+  push:
+    branches: [amalgam-event-foundation]
+    paths: ['intelligence/jet_fuel_history.py', 'tests/test_jet_fuel_history.py', '.github/workflows/airline-fuel-research.yml']
+  workflow_dispatch: {}
+permissions:
+  contents: read
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m unittest discover -s tests -p 'test_jet_fuel_history.py' -v
+      - name: Collect historical monthly jet-fuel context
+        env:
+          EIA_API_KEY: ${{ secrets.EIA_API_KEY }}
+        run: python -m intelligence.jet_fuel_history --start 2025-01 --end 2025-12 --output jet-fuel-history.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: amalgam-jet-fuel-${{ github.run_id }}
+          path: jet-fuel-history.json
+          retention-days: 30
