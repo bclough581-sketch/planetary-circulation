@@ -17,10 +17,27 @@ MAX_MEMBER_BYTES = 15_000_000
 MAX_ZIP_BYTES = 20_000_000
 
 
+def _unique_json_keys(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError("duplicate JSON object key")
+        result[key] = value
+    return result
+
+
+def _parse_json(data):
+    return json.loads(data, object_pairs_hook=_unique_json_keys,
+                      parse_constant=lambda value: (_ for _ in ()).throw(ValueError("non-finite JSON number")))
+
+
+
 def verify_research_payload(payload, manifest_bytes, expected_commit=None, expected_run=None):
     """Validate raw research JSON and manifest with the same rules used for ZIPs."""
-    view = json.loads(payload)
-    manifest = json.loads(manifest_bytes)
+    if len(payload) > MAX_MEMBER_BYTES or len(manifest_bytes) > MAX_MEMBER_BYTES:
+        raise ValueError("research artifact payload too large")
+    view = _parse_json(payload)
+    manifest = _parse_json(manifest_bytes)
     if not isinstance(manifest, dict) or manifest.get("schema") != "amalgam.research-view-artifact-manifest.v1":
         raise ValueError("invalid research artifact manifest schema")
     if set(manifest) != {"schema", "commit_sha", "workflow_run_id", "file",
