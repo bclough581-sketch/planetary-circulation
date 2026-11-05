@@ -8,7 +8,7 @@ p,small{color:#a8b9d2} .shell{display:grid;grid-template-columns:minmax(260px,1f
 .ring{aspect-ratio:1;border-radius:50%;border:18px solid #334963;display:grid;place-items:center;position:relative;background:radial-gradient(circle,#142d43,#080f1d 65%)}
 .ring::after{content:"";position:absolute;inset:12%;border:1px dashed #607a95;border-radius:50%}
 .center{text-align:center;z-index:1;max-width:40%}.center strong{font-size:2rem;display:block}
-.ring::after{pointer-events:none}.ring-node{position:absolute;transform:translate(-50%,-50%);width:26%;min-height:54px;padding:5px 2px;z-index:2;font-size:.75rem;background:#152439}
+.ring::after{pointer-events:none}.ring-node{position:absolute;transform:translate(-50%,-50%);width:23%;min-height:54px;padding:5px 2px;z-index:2;font-size:.75rem;background:#152439}
 .ring-node span{display:block;font-size:.68rem;color:#c0cde0}.ring-node.covered{border-color:#81bce5}.ring-node.outside{border-style:dashed;border-color:#ffcf89}.ring-node[aria-pressed="true"]{outline:3px solid white}.ring-node:disabled{cursor:default;opacity:.7}
 #ring-domains{position:absolute;inset:0}#ring-selection{min-height:1.5em}.domain{gap:10px;flex-wrap:wrap}
 .panel{background:#101e31;border:1px solid #2c435f;border-radius:12px;padding:18px}
@@ -17,7 +17,8 @@ button:focus-visible{outline:2px solid white} .domain{display:flex;justify-conte
 #details{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.88rem} .warn{color:#ffcf89}
 table{width:100%;border-collapse:collapse;font-size:.85rem}th,td{text-align:right;padding:8px;border-bottom:1px solid #334963}caption{text-align:left;color:#a8b9d2}#delta-evidence{overflow-x:auto}
 #details a{color:#9dd8ff;text-decoration:underline}#details a:focus-visible{outline:2px solid white}
-@media(max-width:720px){.shell{grid-template-columns:1fr}}
+input,select{max-width:100%}.panel{min-width:0}
+@media(max-width:720px){body{padding:12px}.shell{grid-template-columns:minmax(0,1fr)}.ring-node{font-size:.65rem;min-height:44px}.ring-node span{font-size:.6rem}.center{font-size:.8rem}}
 </style></head><body>
 <h1>Amalgam — Convergence Research</h1>
 <p>Development-only evidence viewer. No automatically inferred links or validated trading edge.</p>
