@@ -6,7 +6,7 @@ import zipfile
 from pathlib import Path
 from unittest.mock import patch
 
-from intelligence.verify_research_artifact import verify_research_zip, verify_research_payload
+from intelligence.verify_research_artifact import verify_research_zip, verify_research_payload, create_research_manifest
 
 
 class ResearchArtifactVerificationTests(unittest.TestCase):
@@ -130,6 +130,20 @@ class ResearchArtifactVerificationTests(unittest.TestCase):
             manifest = archive.read("research-view-manifest.json")
         with self.assertRaisesRegex(ValueError, "too large"):
             verify_research_payload(b" " * 15_000_001, manifest)
+
+    @patch("intelligence.verify_research_artifact.validate_view", return_value=True)
+    def test_generated_manifest_round_trip(self, validator):
+        payload = json.dumps(self.view).encode()
+        encoded = create_research_manifest(payload, self.commit, self.run_id)
+        result = verify_research_payload(payload, encoded, self.commit, self.run_id)
+        self.assertEqual(result["sha256"], hashlib.sha256(payload).hexdigest())
+        self.assertEqual(result["workflow_run_id"], self.run_id)
+
+    @patch("intelligence.verify_research_artifact.validate_view", return_value=True)
+    def test_manifest_generator_rejects_invalid_commit(self, _):
+        payload = json.dumps(self.view).encode()
+        with self.assertRaisesRegex(ValueError, "invalid commit SHA"):
+            create_research_manifest(payload, "not-a-commit", self.run_id)
 
     @patch("intelligence.verify_research_artifact.validate_view", side_effect=ValueError("invalid view"))
     def test_calls_research_view_validation(self, _):
