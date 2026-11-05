@@ -90,6 +90,18 @@ class FreshnessTests(unittest.TestCase):
                  "source": {"name": "IMF PortWatch", "url": SOURCES["portwatch"][1]}}
         self.assertEqual(eligible(event, self.snapshot, self.now)[1], "source collector failed")
 
+    def test_future_energy_excluded_before_research_validation(self):
+        event = self.energy()
+        event["observed_at"] = "2026-11-04T12:00:01Z"
+        self.assertEqual(eligible(event, self.snapshot, self.now)[1],
+                         "observation postdates research generation")
+
+    def test_future_weather_excluded_before_research_validation(self):
+        event = self.weather("2026-11-04T14:00:00Z")
+        event["observed_at"] = "2026-11-04T12:00:01Z"
+        self.assertEqual(eligible(event, self.snapshot, self.now)[1],
+                         "observation postdates research generation")
+
     def test_old_energy_excluded(self):
         event = self.energy()
         event["observed_at"] = "2026-10-20T00:00:00Z"
