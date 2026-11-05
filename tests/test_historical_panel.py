@@ -27,7 +27,7 @@ class HistoricalPanelTests(unittest.TestCase):
 
     def test_repeated_evidence_is_not_counted_as_independent(self):
         first, second = self.view(3), self.view(4)
-        event = {'id': 'same-source-event', 'domain': 'weather', 'observed_at': '2026-11-03T09:00:00Z',
+        event = {'id': 'same-source-event', 'domain': 'weather', 'status': 'observed', 'observed_at': '2026-11-03T09:00:00Z',
                  'source': {'name': 'NOAA National Weather Service', 'url': 'https://www.weather.gov/documentation/services-web-api'}}
         from intelligence.relationship_readiness import audit_readiness
         for view in (first, second):
@@ -88,7 +88,7 @@ class HistoricalPanelTests(unittest.TestCase):
 
     def test_observation_after_capture_rejected(self):
         view = self.view(4)
-        event = {"id": "test", "domain": "weather", "observed_at": "2026-11-05T12:00:00Z",
+        event = {"id": "test", "domain": "weather", "status": "observed", "observed_at": "2026-11-05T12:00:00Z",
                  "source": {"name": "NOAA National Weather Service", "url": "https://www.weather.gov/documentation/services-web-api"}}
         view["observations"].append(event)
         view["domains"]["weather"] = 1
