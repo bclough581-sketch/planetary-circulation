@@ -1,5 +1,5 @@
 import hashlib
-from zipfile import ZipFile
+from zipfile import ZipFile, ZIP_DEFLATED
 import json
 import tempfile
 import unittest
@@ -117,6 +117,17 @@ class BundleVerificationTests(unittest.TestCase):
             stream.truncate(120_000_001)
         with self.assertRaisesRegex(ValueError, "maximum compressed size"):
             verify_downloaded_zip(archive, "0" * 64)
+
+    def test_downloaded_zip_rejects_highly_compressed_oversized_entry(self):
+        archive = self.root / "compressed-oversized.zip"
+        with ZipFile(archive, "w", compression=ZIP_DEFLATED) as bundle:
+            for name in sorted(self.manifest["files"]):
+                bundle.write(self.root / name, arcname=name)
+            bundle.writestr("research-artifact-manifest.json", " " * 20_000_001)
+        self.assertLess(archive.stat().st_size, 120_000_000)
+        digest = hashlib.sha256(archive.read_bytes()).hexdigest()
+        with self.assertRaisesRegex(ValueError, "oversized file"):
+            verify_downloaded_zip(archive, digest)
 
     def test_downloaded_zip_rejects_extra_member(self):
         archive = self.root / "download.zip"
