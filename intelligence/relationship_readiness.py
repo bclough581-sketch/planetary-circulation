@@ -4,6 +4,7 @@ This is a readiness audit, not a relationship detector or backtest.
 """
 from collections import Counter
 from datetime import datetime, timezone
+from itertools import combinations
 
 
 def audit_readiness(view):
@@ -20,6 +21,11 @@ def audit_readiness(view):
             continue
     domain_dates = {domain: len(days) for domain, days in sorted(dated.items())}
     multi_day_domains = sorted(domain for domain, days in domain_dates.items() if days >= 2)
+    same_utc_date_overlap = {
+        left + '|' + right: len(dated[left] & dated[right])
+        for left, right in combinations(sorted(dated), 2)
+        if dated[left] & dated[right]
+    }
     return {
         "status": "not_ready",
         "historical_relationships_validated": 0,
@@ -27,6 +33,7 @@ def audit_readiness(view):
         "observation_counts": dict(sorted(by_domain.items())),
         "distinct_observation_dates": domain_dates,
         "multi_day_domains": multi_day_domains,
+        "same_utc_date_overlap": same_utc_date_overlap,
         "blocking_reasons": [
             "No preregistered historical cross-domain hypothesis, lag, outcome, or control group is present.",
             "No aligned historical panel and out-of-sample evaluation is present.",
