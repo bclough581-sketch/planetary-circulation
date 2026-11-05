@@ -8,7 +8,13 @@ def eligible(event, snapshot, now=None):
     now = now or datetime.now(timezone.utc)
     if now.tzinfo is None:
         return False, 'clock missing timezone'
-    source = event.get('source', {}).get('name')
+    if not isinstance(event, dict):
+        return False, 'invalid observation record'
+    if not isinstance(event.get('source'), dict):
+        return False, 'invalid source provenance'
+    if not isinstance(event.get('metadata', {}), dict):
+        return False, 'invalid observation metadata'
+    source = event['source'].get('name')
     key = {'ECB statistics': 'ecb', 'U.S. Treasury': 'ust',
            'U.S. Energy Information Administration': 'eia',
            'IMF PortWatch': 'portwatch'}.get(source)
