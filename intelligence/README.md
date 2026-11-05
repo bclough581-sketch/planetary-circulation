@@ -52,6 +52,16 @@ GitHub's published artifact, not independent authenticity of the upstream
 observations, historical publication times, or any predictive relationship.
 An internally consistent panel is not an as-of trading backtest.
 
+## Descriptive research report verification
+
+The historical workflow also publishes a **separate** `amalgam-descriptive-history-<run-id>` artifact. Extract its `descriptive-historical-research.json` and the source panel from the **same run**, then compare them:
+
+```bash
+python -m intelligence.descriptive_history --panel cross-domain-observation-panel.json --verify-report descriptive-historical-research.json
+```
+
+This detects altered statistics relative to the supplied panel. Authenticate the source bundle separately using `verify_downloaded_zip --check-github`. The descriptive artifact itself is not included in that bundle or its manifest, and panel consistency alone does **not** authenticate the descriptive artifact against GitHub.
+
 ## Tests
 
 ```bash
