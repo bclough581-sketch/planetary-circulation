@@ -28,6 +28,7 @@ class BundleVerificationTests(unittest.TestCase):
                     "observations": [{"date": "2025-01-02", "ten_year_yield_percent": 4.4}]}
         from intelligence.cross_domain_history import build as rebuild_panel
         panel = rebuild_panel(energy, treasury)
+        panel["generated_utc"] = "2026-11-04T00:01:00Z"
         audit = assess_asof(panel, "2026-11-04T00:00:00Z")
         values = {"eia-history-research.json": energy,
                   "treasury-history-research.json": treasury,
@@ -40,7 +41,7 @@ class BundleVerificationTests(unittest.TestCase):
             path.write_text(json.dumps(value), encoding="utf-8")
             hashes[name] = hashlib.sha256(path.read_bytes()).hexdigest()
         self.manifest = {"schema": "amalgam.research-artifact-manifest.v1",
-                         "files": hashes, "captured_utc": "2026-11-04T00:00:00Z", "workflow_run_id": "41925963100",
+                         "files": hashes, "captured_utc": "2026-11-04T00:02:00Z", "workflow_run_id": "41925963100",
                          "commit_sha": "a" * 40, "repository": "bclough581-sketch/planetary-circulation",
                          "workflow_url": "https://github.com/bclough581-sketch/planetary-circulation/actions/runs/41925963100",
                          "predictive_advantage": "not_established",
@@ -257,6 +258,22 @@ class BundleVerificationTests(unittest.TestCase):
         self.manifest["captured_utc"] = "2026-11-04T00:00:00"
         self.save_manifest()
         with self.assertRaisesRegex(ValueError, "timezone-naive"):
+            verify_bundle(self.root)
+
+    def test_panel_generated_after_capture_rejected(self):
+        self.manifest["captured_utc"] = "2026-11-04T00:00:30Z"
+        self.save_manifest()
+        with self.assertRaisesRegex(ValueError, "panel generation occurs after"):
+            verify_bundle(self.root)
+
+    def test_source_retrieved_after_panel_generation_rejected(self):
+        path = self.root / "eia-history-research.json"
+        source = json.loads(path.read_text())
+        source["retrieved_utc"] = "2026-11-04T00:01:30Z"
+        path.write_text(json.dumps(source), encoding="utf-8")
+        self.manifest["files"][path.name] = hashlib.sha256(path.read_bytes()).hexdigest()
+        self.save_manifest()
+        with self.assertRaisesRegex(ValueError, "retrieval occurs after panel"):
             verify_bundle(self.root)
 
     def test_tampered_file(self):
