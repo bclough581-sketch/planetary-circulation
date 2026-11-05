@@ -25,3 +25,12 @@ class QuarterlyTests(unittest.TestCase):
         p=self.payload();rows=p['facts']['us-gaap']['Revenues']['units']['USD'];rows.append({**rows[0],'val':101})
         with self.assertRaises(ValueError):normalize(p,'DAL',2025,2025)
         with self.assertRaises(ValueError):normalize(self.payload(),'UAL',2025,2025)
+
+    def test_earliest_retained_filing_selected(self):
+        p=self.payload()
+        for concept in p['facts']['us-gaap'].values():
+            rows=concept['units']['USD']
+            rows.append({**rows[0],'filed':'2026-07-15','accn':'0000027904-26-000001','val':200})
+        result=normalize(p,'DAL',2025,2025)
+        self.assertEqual(result['observations'][0]['filed_date_claim'],'2025-07-15')
+        self.assertEqual(result['observations'][0]['metrics']['revenue_usd']['value'],100)

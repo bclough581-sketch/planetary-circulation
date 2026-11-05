@@ -4,6 +4,7 @@ import json
 import math
 import re
 import urllib.request
+import urllib.error
 from datetime import date, datetime, timezone
 from pathlib import Path
 
@@ -76,17 +77,25 @@ def main():
     parser.add_argument("--start-year", type=int, default=2023)
     parser.add_argument("--end-year", type=int, default=2025)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--input-dir", type=Path, help="Directory containing officially downloaded CIK##########.json companyfacts files")
     args = parser.parse_args()
     companies = []
     for symbol, cik in COMPANIES.items():
         url = f"https://data.sec.gov/api/xbrl/companyfacts/CIK{cik:010d}.json"
         request = urllib.request.Request(url, headers={"User-Agent": "AMALGAM research github.com/bclough581-sketch/planetary-circulation", "Accept-Encoding": "identity"})
-        with urllib.request.urlopen(request, timeout=45) as response:
-            payload = json.load(response)
+        if args.input_dir:
+            payload = json.loads((args.input_dir / f"CIK{cik:010d}.json").read_text(encoding="utf-8"))
+        else:
+            try:
+                with urllib.request.urlopen(request, timeout=45) as response:
+                    payload = json.load(response)
+            except urllib.error.HTTPError as exc:
+                raise RuntimeError(f"SEC access failed (HTTP {exc.code}) for {symbol}; no quarterly dataset produced. Officially downloaded companyfacts files can be processed with --input-dir.") from None
         company = normalize(payload, symbol, args.start_year, args.end_year)
         if not company["observations"]:
             raise ValueError("no paired quarterly facts for " + symbol)
         company["source_url"] = url
+        company["input_mode"] = "local_unverified_file" if args.input_dir else "sec_api_response"
         companies.append(company)
         print(symbol, "paired quarters:", len(company["observations"]), "missing:", company["missing_quarters"])
     result = {"schema": "amalgam.airline-quarterly.v1", "retrieved_utc": datetime.now(timezone.utc).isoformat(),
