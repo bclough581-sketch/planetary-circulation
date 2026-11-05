@@ -154,6 +154,14 @@ const loadAudit=async data=>{
  document.getElementById('ledger-domain').value='all';
  document.getElementById('ledger-domain').handlers.change();
  assert.match(document.getElementById('details').children[1].textContent,/weather/);
+ document.getElementById('ledger-search').value='unmatched evidence';
+ document.getElementById('ledger-search').handlers.input();
+ assert.equal(document.getElementById('details').children.length,1);
+ document.getElementById('ledger-search').value='NOAA';
+ document.getElementById('ledger-search').handlers.input();
+ assert.match(document.getElementById('details').children[1].textContent,/weather/);
+ document.getElementById('ledger-search').value='';
+ document.getElementById('ledger-search').handlers.input();
  const ordered={...good,observations:[event,{...event,id:'two',title:'Earlier',observed_at:'2026-11-03T12:00:00Z'}],domains:{...empty(),weather:2}};
  await load(ordered);
  assert.match(document.getElementById('details').children[1].textContent,/Test/);
