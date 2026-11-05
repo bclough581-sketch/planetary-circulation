@@ -70,12 +70,16 @@ const loadAudit=async data=>{
  assert.match(document.getElementById('descriptive-status').textContent,/MATCH/);
  await document.getElementById('historical-file').handlers.change({target:{files:[{text:async()=>'{broken json'}]}});
  assert.equal(document.getElementById('descriptive-values').children.length,0);
+ assert.equal(document.getElementById('audit-reasons').children.length,0);
+ assert.equal(document.getElementById('audit-dates').children.length,0);
+ assert.match(document.getElementById('audit-status').textContent,/prior audit summary cleared/);
  assert.match(document.getElementById('descriptive-status').textContent,/must be reverified/);
  assert.match(document.getElementById('historical-status').textContent,/Historical panel rejected/);
  await document.getElementById('historical-file').handlers.change({target:{files:[{text:async()=>JSON.stringify(panel)}]}});
  assert.match(document.getElementById('descriptive-status').textContent,/MATCH/);
  assert.match(document.getElementById('historical-status').textContent,/fingerprint MATCH/);
  assert.match(document.getElementById('audit-status').textContent,/2 excluded/);
+ assert.match(document.getElementById('audit-status').textContent,/Imported audit claims/);
  await loadAudit({...audit,blocked:[{date:'2025-01-02',reason:'missing_independent_availability_evidence'},{date:'2025-01-03',reason:'publication_record_not_independently_authenticated'}]});
  assert.match(document.getElementById('historical-status').textContent,/cannot be independently reproduced/);
  await loadAudit(audit);
