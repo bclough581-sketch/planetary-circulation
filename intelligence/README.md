@@ -60,7 +60,7 @@ The historical workflow also publishes a **separate** `amalgam-descriptive-histo
 python -m intelligence.descriptive_history --panel cross-domain-observation-panel.json --verify-report descriptive-historical-research.json
 ```
 
-This detects altered statistics relative to the supplied panel. Authenticate the source bundle separately using `verify_downloaded_zip --check-github`. The descriptive artifact itself is not included in that bundle or its manifest, and panel consistency alone does **not** authenticate the descriptive artifact against GitHub.
+The report now includes `source_observations_sha256`, a SHA-256 fingerprint of the exact historical observation rows. The development viewer verifies this binding before showing the statistics. Earlier descriptive artifacts without the fingerprint are rejected; regenerate both artifacts using the current workflow. This binding prevents accidentally pairing different panels with identical summary statistics, but does not prove the source data are genuine.\n\nThis detects altered statistics relative to the supplied panel. Authenticate the source bundle separately using `verify_downloaded_zip --check-github`. The descriptive artifact itself is not included in that bundle or its manifest, and panel consistency alone does **not** authenticate the descriptive artifact against GitHub.
 
 ## Tests
 
