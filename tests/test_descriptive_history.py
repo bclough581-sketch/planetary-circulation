@@ -50,6 +50,21 @@ class DescriptiveHistoryTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             descriptive_report(self.panel)
 
+    def test_rejects_unsupported_point_in_time_claim(self):
+        self.panel["point_in_time_tradability"] = "established"
+        with self.assertRaises(ValueError):
+            descriptive_report(self.panel)
+
+    def test_rejects_unsupported_alignment_claim(self):
+        self.panel["alignment"] = "publication_time_verified"
+        with self.assertRaises(ValueError):
+            descriptive_report(self.panel)
+
+    def test_rejects_claimed_relationship(self):
+        self.panel["relationships"] = [{"claim": "predictive"}]
+        with self.assertRaises(ValueError):
+            descriptive_report(self.panel)
+
     def test_rejects_nonfinite_numbers(self):
         self.panel["observations"][0]["wti_usd_per_barrel"] = float("nan")
         with self.assertRaises(ValueError):
