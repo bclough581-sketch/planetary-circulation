@@ -99,5 +99,31 @@ class RelationshipReadinessTests(unittest.TestCase):
         self.assertEqual(result["historical_relationships_validated"], 0)
 
 
+class PointInTimeLedgerRegressionTests(unittest.TestCase):
+    def test_future_publication_rejected(self):
+        from intelligence.point_in_time_ledger import assess_candidate
+        record = {
+            "id": "sample", "domain": "energy", "source_url": "https://www.eia.gov/opendata/",
+            "observed_at": "2026-11-01T00:00:00Z",
+            "published_at": "2026-11-04T08:00:00-05:00",
+            "first_seen_at": "2026-11-03T15:00:00Z",
+        }
+        result = assess_candidate(record, "2026-11-04T12:00:00Z")
+        self.assertFalse(result["eligible_for_review"])
+        self.assertFalse(result["point_in_time_verified"])
+
+    def test_plausible_capture_never_verifies_availability(self):
+        from intelligence.point_in_time_ledger import assess_candidate
+        record = {
+            "id": "sample", "domain": "energy", "source_url": "https://www.eia.gov/opendata/",
+            "observed_at": "2026-11-01T00:00:00Z",
+            "published_at": "2026-11-02T00:00:00Z",
+            "first_seen_at": "2026-11-03T00:00:00Z",
+        }
+        result = assess_candidate(record, "2026-11-04T12:00:00Z")
+        self.assertTrue(result["eligible_for_review"])
+        self.assertFalse(result["point_in_time_verified"])
+
+
 if __name__ == "__main__":
     unittest.main()
