@@ -39,7 +39,16 @@ def verify_downloaded_zip(zip_path, published_sha256=None, check_github=False, f
             raise ValueError("ZIP contains directory or oversized file")
         with tempfile.TemporaryDirectory() as tmp:
             for entry in members:
-                (Path(tmp) / entry.filename).write_bytes(archive.read(entry))
+                with archive.open(entry) as source, (Path(tmp) / entry.filename).open("wb") as destination:
+                    remaining = 20_000_001
+                    while remaining > 0:
+                        chunk = source.read(min(1024 * 1024, remaining))
+                        if not chunk:
+                            break
+                        destination.write(chunk)
+                        remaining -= len(chunk)
+                    if remaining == 0:
+                        raise ValueError("ZIP entry exceeds maximum decompressed size")
             result = verify_bundle(tmp)
             manifest = json.loads((Path(tmp) / "research-artifact-manifest.json").read_text())
             github = verify_github_run(tmp, fetch_json=fetch_json, artifact_zip=zip_path) if check_github else None
