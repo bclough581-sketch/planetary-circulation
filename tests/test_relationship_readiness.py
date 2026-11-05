@@ -57,6 +57,22 @@ class RelationshipReadinessTests(unittest.TestCase):
                             for reason in result["blocking_reasons"]))
         self.assertEqual(result["predictive_advantage"], "not_established")
 
+    def test_publication_timestamp_claims_are_counted_but_never_trusted(self):
+        view = {"observations": [
+            {"domain": "energy", "observed_at": "2026-11-03T00:00:00Z",
+             "metadata": {"published_at": "2026-11-04T08:30:00-05:00"}},
+            {"domain": "weather", "observed_at": "2026-11-04T00:00:00Z",
+             "metadata": {"published_at": "2026-11-04T08:30:00"}},
+            {"domain": "energy", "observed_at": "2026-11-04T00:00:00Z",
+             "metadata": {"published_at": "not-a-timestamp"}},
+            {"domain": "economics", "observed_at": "2026-11-04T00:00:00Z"},
+        ]}
+        result = audit_readiness(view)
+        self.assertEqual(result["unverified_publication_timestamp_claims"], {"energy": 1})
+        self.assertEqual(result["point_in_time_availability"], "not_verified")
+        self.assertEqual(result["historical_relationships_validated"], 0)
+        self.assertEqual(result["predictive_advantage"], "not_established")
+
     def test_multiple_dates_still_do_not_establish_predictive_edge(self):
         view = {"observations": [
             {"domain": "weather", "observed_at": "2026-11-03T12:00:00Z"},
