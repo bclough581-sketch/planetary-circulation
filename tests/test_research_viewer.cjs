@@ -213,6 +213,12 @@ const loadAudit=async data=>{
  const oldFile={text:()=>new Promise(resolve=>{resolveOld=resolve;})};
  const pending=document.getElementById('file').handlers.change({target:{files:[oldFile]}});
  assert.equal(document.getElementById('details').children.length,0);
+ assert.equal(document.getElementById('count').textContent,'—');
+ assert.match(document.getElementById('domains').textContent,/Previous coverage cleared/);
+ assert.match(document.getElementById('source-health').textContent,/Awaiting replacement/);
+ assert.match(document.getElementById('readiness').textContent,/Awaiting replacement/);
+ assert.match(document.getElementById('exclusion-reasons').textContent,/Awaiting replacement/);
+ assert.match(document.getElementById('status').textContent,/Import in progress/);
  await load(good);
  resolveOld(JSON.stringify({...good,observations:[],domains:empty()}));
  await pending;
