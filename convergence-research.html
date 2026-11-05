@@ -92,6 +92,8 @@ async function verifyDescriptive(){
 }
 document.getElementById('descriptive-file').addEventListener('change',async e=>{
  const file=e.target.files[0];if(!file)return;descriptiveReport=null;
+ document.getElementById('descriptive-values').replaceChildren();
+ document.getElementById('descriptive-status').textContent='Descriptive report changed; verification required.';
  try{descriptiveReport=JSON.parse(await file.text());}catch(err){document.getElementById('descriptive-status').textContent='Descriptive report rejected: '+err.message;return;}
  await verifyDescriptive();
 });
