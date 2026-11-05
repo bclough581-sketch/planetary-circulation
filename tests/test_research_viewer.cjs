@@ -6,7 +6,8 @@ const html = fs.readFileSync('convergence-research.html','utf8');
 const script = html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
 assert.ok(script, 'viewer script missing');
 class Element {
-  constructor(){this.textContent='';this.children=[];this.className='';this.handlers={};}
+  constructor(){this.textContent='';this.children=[];this.className='';this.handlers={};this.style={};this.attributes={};}
+  setAttribute(name,value){this.attributes[name]=value;}
   addEventListener(type,fn){this.handlers[type]=fn;}
   replaceChildren(...children){this.children=children;this.textContent='';}
   append(...children){this.children.push(...children);}
@@ -135,6 +136,26 @@ const loadAudit=async data=>{
  assert.match(document.getElementById('audit-status').textContent,/Audit rejected/);
 
  await load(good);
+ assert.equal(document.getElementById('ring-domains').children.length,9);
+ const weatherNode=document.getElementById('ring-domains').children[0];
+ assert.match(weatherNode.className,/covered/);
+ assert.match(weatherNode.attributes['aria-label'],/weather: 1 imported \/ 1 within/);
+ document.getElementById('ledger-search').value='unmatched';
+ document.getElementById('ledger-freshness').value='outside';
+ weatherNode.handlers.click();
+ assert.equal(document.getElementById('ring-domains').children[0],weatherNode,'Keep keyboard focus target stable when filtering');
+ assert.equal(document.getElementById('ledger-domain').value,'weather');
+ assert.equal(document.getElementById('ledger-search').value,'');
+ assert.equal(document.getElementById('ledger-freshness').value,'all');
+ assert.equal(document.getElementById('ring-domains').children[0].attributes['aria-pressed'],'true');
+ assert.match(document.getElementById('details').children[1].textContent,/weather/);
+ document.getElementById('ring-domains').children[1].handlers.click();
+ assert.match(document.getElementById('details').children[0].textContent,/0 matching imported/);
+ assert.match(document.getElementById('ring-selection').textContent,/geopolitics/);
+ assert.equal(document.getElementById('ring-domains').children[0].attributes['aria-pressed'],'false');
+ document.getElementById('ring-all').handlers.click();
+ assert.equal(document.getElementById('ledger-domain').value,'all');
+ assert.match(document.getElementById('details').children[1].textContent,/weather/);
  document.getElementById('ledger-freshness').value='within';
  document.getElementById('ledger-freshness').handlers.change();
  assert.equal(document.getElementById('details').children.length,2);
@@ -213,6 +234,8 @@ const loadAudit=async data=>{
   await load(bad);
   assert.equal(document.getElementById('count').textContent,'—',name);
   assert.equal(document.getElementById('details').children.length,0,name);
+  assert.ok(document.getElementById('ring-domains').children.every(node=>node.disabled),name);
+  assert.ok(document.getElementById('ring-all').disabled,name);
   assert.match(document.getElementById('status').textContent,/Unable to load file/,name);
   await load(good);
  }
@@ -221,6 +244,7 @@ const loadAudit=async data=>{
  const pending=document.getElementById('file').handlers.change({target:{files:[oldFile]}});
  assert.equal(document.getElementById('details').children.length,0);
  assert.equal(document.getElementById('count').textContent,'—');
+ assert.ok(document.getElementById('ring-domains').children.every(node=>node.disabled));
  assert.match(document.getElementById('domains').textContent,/Previous coverage cleared/);
  assert.match(document.getElementById('source-health').textContent,/Awaiting replacement/);
  assert.match(document.getElementById('readiness').textContent,/Awaiting replacement/);
@@ -239,6 +263,8 @@ const loadAudit=async data=>{
  assert.match(document.getElementById('excluded-ledger').children[0].textContent,/0 of 0 pipeline-excluded/);
  const expired=JSON.parse(JSON.stringify(good));expired.observations[0].metadata.expires='2026-11-04T18:00:00Z';
  await load(expired);
+ assert.match(document.getElementById('ring-domains').children[0].className,/outside/);
+ assert.doesNotMatch(document.getElementById('ring-domains').children[0].className,/covered/);
  assert.match(document.getElementById('details').children[1].textContent,/WEATHER ALERT EXPIRED/);
  assert.match(document.getElementById('domains').children[0].children[2].textContent,/0 within freshness window \/ 1 outside/);
  assert.match(document.getElementById('status').textContent,/1 imported observations are outside viewer-time freshness or have expired/);
