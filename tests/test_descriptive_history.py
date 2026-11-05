@@ -35,6 +35,16 @@ class DescriptiveHistoryTests(unittest.TestCase):
         self.assertEqual(result["relationships"], [])
         self.assertEqual(result["predictive_advantage"], "not_established")
 
+    def test_integral_float_fingerprint_matches_browser_json_number_encoding(self):
+        self.panel["observations"][0]["wti_usd_per_barrel"] = 70.0
+        report = descriptive_report(self.panel)
+        canonical_rows = json.loads(json.dumps(self.panel["observations"]))
+        canonical_rows[0]["wti_usd_per_barrel"] = 70
+        expected = hashlib.sha256(
+            json.dumps(canonical_rows, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        ).hexdigest()
+        self.assertEqual(report["source_observations_sha256"], expected)
+
     def test_rejects_unverified_claim_of_publication(self):
         self.panel["publication_time_verified"] = True
         with self.assertRaises(ValueError):
