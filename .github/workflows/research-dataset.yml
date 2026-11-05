@@ -121,3 +121,41 @@ jobs:
             research-view.json
             research-view-manifest.json
           retention-days: 30
+
+  verify-uploaded-artifact:
+    needs: research-dataset
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: amalgam-event-foundation
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Download the actual uploaded research artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: amalgam-research-view-${{ github.run_id }}
+          path: verified-artifact
+      - name: Verify downloaded artifact against expected run and commit
+        env:
+          AMALGAM_COMMIT: ${{ github.sha }}
+          AMALGAM_RUN_ID: ${{ github.run_id }}
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          from intelligence.verify_research_artifact import verify_research_payload
+
+          folder = Path("verified-artifact")
+          actual = {p.name for p in folder.iterdir() if p.is_file()}
+          assert actual == {"research-view.json", "research-view-manifest.json"}, "unexpected downloaded artifact files"
+          manifest = verify_research_payload(
+              (folder / "research-view.json").read_bytes(),
+              (folder / "research-view-manifest.json").read_bytes(),
+              expected_commit=os.environ["AMALGAM_COMMIT"],
+              expected_run=os.environ["AMALGAM_RUN_ID"],
+          )
+          print("Downloaded artifact verified:", manifest["sha256"])
+          PY
