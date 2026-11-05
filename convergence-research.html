@@ -138,6 +138,7 @@ async function verifyHistoricalPair(){
 document.getElementById('historical-file').addEventListener('change',async e=>{
  const file=e.target.files[0];if(!file)return;
  historicalPanel=null;
+ historicalAudit=null;
  document.getElementById('audit-reasons').replaceChildren();
  document.getElementById('audit-dates').replaceChildren();
  document.getElementById('audit-status').textContent='Historical panel changed; prior audit summary cleared pending verification.';
