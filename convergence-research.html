@@ -39,6 +39,7 @@ function descriptiveStats(values){
  return {minimum:sorted[0],maximum:sorted[n-1],mean:Math.round((mean+Number.EPSILON)*10000)/10000,median:Math.round((median+Number.EPSILON)*10000)/10000,standard_deviation:sd===null?null:Math.round((sd+Number.EPSILON)*10000)/10000};
 }
 async function verifyDescriptive(){
+ const panelAtStart=historicalPanel,reportAtStart=descriptiveReport;
  const status=document.getElementById('descriptive-status'),target=document.getElementById('descriptive-values');target.replaceChildren();
  if(!descriptiveReport||!historicalPanel){status.textContent='Load both the historical panel and descriptive report.';return;}
  try{
@@ -58,6 +59,7 @@ async function verifyDescriptive(){
   if(dates.some((d,i)=>!validDate(d)||(i>0&&dates[i-1]>=d))||
      r.first_date!==dates[0]||r.last_date!==dates[dates.length-1])throw Error('Invalid or mismatched dates');
   const digest=await globalThis.crypto.subtle.digest('SHA-256',new TextEncoder().encode(canonicalJson(rows)));
+  if(historicalPanel!==panelAtStart||descriptiveReport!==reportAtStart)return;
   const actual=Array.from(new Uint8Array(digest)).map(x=>x.toString(16).padStart(2,'0')).join('');
   if(actual!==r.source_observations_sha256)throw Error('Descriptive report panel fingerprint mismatch');
   const spreads=[],yields=[];
@@ -88,7 +90,7 @@ async function verifyDescriptive(){
    'Treasury 10-year yield (%): mean '+yieldStats.mean+' | median '+yieldStats.median+' | standard deviation '+yieldStats.standard_deviation+' | range '+yieldStats.minimum+'–'+yieldStats.maximum,
    'Point-in-time eligible: 0 | validated predictive relationships: 0'
   ]){const p=document.createElement('p');p.textContent=line;target.append(p);}
- }catch(err){status.textContent='Descriptive report REJECTED: '+err.message;}
+ }catch(err){if(historicalPanel!==panelAtStart||descriptiveReport!==reportAtStart)return;status.textContent='Descriptive report REJECTED: '+err.message;}
 }
 let descriptiveImportVersion=0;
 document.getElementById('descriptive-file').addEventListener('change',async e=>{
@@ -107,6 +109,7 @@ const canonicalJson=value=>{
 };
 async function verifyHistoricalPair(){
  const status=document.getElementById('historical-status');
+ const panelAtStart=historicalPanel,auditAtStart=historicalAudit;
  if(!historicalPanel||!historicalAudit){status.textContent='Load both historical panel and audit to verify their binding.';return;}
  try{
   if(historicalPanel.schema!=='amalgam.cross-domain-observation-panel.v1'||
@@ -118,6 +121,7 @@ async function verifyHistoricalPair(){
   const canonical=canonicalJson(historicalPanel.observations);
   const bytes=new TextEncoder().encode(canonical);
   const digest=await globalThis.crypto.subtle.digest('SHA-256',bytes);
+  if(historicalPanel!==panelAtStart||historicalAudit!==auditAtStart)return;
   const actual=Array.from(new Uint8Array(digest)).map(x=>x.toString(16).padStart(2,'0')).join('');
   if(actual!==historicalAudit.source_observations_sha256)throw Error('Panel fingerprint mismatch');
   if(historicalAudit.blocked_count!==historicalPanel.observations.length||
@@ -136,7 +140,7 @@ async function verifyHistoricalPair(){
       throw Error('Audit exclusion cannot be independently reproduced');
   }
   status.textContent='Panel fingerprint MATCH; all missing-evidence exclusions independently reproduced. Source authenticity and publication timing NOT verified.';
- }catch(err){status.textContent='Panel/audit verification FAILED: '+err.message;}
+ }catch(err){if(historicalPanel!==panelAtStart||historicalAudit!==auditAtStart)return;status.textContent='Panel/audit verification FAILED: '+err.message;}
 }
 let historicalImportVersion=0;
 document.getElementById('historical-file').addEventListener('change',async e=>{
