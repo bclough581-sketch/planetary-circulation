@@ -60,6 +60,14 @@ def validate_view(view):
         except (ValueError, TypeError, AttributeError) as exc:
             raise ValueError("invalid or future research observation timestamp") from exc
         expected[event["domain"]] += 1
+    exclusions = view.get("excluded")
+    if not isinstance(exclusions, list):
+        raise ValueError("missing exclusion audit")
+    for item in exclusions:
+        if not isinstance(item, dict) or not isinstance(item.get("id"), str) or not item["id"].strip() or not isinstance(item.get("reason"), str) or not item["reason"].strip():
+            raise ValueError("invalid exclusion audit record")
+        if item["id"] in seen:
+            raise ValueError("observation cannot be both accepted and excluded")
     if counts != expected:
         raise ValueError("domain counts disagree with evidence")
     if view.get("licensing", {}).get("portwatch_commercial_reuse") != "permission_not_verified":
