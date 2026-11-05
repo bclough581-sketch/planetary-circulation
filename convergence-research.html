@@ -47,7 +47,13 @@ function verifyDescriptive(){
      !Array.isArray(r.relationships)||r.relationships.length||r.asof_eligible_dates!==0||historicalPanel.publication_time_verified!==false||
      !Array.isArray(rows)||!rows.length||r.matched_dates!==rows.length)throw Error('Unsupported descriptive claim or mismatched count');
   const dates=rows.map(x=>x.date);
-  if(dates.some((d,i)=>typeof d!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(d)||(i>0&&dates[i-1]>=d))||
+  const validDate=d=>{
+   if(typeof d!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(d))return false;
+   const [year,month,day]=d.split('-').map(Number);
+   const parsed=new Date(0);parsed.setUTCFullYear(year,month-1,day);
+   return parsed.getUTCFullYear()===year&&parsed.getUTCMonth()===month-1&&parsed.getUTCDate()===day;
+  };
+  if(dates.some((d,i)=>!validDate(d)||(i>0&&dates[i-1]>=d))||
      r.first_date!==dates[0]||r.last_date!==dates[dates.length-1])throw Error('Invalid or mismatched dates');
   const spreads=[],yields=[];
   for(const row of rows){
