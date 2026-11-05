@@ -144,6 +144,8 @@ const loadAudit=async data=>{
  document.getElementById('ledger-freshness').value='all';
  document.getElementById('ledger-freshness').handlers.change();
  assert.equal(document.getElementById('count').textContent,1);
+ assert.match(document.getElementById('domains').children[0].children[2].textContent,/1 within freshness window \/ 0 outside \/ 1 attributed sources/);
+ assert.match(document.getElementById('domains').children[1].children[2].textContent,/NO IMPORTED EVIDENCE/);
  assert.equal(document.getElementById('link-count').textContent,'0 validated links');
  assert.match(document.getElementById('details').children[1].textContent,/within domain freshness window/);
  assert.match(document.getElementById('details').children[1].textContent,/imported snapshot age 1h/);
