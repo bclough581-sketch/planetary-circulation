@@ -1,0 +1,47 @@
+import unittest
+
+from intelligence.descriptive_history import descriptive_report
+
+
+class DescriptiveHistoryTests(unittest.TestCase):
+    def setUp(self):
+        self.panel = {
+            "schema": "amalgam.cross-domain-observation-panel.v1",
+            "predictive_advantage": "not_established",
+            "publication_time_verified": False,
+            "observations": [
+                {"date": "2025-01-02", "wti_usd_per_barrel": 70,
+                 "brent_usd_per_barrel": 73, "treasury_10y_percent": 4.1},
+                {"date": "2025-01-03", "wti_usd_per_barrel": 72,
+                 "brent_usd_per_barrel": 71, "treasury_10y_percent": 4.3},
+            ],
+        }
+
+    def test_descriptive_spread_without_predictive_claim(self):
+        result = descriptive_report(self.panel)
+        self.assertEqual(result["matched_dates"], 2)
+        self.assertEqual(result["brent_minus_wti_usd_per_barrel"]["mean"], 1)
+        self.assertEqual(result["brent_minus_wti_usd_per_barrel"]["positive_dates"], 1)
+        self.assertEqual(result["brent_minus_wti_usd_per_barrel"]["negative_dates"], 1)
+        self.assertEqual(result["asof_eligible_dates"], 0)
+        self.assertEqual(result["relationships"], [])
+        self.assertEqual(result["predictive_advantage"], "not_established")
+
+    def test_rejects_unverified_claim_of_publication(self):
+        self.panel["publication_time_verified"] = True
+        with self.assertRaises(ValueError):
+            descriptive_report(self.panel)
+
+    def test_rejects_nonfinite_numbers(self):
+        self.panel["observations"][0]["wti_usd_per_barrel"] = float("nan")
+        with self.assertRaises(ValueError):
+            descriptive_report(self.panel)
+
+    def test_rejects_duplicate_dates(self):
+        self.panel["observations"][1]["date"] = "2025-01-02"
+        with self.assertRaises(ValueError):
+            descriptive_report(self.panel)
+
+
+if __name__ == "__main__":
+    unittest.main()
