@@ -198,6 +198,8 @@ const loadAudit=async data=>{
   ['future generation time',x=>x.generated_utc='2026-11-05T00:00:00Z'],
   ['future observation time',x=>x.observations[0].observed_at='2026-11-05T00:00:00Z'],
   ['invalid observation time',x=>x.observations[0].observed_at='not-a-date'],
+  ['timezone-free observation',x=>x.observations[0].observed_at='2026-11-04T12:00:00'],
+  ['observation after generation',x=>x.observations[0].observed_at='2026-11-04T19:00:01Z'],
   ['unvalidated relationship',x=>x.relationships.push({status:'proposed'})],
   ['false reuse permission',x=>x.licensing.portwatch_commercial_reuse='permitted'],
   ['missing feed health',x=>delete x.feed_health],
