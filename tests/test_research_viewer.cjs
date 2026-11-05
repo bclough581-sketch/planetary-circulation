@@ -40,7 +40,7 @@ const loadAudit=async data=>{
  await document.getElementById('historical-file').handlers.change({target:{files:[{text:async()=>JSON.stringify(panel)}]}});
  await loadAudit(audit);
  const loadDescriptive=async data=>document.getElementById('descriptive-file').handlers.change({target:{files:[{text:async()=>JSON.stringify(data)}]}});
- const descriptive={schema:'amalgam.descriptive-historical-research.v1',status:'descriptive_only',matched_dates:2,first_date:'2025-01-02',last_date:'2025-01-03',
+ const descriptive={schema:'amalgam.descriptive-historical-research.v1',status:'descriptive_only',matched_dates:2,source_observations_sha256:fingerprint,first_date:'2025-01-02',last_date:'2025-01-03',
   brent_minus_wti_usd_per_barrel:{minimum:5,maximum:5,mean:5,median:5,standard_deviation:0,positive_dates:2,zero_dates:0,negative_dates:0},
   treasury_10y_percent:{minimum:4.4,maximum:4.5,mean:4.45,median:4.45,standard_deviation:0.0707},
   asof_eligible_dates:0,relationships:[],predictive_advantage:'not_established',warning:'Descriptive only; no predictive lift is inferred.'};
@@ -62,6 +62,8 @@ const loadAudit=async data=>{
  assert.match(document.getElementById('descriptive-status').textContent,/REJECTED/);
  await loadDescriptive({...descriptive,stock_pick_confidence:0.99});
  assert.match(document.getElementById('descriptive-status').textContent,/REJECTED/);
+ await loadDescriptive({...descriptive,source_observations_sha256:'0'.repeat(64)});
+ assert.match(document.getElementById('descriptive-status').textContent,/fingerprint mismatch/);
  assert.match(document.getElementById('descriptive-status').textContent,/REJECTED/);
  assert.equal(document.getElementById('descriptive-values').children.length,0);
  await loadDescriptive(descriptive);
