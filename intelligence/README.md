@@ -1,27 +1,73 @@
-# Amalgam intelligence foundation — development branch
+# Amalgam intelligence research — development branch
 
-This module defines **observations** and **relationships** across nine domains:
-weather, geopolitics, maritime, aviation, energy, commodities, economics,
-markets and corporate.
+Nine domains: weather, geopolitics, maritime, aviation, energy, commodities,
+economics, markets and corporate. The convergence ring is a research interface,
+not a validated signal or a trading recommendation.
 
-## Guarantees at this stage
-- Each observation has an explicit source and timezone-aware timestamp.
-- Unknown evidence is represented explicitly; no automatic confidence score is invented.
-- Relationships are **hypotheses**, not claims of causation or trading edge.
-- Relationship records include evidence references, counterarguments, missing data,
-  and `predictive_advantage: not_established`.
-- Graph validation rejects dangling evidence references.
-- No production data, refresh workflow, UI, or homepage has been changed.
+## Current capabilities
+- Source-attributed event records, NOAA collection, freshness and eligibility audits.
+- A standalone `convergence-research.html` viewer; research JSON is uploaded
+  manually. There is no live production connection or automatic deployment.
+- EIA WTI/Brent and U.S. Treasury 10-year historical collection and exact-date
+  alignment, with a coverage/exclusion audit.
+- Fail-closed historical point-in-time audit: **zero rows are eligible** without
+  independently authenticated publication-time evidence.
+- Artifact manifests, SHA-256 file checksums, cross-file consistency validation,
+  GitHub workflow metadata verification, and original ZIP-byte verification.
+- The historical decision schedule tool audits user-supplied decision timestamps;
+  supplying timestamps **never** grants point-in-time eligibility.
 
-## What is not implemented
-This is the shared record format, **not** a live ingestion pipeline, pattern-discovery
-algorithm, forecasting model, or independent validation engine. A source URL in a
-record is attribution, not proof that a feed was successfully queried.
+## Verify a downloaded historical bundle
 
-## Test locally
-`python -m unittest tests.test_intelligence -v`
+1. Download the `amalgam-cross-domain-history-<run-id>` artifact ZIP from the
+   **intelligence-cross-domain-history-research** GitHub Actions run.
+2. From the repository root, with Python 3:
 
-## Next
-Verify existing feed health and map current data into this structure; add NOAA
-weather ingestion and a real weather-to-energy evidence path on this branch,
-with tests and license review before considering a merge.
+```bash
+python -m intelligence.verify_downloaded_zip /path/to/artifact.zip --check-github
+```
+
+This queries GitHub's public API to check the completed run, commit, artifact
+attachment and published ZIP digest, then checks all six ZIP entries and the
+research panel, source data, manifest and exclusion audit for consistency.
+
+If GitHub is inaccessible, an independently copied SHA-256 digest may be used:
+
+```bash
+python -m intelligence.verify_downloaded_zip /path/to/artifact.zip --github-sha256 <64-lowercase-hex-digest>
+```
+
+Do not obtain the expected digest from the same untrusted ZIP. The digest is
+published in the GitHub Actions artifact metadata (not the research manifest).
+A report can be saved with `--output verification-report.json`.
+
+To verify already-extracted files without authenticating the ZIP:
+
+```bash
+python -m intelligence.verify_bundle /path/to/extracted-directory
+```
+
+**Trust boundary:** A matching GitHub ZIP digest establishes integrity against
+GitHub's published artifact, not independent authenticity of the upstream
+observations, historical publication times, or any predictive relationship.
+An internally consistent panel is not an as-of trading backtest.
+
+## Tests
+
+```bash
+python -m unittest discover -s tests -p 'test_*.py'
+```
+
+The development workflows also run Node viewer checks. Historical research
+artifacts are retained for 30 days; scheduled capture is not enabled on this
+development branch.
+
+## Outstanding blockers
+
+- Historical observation dates are not independently verified availability
+  timestamps. The 244 aligned 2025 dates are **not** trade-time eligible.
+- No preregistered cross-domain hypothesis has passed out-of-sample testing.
+- PortWatch licensing for commercial reuse remains unverified; keep it quarantined.
+- The convergence ring must not imply validated relationships or predictive lift.
+
+**Predictive advantage: not established.** Production `main` is unchanged.
