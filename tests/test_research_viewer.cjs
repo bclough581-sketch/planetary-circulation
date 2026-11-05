@@ -47,6 +47,13 @@ const loadAudit=async data=>{
  await loadDescriptive(descriptive);
  assert.match(document.getElementById('descriptive-status').textContent,/MATCH/);
  assert.match(document.getElementById('descriptive-values').children[1].textContent,/median 5/);
+ const impossiblePanel={...panel,observations:panel.observations.map((x,i)=>i===0?{...x,date:'2025-02-30'}:x)};
+ await document.getElementById('historical-file').handlers.change({target:{files:[{text:async()=>JSON.stringify(impossiblePanel)}]}});
+ await loadDescriptive({...descriptive,first_date:'2025-02-30'});
+ assert.match(document.getElementById('descriptive-status').textContent,/REJECTED: Invalid or mismatched dates/);
+ await document.getElementById('historical-file').handlers.change({target:{files:[{text:async()=>JSON.stringify(panel)}]}});
+ await loadDescriptive(descriptive);
+ assert.match(document.getElementById('descriptive-status').textContent,/MATCH/);
  await loadDescriptive({...descriptive,brent_minus_wti_usd_per_barrel:{...descriptive.brent_minus_wti_usd_per_barrel,mean:99}});
  assert.match(document.getElementById('descriptive-status').textContent,/REJECTED/);
  assert.equal(document.getElementById('descriptive-values').children.length,0);
