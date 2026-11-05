@@ -6,7 +6,7 @@ import zipfile
 from pathlib import Path
 from unittest.mock import patch
 
-from intelligence.verify_research_artifact import verify_research_zip
+from intelligence.verify_research_artifact import verify_research_zip, verify_research_payload
 
 
 class ResearchArtifactVerificationTests(unittest.TestCase):
@@ -102,6 +102,34 @@ class ResearchArtifactVerificationTests(unittest.TestCase):
         self.write(lambda m: m.update(unverified_claim=True))
         with self.assertRaisesRegex(ValueError, "unexpected"):
             verify_research_zip(self.path)
+
+    @patch("intelligence.verify_research_artifact.validate_view", return_value=True)
+    def test_rejects_duplicate_manifest_keys(self, _):
+        self.write()
+        with zipfile.ZipFile(self.path) as archive:
+            payload = archive.read("research-view.json")
+            manifest = archive.read("research-view-manifest.json").decode()
+        duplicate = manifest.replace('"schema":', '"schema": "injected", "schema":', 1)
+        with self.assertRaisesRegex(ValueError, "duplicate JSON"):
+            verify_research_payload(payload, duplicate.encode())
+
+    @patch("intelligence.verify_research_artifact.validate_view", return_value=True)
+    def test_rejects_nonfinite_json(self, _):
+        self.write()
+        with zipfile.ZipFile(self.path) as archive:
+            payload = archive.read("research-view.json")
+            manifest = archive.read("research-view-manifest.json")
+        malicious = payload.replace(b'"observations": []', b'"observations": [], "injected": NaN')
+        with self.assertRaisesRegex(ValueError, "non-finite"):
+            verify_research_payload(malicious, manifest)
+
+    @patch("intelligence.verify_research_artifact.validate_view", return_value=True)
+    def test_rejects_oversized_raw_payload(self, _):
+        self.write()
+        with zipfile.ZipFile(self.path) as archive:
+            manifest = archive.read("research-view-manifest.json")
+        with self.assertRaisesRegex(ValueError, "too large"):
+            verify_research_payload(b" " * 15_000_001, manifest)
 
     @patch("intelligence.verify_research_artifact.validate_view", side_effect=ValueError("invalid view"))
     def test_calls_research_view_validation(self, _):
