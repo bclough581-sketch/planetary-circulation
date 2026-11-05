@@ -87,6 +87,28 @@ class RelationshipReadinessTests(unittest.TestCase):
         self.assertEqual(result["point_in_time_availability"], "not_verified")
         self.assertEqual(result["predictive_advantage"], "not_established")
 
+    def test_historical_candidate_review_requires_both_availability_timestamps(self):
+        view = {"generated_utc": "2026-11-04T12:00:00Z", "observations": [
+            {"id": "complete", "domain": "energy",
+             "source": {"url": "https://www.eia.gov/opendata/"},
+             "observed_at": "2026-11-01T00:00:00Z",
+             "metadata": {"published_at": "2026-11-02T00:00:00Z",
+                          "first_seen_at": "2026-11-03T00:00:00Z"}},
+            {"id": "missing", "domain": "weather",
+             "source": {"url": "https://www.weather.gov/"},
+             "observed_at": "2026-11-01T00:00:00Z", "metadata": {}},
+            {"id": "late", "domain": "energy",
+             "source": {"url": "https://www.eia.gov/opendata/"},
+             "observed_at": "2026-11-01T00:00:00Z",
+             "metadata": {"published_at": "2026-11-05T00:00:00Z",
+                          "first_seen_at": "2026-11-03T00:00:00Z"}},
+        ]}
+        result = audit_readiness(view)
+        self.assertEqual(result["historical_candidate_review"],
+                         {"blocked": 2, "reviewable": 1})
+        self.assertEqual(result["point_in_time_availability"], "not_verified")
+        self.assertEqual(result["predictive_advantage"], "not_established")
+
     def test_multiple_dates_still_do_not_establish_predictive_edge(self):
         view = {"observations": [
             {"domain": "weather", "observed_at": "2026-11-03T12:00:00Z"},
