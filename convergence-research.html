@@ -243,7 +243,10 @@ const renderEvidenceLedger=()=>{
   const freshness=age<0?'FUTURE RELATIVE TO VIEWER CLOCK':expiredAlert?'WEATHER ALERT EXPIRED OR EXPIRY UNVERIFIABLE':age>(maxAgeHours[event.domain]??24)?'EXCEEDS DOMAIN FRESHNESS WINDOW':'within domain freshness window';
   const snapshotContext=datasetAgeHours>24?' | IMPORTED SNAPSHOT OLDER THAN 24 HOURS':' | imported snapshot age '+Math.max(0,Math.floor(datasetAgeHours))+'h';
   const missing=Array.isArray(event.missing)?event.missing.filter(x=>typeof x==='string'&&x.trim()):[];
-  p.textContent=event.domain+' | '+event.title+' | observed '+event.observed_at+' | '+freshness+snapshotContext+' | '+event.source.name+' | source '+event.source.url+' | evidence gaps: '+(missing.length?missing.join('; '):'none recorded (not proof of completeness)');
+  const hasValue=event.value!==null&&event.value!==undefined&&['number','string'].includes(typeof event.value)&&String(event.value).trim()!=='';
+  const measurement=hasValue?' | reported value '+String(event.value)+(typeof event.unit==='string'&&event.unit.trim()?' '+event.unit:' (unit not supplied)'):' | no numeric or text measurement supplied';
+  const sourceDate=typeof event.metadata?.asof==='string'?' | source as-of '+event.metadata.asof:'';
+  p.textContent=event.domain+' | '+event.title+' | observed '+event.observed_at+' | '+freshness+snapshotContext+' | '+event.source.name+' | source '+event.source.url+measurement+sourceDate+' | evidence gaps: '+(missing.length?missing.join('; '):'none recorded (not proof of completeness)');
   ledger.append(p);
  }
  if(selected.length>100){const notice=document.createElement('p');notice.className='warn';notice.textContent='Showing first 100 of '+selected.length+' observations in selected domain. Ledger display is truncated; domain totals cover the complete imported dataset.';ledger.prepend(notice);}
