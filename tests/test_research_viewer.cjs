@@ -201,6 +201,8 @@ const loadAudit=async data=>{
   ['unvalidated relationship',x=>x.relationships.push({status:'proposed'})],
   ['false reuse permission',x=>x.licensing.portwatch_commercial_reuse='permitted'],
   ['missing feed health',x=>delete x.feed_health],
+  ['event validated without evidence',x=>x.observations[0].status='validated'],
+  ['embedded forecast probability',x=>x.observations[0].probability=0.9],
  ]) {
   const bad=JSON.parse(JSON.stringify(good));change(bad);
   await load(bad);
