@@ -45,9 +45,6 @@ async function verifyDescriptive(){
   const r=descriptiveReport,rows=historicalPanel.observations;
   if(!globalThis.crypto?.subtle)throw Error('SHA-256 unavailable for descriptive report binding');
   if(typeof r.source_observations_sha256!=='string'||!/^[a-f0-9]{64}$/.test(r.source_observations_sha256))throw Error('Missing historical panel fingerprint');
-  const digest=await globalThis.crypto.subtle.digest('SHA-256',new TextEncoder().encode(canonicalJson(rows)));
-  const actual=Array.from(new Uint8Array(digest)).map(x=>x.toString(16).padStart(2,'0')).join('');
-  if(actual!==r.source_observations_sha256)throw Error('Descriptive report panel fingerprint mismatch');
   if(r.schema!=='amalgam.descriptive-historical-research.v1'||r.status!=='descriptive_only'||r.predictive_advantage!=='not_established'||
      !Array.isArray(r.relationships)||r.relationships.length||r.asof_eligible_dates!==0||historicalPanel.publication_time_verified!==false||
      !Array.isArray(rows)||!rows.length||r.matched_dates!==rows.length)throw Error('Unsupported descriptive claim or mismatched count');
@@ -60,6 +57,9 @@ async function verifyDescriptive(){
   };
   if(dates.some((d,i)=>!validDate(d)||(i>0&&dates[i-1]>=d))||
      r.first_date!==dates[0]||r.last_date!==dates[dates.length-1])throw Error('Invalid or mismatched dates');
+  const digest=await globalThis.crypto.subtle.digest('SHA-256',new TextEncoder().encode(canonicalJson(rows)));
+  const actual=Array.from(new Uint8Array(digest)).map(x=>x.toString(16).padStart(2,'0')).join('');
+  if(actual!==r.source_observations_sha256)throw Error('Descriptive report panel fingerprint mismatch');
   const spreads=[],yields=[];
   for(const row of rows){
    const {wti_usd_per_barrel:w,brent_usd_per_barrel:b,treasury_10y_percent:y}=row;
