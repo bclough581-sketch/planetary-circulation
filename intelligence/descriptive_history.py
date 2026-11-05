@@ -3,11 +3,14 @@
 Observation-date alignment does not prove trade-time availability.
 """
 import argparse
+import hashlib
 import json
 import math
 import statistics
 from datetime import date
 from pathlib import Path
+
+from intelligence.point_in_time import _json_number_normalized
 
 
 def descriptive_report(panel):
@@ -39,6 +42,7 @@ def descriptive_report(panel):
         "schema": "amalgam.descriptive-historical-research.v1",
         "status": "descriptive_only",
         "matched_dates": len(rows),
+        "source_observations_sha256": hashlib.sha256(json.dumps(_json_number_normalized(rows), sort_keys=True, separators=(",", ":"), allow_nan=False, ensure_ascii=False).encode("utf-8")).hexdigest(),
         "first_date": dates[0],
         "last_date": dates[-1],
         "brent_minus_wti_usd_per_barrel": {
