@@ -75,6 +75,34 @@ class BundleVerificationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "SHA-256 mismatch"):
             verify_downloaded_zip(archive, "0" * 64)
 
+    def test_downloaded_zip_cross_checks_github_run(self):
+        archive = self.root / "download.zip"
+        with ZipFile(archive, "w") as bundle:
+            for name in sorted(self.manifest["files"]):
+                bundle.write(self.root / name, arcname=name)
+            bundle.write(self.root / "research-artifact-manifest.json",
+                         arcname="research-artifact-manifest.json")
+        digest = hashlib.sha256(archive.read_bytes()).hexdigest()
+        def fake_fetch(url):
+            if "/artifacts?" in url:
+                return {"artifacts": [{"id": 12, "name": "amalgam-cross-domain-history-41925963100",
+                                       "expired": False, "digest": "sha256:" + digest,
+                                       "workflow_run": {"id": 41925963100, "head_sha": "a" * 40}}]}
+            return {"id": 41925963100, "head_sha": "a" * 40,
+                    "head_branch": "amalgam-event-foundation",
+                    "status": "completed", "conclusion": "success",
+                    "name": "intelligence-cross-domain-history-research",
+                    "html_url": self.manifest["workflow_url"]}
+        result = verify_downloaded_zip(archive, digest, check_github=True, fetch_json=fake_fetch)
+        self.assertEqual(result["github_run"]["status"], "github_artifact_zip_digest_matched")
+        def mismatched_fetch(url):
+            result = fake_fetch(url)
+            if "/artifacts?" in url:
+                result["artifacts"][0]["digest"] = "sha256:" + "0" * 64
+            return result
+        with self.assertRaisesRegex(ValueError, "ZIP digest mismatch"):
+            verify_downloaded_zip(archive, digest, check_github=True, fetch_json=mismatched_fetch)
+
     def test_downloaded_zip_rejects_extra_member(self):
         archive = self.root / "download.zip"
         with ZipFile(archive, "w") as bundle:
