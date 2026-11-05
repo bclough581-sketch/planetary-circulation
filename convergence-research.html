@@ -36,8 +36,59 @@ button:focus-visible{outline:2px solid white} .domain{display:flex;justify-conte
 <h3>Source health and limitations</h3><div id="source-health">Load a dataset to inspect feed status.</div>
 <h3>Exclusion reasons</h3><div id="exclusion-reasons">No dataset loaded.</div><details><summary>Inspect excluded observation IDs and reasons</summary><div id="excluded-ledger">No dataset loaded.</div></details>
 <p><label for="ledger-domain">Filter evidence ledger by domain</label> <select id="ledger-domain"><option value="all">All domains</option><option value="weather">Weather</option><option value="geopolitics">Geopolitics</option><option value="maritime">Maritime</option><option value="aviation">Aviation</option><option value="energy">Energy</option><option value="commodities">Commodities</option><option value="economics">Economics</option><option value="markets">Markets</option><option value="corporate">Corporate</option></select> <label for="ledger-order">Order</label> <select id="ledger-order"><option value="newest">Newest observations first</option><option value="oldest">Oldest observations first</option><option value="source">Source name A–Z</option></select> <label for="ledger-freshness">Freshness</label> <select id="ledger-freshness"><option value="all">All imported observations</option><option value="within">Within domain freshness window</option><option value="outside">Outside domain freshness window</option></select></p><p><label for="ledger-search">Find evidence by title, source, or observation ID</label> <input type="search" id="ledger-search" placeholder="Search imported evidence"></p><div id="details"></div></section>\n<section class="panel"><h2>Historical point-in-time exclusion audit</h2><p>Import point-in-time-audit.json from the cross-domain development workflow. This is separate from the live observation evidence ledger.</p><label for="historical-file">Select cross-domain-observation-panel.json</label> <input type="file" id="historical-file" accept=".json,application/json"><p id="historical-status">No historical panel loaded.</p><label for="audit-file">Select point-in-time-audit.json</label> <input type="file" id="audit-file" accept=".json,application/json"><p id="audit-status" class="warn">No historical audit loaded.</p><div id="audit-reasons"></div><div id="audit-dates"></div><p class="warn">Local imports are not authenticated. This display does not certify publication timing or trading eligibility.</p></section>
+<section class="panel" id="jet-fuel-case"><h2>Airline case: jet-fuel evidence</h2><p>Import jet-fuel-history.json from the airline-fuel-research workflow. This regional fuel-price benchmark is separate from the oil/Treasury panel and does not add validated convergence links.</p><label for="jet-file">Select monthly jet-fuel history</label> <input type="file" id="jet-file" accept=".json,application/json"><p id="jet-status" role="status">No jet-fuel evidence loaded.</p><div id="jet-values"></div></section>
 <section class="panel"><h2>Historical descriptive context</h2><p>Import the descriptive-historical-research.json from the same development workflow run as the historical panel. Values are recalculated locally before display.</p><label for="descriptive-file">Select descriptive-historical-research.json</label> <input type="file" id="descriptive-file" accept=".json,application/json"><p id="descriptive-status" class="warn">No descriptive report loaded.</p><div id="descriptive-values"></div><p class="warn">Descriptive only. Neither the imported files nor historical publication times are authenticated in this browser. No predictive advantage is established.</p></section>
 <script>
+let jetImportVersion=0;
+document.getElementById('jet-file').addEventListener('change',async e=>{
+ const version=++jetImportVersion,target=document.getElementById('jet-values'),status=document.getElementById('jet-status');
+ target.replaceChildren();status.textContent='Previous jet-fuel evidence cleared. Importing replacement.';
+ const file=e.target.files[0];if(!file){status.textContent='No jet-fuel evidence loaded.';return;}
+ try{
+  if(file.size>2000000)throw Error('File exceeds 2 MB limit');
+  const text=await file.text();if(version!==jetImportVersion)return;
+  if(text.length>2000000)throw Error('File exceeds size limit');
+  const d=JSON.parse(text),source='https://www.eia.gov/dnav/pet/hist/eer_epjk_pf4_rgc_dpgM.htm';
+  const fields=['schema','source_url','source','series','retrieved_utc','frequency','unit','requested_start','requested_end','observations','missing_months','excluded','publication_time_verified','predictive_advantage','warning'];
+  if(!d||Object.keys(d).length!==fields.length||fields.some(key=>!Object.hasOwn(d,key))||
+     d.schema!=='amalgam.jet-fuel-history.v1'||d.source_url!==source||d.source!=='U.S. Energy Information Administration'||
+     d.series!=='EER_EPJK_PF4_RGC_DPG'||d.frequency!=='monthly'||d.unit!=='USD_per_gallon'||
+     d.publication_time_verified!==false||d.predictive_advantage!=='not_established')throw Error('Unsupported source, units or research claims');
+  const monthIndex=value=>{
+   if(typeof value!=='string'||!/^\d{4}-(0[1-9]|1[0-2])$/.test(value)||value.startsWith('0000'))throw Error('Invalid month');
+   return Number(value.slice(0,4))*12+Number(value.slice(5))-1;
+  };
+  const start=monthIndex(d.requested_start),end=monthIndex(d.requested_end);
+  if(end<start||end-start>1200)throw Error('Invalid or excessive date range');
+  if(typeof d.retrieved_utc!=='string'||!/(Z|[+-]\d{2}:\d{2})$/.test(d.retrieved_utc)||!Number.isFinite(Date.parse(d.retrieved_utc))||Date.parse(d.retrieved_utc)>Date.now()+300000)throw Error('Invalid retrieval time');
+  if(!Array.isArray(d.observations)||!d.observations.length||!Array.isArray(d.missing_months)||!Array.isArray(d.excluded))throw Error('Missing coverage data');
+  let previous=start-1;const observed=new Set();
+  for(const row of d.observations){
+   const index=monthIndex(row.period);
+   if(index<start||index>end||index<=previous||!Number.isFinite(row.value)||row.value<=0||Object.keys(row).sort().join()!=='period,value')throw Error('Invalid, duplicate or unordered observation');
+   observed.add(row.period);previous=index;
+  }
+  const missing=[];
+  for(let index=start;index<=end;index++){
+   const period=String(Math.floor(index/12)).padStart(4,'0')+'-'+String(index%12+1).padStart(2,'0');
+   if(!observed.has(period))missing.push(period);
+  }
+  if(JSON.stringify(missing)!==JSON.stringify(d.missing_months))throw Error('Missing months disagree with observations');
+  if(d.excluded.some(row=>!row||monthIndex(row.period)<start||monthIndex(row.period)>end||row.reason!=='missing_or_invalid_value'))throw Error('Invalid exclusion record');
+  const first=d.observations[0],last=d.observations[d.observations.length-1];
+  const lines=[
+   'Imported coverage: '+d.observations.length+' months / '+(end-start+1)+' requested. Missing: '+(missing.join(', ')||'none')+'. Excluded source rows: '+d.excluded.length+'. No gap filling.',
+   first.period+' '+first.value+' → '+last.period+' '+last.value+' USD/gallon. '+(d.observations.length>1?'Endpoint change: '+((last.value/first.value-1)*100).toFixed(2)+'%.':'One observation: change cannot be assessed.'),
+   'Sector implication to investigate: changes in jet-fuel prices may affect airline fuel expense. Realized costs depend on contracts, hedging and consumption; margin effects also depend on fares and demand. No company outcome or stock-return evidence is included.',
+   'Source: EIA Gulf Coast kerosene-type jet-fuel spot benchmark. Retrieved '+d.retrieved_utc+'. Local consistency checks do not authenticate this file or upstream values. Historical availability remains unverified; predictive advantage is not established.'
+  ];
+  for(const line of lines){const p=document.createElement('p');p.textContent=line;target.append(p);}
+  const reference=document.createElement('a');reference.href=source;reference.textContent='Open EIA benchmark history';reference.target='_blank';reference.rel='noopener noreferrer';target.append(reference);
+  const detail=document.createElement('details'),summary=document.createElement('summary');summary.textContent='Inspect every imported month';detail.append(summary);
+  for(const row of d.observations){const p=document.createElement('p');p.textContent=row.period+' | '+row.value+' USD/gallon';detail.append(p);}target.append(detail);
+  status.textContent='Jet-fuel evidence passed local consistency checks. Authenticity and historical availability NOT verified.';
+ }catch(err){if(version!==jetImportVersion)return;target.replaceChildren();status.textContent='Jet-fuel import rejected: '+err.message;}
+});
 let descriptiveReport=null;
 function descriptiveStats(values){
  const sorted=[...values].sort((a,b)=>a-b),n=sorted.length,mean=values.reduce((a,b)=>a+b,0)/n;

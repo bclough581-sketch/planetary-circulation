@@ -32,6 +32,21 @@ const loadAudit=async data=>{
  await document.getElementById('audit-file').handlers.change({target:{files:[{text:async()=>JSON.stringify(data)}]}});
 };
 (async()=>{
+ const jet={schema:'amalgam.jet-fuel-history.v1',source_url:'https://www.eia.gov/dnav/pet/hist/eer_epjk_pf4_rgc_dpgM.htm',source:'U.S. Energy Information Administration',series:'EER_EPJK_PF4_RGC_DPG',retrieved_utc:'2026-11-04T12:00:00Z',frequency:'monthly',unit:'USD_per_gallon',requested_start:'2025-01',requested_end:'2025-03',observations:[{period:'2025-01',value:2},{period:'2025-03',value:3}],missing_months:['2025-02'],excluded:[],publication_time_verified:false,predictive_advantage:'not_established',warning:'Research only'};
+ const loadJet=async data=>document.getElementById('jet-file').handlers.change({target:{files:[{text:async()=>JSON.stringify(data)}]}});
+ await loadJet(jet);
+ assert.match(document.getElementById('jet-values').children[0].textContent,/Missing: 2025-02/);
+ assert.match(document.getElementById('jet-values').children[1].textContent,/50.00%/);
+ for(const changes of [{unit:'USD_per_barrel'},{missing_months:[]},{publication_time_verified:true},{observations:[...jet.observations,jet.observations[0]]},{source_url:'javascript:alert(1)'},{expected_return:1}]){
+  await loadJet({...jet,...changes});
+  assert.match(document.getElementById('jet-status').textContent,/rejected/);
+  assert.equal(document.getElementById('jet-values').children.length,0);
+ }
+ let finishOldJet;
+ const oldJet=document.getElementById('jet-file').handlers.change({target:{files:[{text:()=>new Promise(resolve=>{finishOldJet=resolve;})}]}});
+ await loadJet(jet);finishOldJet('{broken');await oldJet;
+ assert.match(document.getElementById('jet-status').textContent,/passed/);
+
  const panel={schema:'amalgam.cross-domain-observation-panel.v1',publication_time_verified:false,observations:[{date:'2025-01-02',wti_usd_per_barrel:70,brent_usd_per_barrel:75,treasury_10y_percent:4.4},{date:'2025-01-03',wti_usd_per_barrel:71,brent_usd_per_barrel:76,treasury_10y_percent:4.5}]};
  const fingerprint=createHash('sha256').update(JSON.stringify([{brent_usd_per_barrel:75,date:'2025-01-02',treasury_10y_percent:4.4,wti_usd_per_barrel:70},{brent_usd_per_barrel:76,date:'2025-01-03',treasury_10y_percent:4.5,wti_usd_per_barrel:71}])).digest('hex');
  const audit={source_panel_schema:panel.schema,source_observation_count:2,source_observations_sha256:fingerprint,status:'blocked',decision_utc:'2026-11-04T00:00:00Z',usable_count:0,blocked_count:2,
