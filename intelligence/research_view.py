@@ -24,6 +24,16 @@ def validate_view(view):
     counts = view.get("domains")
     if not isinstance(observations, list) or not isinstance(counts, dict):
         raise ValueError("missing observations or domain counts")
+    from .ingest import SOURCES
+    source_domains = {
+        "NOAA National Weather Service": "weather",
+        "ECB statistics": "economics",
+        "U.S. Treasury": "economics",
+        "U.S. Energy Information Administration": "energy",
+        "IMF PortWatch": "maritime",
+    }
+    source_urls = {name: url for name, url in SOURCES.values()}
+    source_urls["NOAA National Weather Service"] = "https://www.weather.gov/documentation/services-web-api"
     expected = {domain: 0 for domain in DOMAINS}
     seen = set()
     for event in observations:
@@ -38,6 +48,9 @@ def validate_view(view):
             raise ValueError("unsupported observation-level predictive claim")
         if not isinstance(event.get("source"), dict) or not event["source"].get("url") or not event.get("observed_at"):
             raise ValueError("observation missing provenance")
+        source = event["source"]
+        if source.get("name") not in source_domains or source.get("url") != source_urls[source["name"]] or event["domain"] != source_domains[source["name"]]:
+            raise ValueError("research observation source identity mismatch")
         try:
             observed = datetime.fromisoformat(event["observed_at"].replace("Z", "+00:00"))
             if observed.tzinfo is None or observed.utcoffset() is None:
