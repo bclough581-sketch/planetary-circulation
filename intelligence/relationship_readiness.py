@@ -3,7 +3,7 @@
 This is a readiness audit, not a relationship detector or backtest.
 """
 from collections import Counter
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 def audit_readiness(view):
@@ -13,7 +13,9 @@ def audit_readiness(view):
     for event in observations:
         try:
             stamp = datetime.fromisoformat(event["observed_at"].replace("Z", "+00:00"))
-            dated.setdefault(event["domain"], set()).add(stamp.date().isoformat())
+            if stamp.tzinfo is None or stamp.utcoffset() is None:
+                continue
+            dated.setdefault(event["domain"], set()).add(stamp.astimezone(timezone.utc).date().isoformat())
         except (KeyError, ValueError, TypeError, AttributeError):
             continue
     domain_dates = {domain: len(days) for domain, days in sorted(dated.items())}
