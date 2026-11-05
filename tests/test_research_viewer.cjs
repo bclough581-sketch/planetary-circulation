@@ -31,7 +31,7 @@ const loadAudit=async data=>{
  await document.getElementById('audit-file').handlers.change({target:{files:[{text:async()=>JSON.stringify(data)}]}});
 };
 (async()=>{
- const panel={schema:'amalgam.cross-domain-observation-panel.v1',observations:[{date:'2025-01-02',wti_usd_per_barrel:70,brent_usd_per_barrel:75,treasury_10y_percent:4.4},{date:'2025-01-03',wti_usd_per_barrel:71,brent_usd_per_barrel:76,treasury_10y_percent:4.5}]};
+ const panel={schema:'amalgam.cross-domain-observation-panel.v1',publication_time_verified:false,observations:[{date:'2025-01-02',wti_usd_per_barrel:70,brent_usd_per_barrel:75,treasury_10y_percent:4.4},{date:'2025-01-03',wti_usd_per_barrel:71,brent_usd_per_barrel:76,treasury_10y_percent:4.5}]};
  const fingerprint=createHash('sha256').update(JSON.stringify([{brent_usd_per_barrel:75,date:'2025-01-02',treasury_10y_percent:4.4,wti_usd_per_barrel:70},{brent_usd_per_barrel:76,date:'2025-01-03',treasury_10y_percent:4.5,wti_usd_per_barrel:71}])).digest('hex');
  const audit={source_panel_schema:panel.schema,source_observation_count:2,source_observations_sha256:fingerprint,status:'blocked',decision_utc:'2026-11-04T00:00:00Z',usable_count:0,blocked_count:2,
    blocked:[{date:'2025-01-02',reason:'missing_independent_availability_evidence'},
@@ -39,6 +39,18 @@ const loadAudit=async data=>{
    predictive_advantage:'not_established'};
  await document.getElementById('historical-file').handlers.change({target:{files:[{text:async()=>JSON.stringify(panel)}]}});
  await loadAudit(audit);
+ const loadDescriptive=async data=>document.getElementById('descriptive-file').handlers.change({target:{files:[{text:async()=>JSON.stringify(data)}]}});
+ const descriptive={schema:'amalgam.descriptive-historical-research.v1',status:'descriptive_only',matched_dates:2,first_date:'2025-01-02',last_date:'2025-01-03',
+  brent_minus_wti_usd_per_barrel:{minimum:5,maximum:5,mean:5,median:5,standard_deviation:0,positive_dates:2,zero_dates:0,negative_dates:0},
+  treasury_10y_percent:{minimum:4.4,maximum:4.5,mean:4.45,median:4.45,standard_deviation:0.0707},
+  asof_eligible_dates:0,relationships:[],predictive_advantage:'not_established'};
+ await loadDescriptive(descriptive);
+ assert.match(document.getElementById('descriptive-status').textContent,/MATCH/);
+ assert.match(document.getElementById('descriptive-values').children[1].textContent,/median 5/);
+ await loadDescriptive({...descriptive,brent_minus_wti_usd_per_barrel:{...descriptive.brent_minus_wti_usd_per_barrel,mean:99}});
+ assert.match(document.getElementById('descriptive-status').textContent,/REJECTED/);
+ assert.equal(document.getElementById('descriptive-values').children.length,0);
+ await loadDescriptive(descriptive);
  assert.match(document.getElementById('historical-status').textContent,/fingerprint MATCH/);
  assert.match(document.getElementById('audit-status').textContent,/2 excluded/);
  await loadAudit({...audit,blocked:[{date:'2025-01-02',reason:'missing_independent_availability_evidence'},{date:'2025-01-03',reason:'publication_record_not_independently_authenticated'}]});
