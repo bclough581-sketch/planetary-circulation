@@ -32,6 +32,20 @@ const loadAudit=async data=>{
  await document.getElementById('audit-file').handlers.change({target:{files:[{text:async()=>JSON.stringify(data)}]}});
 };
 (async()=>{
+ const quarters=document.getElementById('quarterly-curated');
+ const quarterData=JSON.parse(decodeURIComponent(quarters.children[2].href.split(',').slice(1).join(',')));
+ assert.equal(quarterData.observations.length,6);
+ assert.equal(quarterData.publication_time_verified,false);
+ assert.equal(quarterData.input_mode,'manual_issuer_release_transcription');
+ const quarterRows=quarterData.observations;
+ assert.equal(new Set(quarterRows.map(x=>x.period)).size,6);
+ for(let i=0;i<3;i++){
+  assert.ok(quarterRows[i+3].fuelExpense<quarterRows[i].fuelExpense);
+  const marginChange=quarterRows[i+3].operatingIncome/quarterRows[i+3].revenue-quarterRows[i].operatingIncome/quarterRows[i].revenue;
+  assert.equal(marginChange>0,i===2);
+ }
+ assert.deepEqual(quarterData.missing_quarters,['2024Q4','2025Q4']);
+
  const brief=()=>decodeURIComponent(document.getElementById('case-export').href.split(',').slice(1).join(','));
  assert.match(brief(),/NOT LOADED/);
  assert.match(brief(),/cannot serve as untouched holdout/);
