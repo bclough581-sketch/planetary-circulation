@@ -8,6 +8,7 @@ from pathlib import Path
 from intelligence.point_in_time import assess_asof
 from intelligence.coverage_audit import coverage_report
 from intelligence.verify_bundle import verify_bundle, verify_github_run
+from intelligence.verify_downloaded_zip import verify_downloaded_zip
 
 
 class BundleVerificationTests(unittest.TestCase):
@@ -58,6 +59,33 @@ class BundleVerificationTests(unittest.TestCase):
 
     def test_valid_bundle(self):
         self.assertEqual(verify_bundle(self.root)["observations"], 1)
+
+    def test_reproducible_downloaded_zip_verification(self):
+        archive = self.root / "download.zip"
+        with ZipFile(archive, "w") as bundle:
+            for name in sorted(self.manifest["files"]):
+                bundle.write(self.root / name, arcname=name)
+            bundle.write(self.root / "research-artifact-manifest.json",
+                         arcname="research-artifact-manifest.json")
+        digest = hashlib.sha256(archive.read_bytes()).hexdigest()
+        report = verify_downloaded_zip(archive, digest)
+        self.assertEqual(report["research_files_verified"], 5)
+        self.assertEqual(report["matched_observation_dates"], 1)
+        self.assertEqual(report["predictive_advantage"], "not_established")
+        with self.assertRaisesRegex(ValueError, "SHA-256 mismatch"):
+            verify_downloaded_zip(archive, "0" * 64)
+
+    def test_downloaded_zip_rejects_extra_member(self):
+        archive = self.root / "download.zip"
+        with ZipFile(archive, "w") as bundle:
+            for name in sorted(self.manifest["files"]):
+                bundle.write(self.root / name, arcname=name)
+            bundle.write(self.root / "research-artifact-manifest.json",
+                         arcname="research-artifact-manifest.json")
+            bundle.writestr("../unexpected.json", "{}")
+        digest = hashlib.sha256(archive.read_bytes()).hexdigest()
+        with self.assertRaisesRegex(ValueError, "exactly the six"):
+            verify_downloaded_zip(archive, digest)
 
     def test_github_run_metadata_matches(self):
         def fake_fetch(url):
