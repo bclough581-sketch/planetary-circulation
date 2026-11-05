@@ -279,9 +279,13 @@ document.getElementById('file').addEventListener('change',async e=>{
   const ledger=document.getElementById('details');ledger.replaceChildren();
   for(const event of data.observations.slice(0,100)){
    const p=document.createElement('p');
-   p.textContent=event.domain+' | '+event.title+' | '+event.observed_at+' | '+(event.source?.name||'unknown source');
+   const observed=Date.parse(event.observed_at);
+   const age=(Date.now()-observed)/3600000;
+   const freshness=age<0?'FUTURE RELATIVE TO VIEWER CLOCK':age>(maxAgeHours[event.domain]??24)?'EXCEEDS DOMAIN FRESHNESS WINDOW':'within domain freshness window';
+   p.textContent=event.domain+' | '+event.title+' | observed '+event.observed_at+' | '+freshness+' | '+event.source.name+' | source '+event.source.url;
    ledger.append(p);
   }
+  if(data.observations.length>100){const notice=document.createElement('p');notice.className='warn';notice.textContent='Showing first 100 of '+data.observations.length+' observations. Ledger display is truncated; domain totals cover the complete imported dataset.';ledger.prepend(notice);}
   const excluded=document.createElement('p');
   excluded.className='warn';excluded.textContent=data.excluded.length+' excluded observations (stale, missing or source failure)';
   ledger.prepend(excluded);
