@@ -32,6 +32,17 @@ const loadAudit=async data=>{
  await document.getElementById('audit-file').handlers.change({target:{files:[{text:async()=>JSON.stringify(data)}]}});
 };
 (async()=>{
+ const company=document.getElementById('delta-evidence');
+ const companyTable=company.children[0];
+ assert.equal(companyTable.children[2].children[3].textContent,'10566');
+ assert.equal(companyTable.children[3].children[3].textContent,'9819');
+ assert.equal(companyTable.children[3].children[5].textContent,'9.19%');
+ assert.match(company.children[1].textContent,/fuel expense -7.07%/);
+ assert.match(company.children[1].textContent,/operating income -2.89%/);
+ assert.match(company.children[1].textContent,/-0.54 percentage points/);
+ assert.match(company.children[2].textContent,/cannot test the sector hypothesis/);
+ assert.match(company.children[3].href,/www.sec.gov\/Archives/);
+
  const jet={schema:'amalgam.jet-fuel-history.v1',source_url:'https://www.eia.gov/dnav/pet/hist/eer_epjk_pf4_rgc_dpgM.htm',source:'U.S. Energy Information Administration',series:'EER_EPJK_PF4_RGC_DPG',retrieved_utc:'2026-11-04T12:00:00Z',frequency:'monthly',unit:'USD_per_gallon',requested_start:'2025-01',requested_end:'2025-03',observations:[{period:'2025-01',value:2},{period:'2025-03',value:3}],missing_months:['2025-02'],excluded:[],publication_time_verified:false,predictive_advantage:'not_established',warning:'Research only'};
  const loadJet=async data=>document.getElementById('jet-file').handlers.change({target:{files:[{text:async()=>JSON.stringify(data)}]}});
  await loadJet(jet);

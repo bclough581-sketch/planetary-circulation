@@ -15,6 +15,7 @@ p,small{color:#a8b9d2} .shell{display:grid;grid-template-columns:minmax(260px,1f
 button{background:#213954;color:#e6eefc;border:1px solid #54718f;border-radius:6px;padding:9px 12px;cursor:pointer}
 button:focus-visible{outline:2px solid white} .domain{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #263c53}
 #details{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.88rem} .warn{color:#ffcf89}
+table{width:100%;border-collapse:collapse;font-size:.85rem}th,td{text-align:right;padding:8px;border-bottom:1px solid #334963}caption{text-align:left;color:#a8b9d2}#delta-evidence{overflow-x:auto}
 #details a{color:#9dd8ff;text-decoration:underline}#details a:focus-visible{outline:2px solid white}
 @media(max-width:720px){.shell{grid-template-columns:1fr}}
 </style></head><body>
@@ -37,8 +38,35 @@ button:focus-visible{outline:2px solid white} .domain{display:flex;justify-conte
 <h3>Exclusion reasons</h3><div id="exclusion-reasons">No dataset loaded.</div><details><summary>Inspect excluded observation IDs and reasons</summary><div id="excluded-ledger">No dataset loaded.</div></details>
 <p><label for="ledger-domain">Filter evidence ledger by domain</label> <select id="ledger-domain"><option value="all">All domains</option><option value="weather">Weather</option><option value="geopolitics">Geopolitics</option><option value="maritime">Maritime</option><option value="aviation">Aviation</option><option value="energy">Energy</option><option value="commodities">Commodities</option><option value="economics">Economics</option><option value="markets">Markets</option><option value="corporate">Corporate</option></select> <label for="ledger-order">Order</label> <select id="ledger-order"><option value="newest">Newest observations first</option><option value="oldest">Oldest observations first</option><option value="source">Source name A–Z</option></select> <label for="ledger-freshness">Freshness</label> <select id="ledger-freshness"><option value="all">All imported observations</option><option value="within">Within domain freshness window</option><option value="outside">Outside domain freshness window</option></select></p><p><label for="ledger-search">Find evidence by title, source, or observation ID</label> <input type="search" id="ledger-search" placeholder="Search imported evidence"></p><div id="details"></div></section>\n<section class="panel"><h2>Historical point-in-time exclusion audit</h2><p>Import point-in-time-audit.json from the cross-domain development workflow. This is separate from the live observation evidence ledger.</p><label for="historical-file">Select cross-domain-observation-panel.json</label> <input type="file" id="historical-file" accept=".json,application/json"><p id="historical-status">No historical panel loaded.</p><label for="audit-file">Select point-in-time-audit.json</label> <input type="file" id="audit-file" accept=".json,application/json"><p id="audit-status" class="warn">No historical audit loaded.</p><div id="audit-reasons"></div><div id="audit-dates"></div><p class="warn">Local imports are not authenticated. This display does not certify publication timing or trading eligibility.</p></section>
 <section class="panel" id="jet-fuel-case"><h2>Airline case: jet-fuel evidence</h2><p>Import jet-fuel-history.json from the airline-fuel-research workflow. This regional fuel-price benchmark is separate from the oil/Treasury panel and does not add validated convergence links.</p><label for="jet-file">Select monthly jet-fuel history</label> <input type="file" id="jet-file" accept=".json,application/json"><p id="jet-status" role="status">No jet-fuel evidence loaded.</p><div id="jet-values"></div></section>
+<section class="panel"><h2>Company evidence: Delta Air Lines (DAL)</h2><p>Curated historical comparison, not live coverage. Full-year consolidated GAAP figures; USD millions except fuel price. Manually checked November 5, 2026 against the January 13, 2026 results release filed as SEC Exhibit 99.1.</p><div id="delta-evidence"></div><p>Both years come from the same later release. This is retrospective evidence, unavailable as a complete comparison during 2025. It does not authenticate historical availability, establish causation, or add a validated ring link.</p></section>
 <section class="panel"><h2>Historical descriptive context</h2><p>Import the descriptive-historical-research.json from the same development workflow run as the historical panel. Values are recalculated locally before display.</p><label for="descriptive-file">Select descriptive-historical-research.json</label> <input type="file" id="descriptive-file" accept=".json,application/json"><p id="descriptive-status" class="warn">No descriptive report loaded.</p><div id="descriptive-values"></div><p class="warn">Descriptive only. Neither the imported files nor historical publication times are authenticated in this browser. No predictive advantage is established.</p></section>
 <script>
+// Curated from the GAAP columns of the December-quarter/full-year results table.
+// Deliberately separate from imported observations and their domain totals.
+const deltaCompanyEvidence={
+ source:'https://www.sec.gov/Archives/edgar/data/27904/000002790426000008/deltaairlinesannouncesdece.htm',
+ rows:[
+  {year:2024,revenue:61643,operatingIncome:5995,fuelExpense:10566,fuelPrice:2.57},
+  {year:2025,revenue:63364,operatingIncome:5822,fuelExpense:9819,fuelPrice:2.30}
+ ]
+};
+function renderDeltaEvidence(){
+ const target=document.getElementById('delta-evidence');target.replaceChildren();
+ const table=document.createElement('table'),caption=document.createElement('caption');caption.textContent='Reported values and calculated operating margins';table.append(caption);
+ const header=document.createElement('tr');
+ for(const label of ['Year','Revenue ($m)','Operating income ($m)','Fuel expense ($m)','Fuel price ($/gallon)','Calculated operating margin']){const th=document.createElement('th');th.textContent=label;th.setAttribute('scope','col');header.append(th);}table.append(header);
+ for(const row of deltaCompanyEvidence.rows){
+  const tr=document.createElement('tr');
+  for(const value of [row.year,row.revenue,row.operatingIncome,row.fuelExpense,row.fuelPrice.toFixed(2),(100*row.operatingIncome/row.revenue).toFixed(2)+'%']){const td=document.createElement('td');td.textContent=String(value);tr.append(td);}table.append(tr);
+ }
+ target.append(table);
+ const [prior,current]=deltaCompanyEvidence.rows;
+ const change=key=>((current[key]/prior[key]-1)*100).toFixed(2);
+ const p=document.createElement('p');p.textContent='2025 versus 2024: fuel expense '+change('fuelExpense')+'%; operating income '+change('operatingIncome')+'%. Calculated operating margin changed by '+(100*(current.operatingIncome/current.revenue-prior.operatingIncome/prior.revenue)).toFixed(2)+' percentage points. Lower fuel expense coincided with lower operating profitability; this does not isolate fuel effects.';target.append(p);
+ const context=document.createElement('p');context.textContent='Comparison limits: annual company fuel expense and average fuel price are not monthly Gulf Coast spot prices. Consolidated results include refinery activity; GAAP and adjusted measures differ. Contracts, consumption, demand and other costs require investigation. One selected company and two years cannot test the sector hypothesis or predict returns.';target.append(context);
+ const link=document.createElement('a');link.href=deltaCompanyEvidence.source;link.textContent='Inspect the SEC-filed results table (GAAP columns)';link.target='_blank';link.rel='noopener noreferrer';target.append(link);
+}
+renderDeltaEvidence();
 let jetImportVersion=0;
 document.getElementById('jet-file').addEventListener('change',async e=>{
  const version=++jetImportVersion,target=document.getElementById('jet-values'),status=document.getElementById('jet-status');
