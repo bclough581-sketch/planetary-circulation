@@ -45,6 +45,7 @@ def audit_readiness(view):
     # Existing source observations lack verified first-seen/publication evidence.
     # Candidate review is diagnostic only, never a historical trading eligibility grant.
     candidate_review = Counter()
+    candidate_block_reasons = Counter()
     if generated is not None:
         for event in observations:
             metadata = event.get("metadata")
@@ -59,6 +60,8 @@ def audit_readiness(view):
             }
             outcome = assess_candidate(candidate, generated.isoformat())
             candidate_review["reviewable" if outcome["eligible_for_review"] else "blocked"] += 1
+            if not outcome["eligible_for_review"]:
+                candidate_block_reasons[outcome["reason"]] += 1
     domain_dates = {domain: len(days) for domain, days in sorted(dated.items())}
     multi_day_domains = sorted(domain for domain, days in domain_dates.items() if days >= 2)
     same_utc_date_overlap = {
@@ -76,6 +79,7 @@ def audit_readiness(view):
         "same_utc_date_overlap": same_utc_date_overlap,
         "point_in_time_availability": "not_verified",
         "historical_candidate_review": dict(sorted(candidate_review.items())),
+        "historical_candidate_block_reasons": dict(sorted(candidate_block_reasons.items())),
         "unverified_publication_timestamp_claims": dict(sorted(publication_timestamp_claims.items())),
         "publication_claims_after_generation": dict(sorted(publication_after_generation.items())),
         "blocking_reasons": [
