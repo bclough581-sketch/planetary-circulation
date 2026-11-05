@@ -15,7 +15,9 @@ on:
       - 'intelligence/coverage_audit.py'
       - 'tests/test_coverage_audit.py'
       - 'intelligence/decision_schedule.py'
+      - 'intelligence/descriptive_history.py'
       - 'tests/test_decision_schedule.py'
+      - 'tests/test_descriptive_history.py'
   workflow_dispatch: {}
 permissions:
   contents: read
@@ -35,7 +37,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Test historical cross-domain alignment
-        run: python -m unittest tests.test_cross_domain_history tests.test_eia_history tests.test_treasury_history tests.test_point_in_time tests.test_audit_validation tests.test_verify_bundle tests.test_coverage_audit tests.test_decision_schedule -v
+        run: python -m unittest tests.test_cross_domain_history tests.test_eia_history tests.test_treasury_history tests.test_point_in_time tests.test_audit_validation tests.test_verify_bundle tests.test_coverage_audit tests.test_decision_schedule tests.test_descriptive_history -v
       - name: Retrieve 2025 EIA and Treasury observations
         env:
           EIA_API_KEY: ${{ secrets.EIA_API_KEY }}
@@ -50,6 +52,10 @@ jobs:
           from pathlib import Path
           data = json.loads(Path("cross-domain-observation-panel.json").read_text())
           print("Verified cross-domain dates:", len(data["observations"]))
+          from intelligence.descriptive_history import descriptive_report
+          summary = descriptive_report(data)
+          print("Descriptive Brent-WTI spread mean (USD/barrel):", summary["brent_minus_wti_usd_per_barrel"]["mean"])
+          assert summary["asof_eligible_dates"] == 0
           assert len(data["observations"]) >= 150, "Insufficient cross-domain overlap"
           assert data["publication_time_verified"] is False
           assert data["predictive_advantage"] == "not_established"
