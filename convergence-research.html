@@ -133,6 +133,36 @@ function renderCuratedQuarters(){
  const link=document.createElement('a');link.textContent='Download curated quarterly evidence (JSON)';link.download='delta-quarterly-curated.json';link.href='data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(deltaQuarterlyEvidence,null,2));target.append(link);
 }
 renderCuratedQuarters();
+function quarterlyFuelAlignment(data){
+ const prices=new Map(data.observations.map(row=>[row.period,row.value]));
+ const outcomes=new Map(deltaQuarterlyEvidence.observations.map(row=>[row.period,row]));
+ const rows=[];
+ for(const outcome of deltaQuarterlyEvidence.observations){
+  const year=Number(outcome.period.slice(0,4)),quarter=Number(outcome.period.slice(-1));
+  const months=Array.from({length:3},(_,i)=>year+'-'+String((quarter-1)*3+i+1).padStart(2,'0'));
+  const missing=months.filter(month=>!prices.has(month));
+  const nextPeriod=quarter===4?(year+1)+'Q1':year+'Q'+(quarter+1);
+  const next=outcomes.get(nextPeriod);
+  rows.push({period:outcome.period,months,missing,
+   mean:missing.length?null:months.reduce((sum,month)=>sum+prices.get(month),0)/3,
+   margin:100*outcome.operatingIncome/outcome.revenue,
+   nextPeriod,nextMargin:next?100*next.operatingIncome/next.revenue:null});
+ }
+ return rows;
+}
+function renderQuarterlyFuelAlignment(data){
+ const section=document.createElement('section'),heading=document.createElement('h3');heading.textContent='Quarterly fuel context and company outcomes';section.append(heading);
+ const table=document.createElement('table'),header=document.createElement('tr');
+ for(const text of ['Fuel quarter','Monthly coverage','Mean spot price ($/gallon)','Same-quarter DAL margin','Next-quarter DAL margin']){const th=document.createElement('th');th.textContent=text;th.setAttribute('scope','col');header.append(th);}table.append(header);
+ const rows=quarterlyFuelAlignment(data);
+ for(const row of rows){const tr=document.createElement('tr');
+  for(const text of [row.period,(3-row.missing.length)+'/3 months'+(row.missing.length?'; missing '+row.missing.join(', '):''),row.mean===null?'Unavailable':row.mean.toFixed(3),row.margin.toFixed(2)+'%',row.nextPeriod+': '+(row.nextMargin===null?'Unavailable':row.nextMargin.toFixed(2)+'%')]){const td=document.createElement('td');td.textContent=text;tr.append(td);}table.append(tr);
+ }
+ const scroll=document.createElement('div');scroll.style.overflowX='auto';scroll.append(table);section.append(scroll);
+ const notice=document.createElement('p');notice.textContent=rows.filter(row=>row.mean!==null&&row.nextMargin!==null).length+' complete fuel-quarter / next-quarter outcome pairs. Means are equal-weight averages of three monthly regional spot benchmarks, not daily-weighted quarterly prices or realized airline fuel costs. Missing months block the mean; no filling. Displayed outcomes do not make incomplete fuel quarters eligible.';section.append(notice);
+ const boundary=document.createElement('p');boundary.textContent='Alignment uses reporting periods only. No point-in-time eligibility, causal relationship, model fit, correlation or stock return is established. All displayed observations remain exploratory; independent availability evidence, controls, a larger sample and a locked holdout are still required.';section.append(boundary);
+ return section;
+}
 let jetEvidenceLoaded=false;
 let jetEvidenceData=null;
 let jetImportVersion=0;
@@ -183,6 +213,7 @@ document.getElementById('jet-file').addEventListener('change',async e=>{
   const reference=document.createElement('a');reference.href=source;reference.textContent='Open EIA benchmark history';reference.target='_blank';reference.rel='noopener noreferrer';target.append(reference);
   const detail=document.createElement('details'),summary=document.createElement('summary');summary.textContent='Inspect every imported month';detail.append(summary);
   for(const row of d.observations){const p=document.createElement('p');p.textContent=row.period+' | '+row.value+' USD/gallon';detail.append(p);}target.append(detail);
+  target.append(renderQuarterlyFuelAlignment(d));
   jetEvidenceLoaded=true;jetEvidenceData=d;renderCasePath();
   status.textContent='Jet-fuel evidence passed local consistency checks. Authenticity and historical availability NOT verified.';
  }catch(err){if(version!==jetImportVersion)return;target.replaceChildren();status.textContent='Jet-fuel import rejected: '+err.message;}
@@ -412,6 +443,11 @@ function airlineResearchBrief(){
   for(const row of evidence.rows)lines.push(name+' '+row.year+': revenue '+row.revenue+'; operating income '+row.operatingIncome+'; fuel expense '+row.fuelExpense+'; calculated margin '+(100*row.operatingIncome/row.revenue).toFixed(2)+'%.');
   const b=airlineCostBridge(evidence.rows);
   lines.push(name+' operating-income change: '+b.revenueChange+' revenue change + '+b.fuelSavings+' fuel savings - '+b.otherCostIncrease+' other operating cost increase = '+b.operatingIncomeChange+'.');
+ }
+ if(jetEvidenceData){
+  lines.push('', 'QUARTERLY ALIGNMENT — REPORTING PERIODS ONLY');
+  for(const row of quarterlyFuelAlignment(jetEvidenceData))lines.push(row.period+': '+(3-row.missing.length)+'/3 fuel months; mean spot USD/gallon '+(row.mean===null?'UNAVAILABLE':row.mean.toFixed(3))+'; DAL margin '+row.margin.toFixed(2)+'%; next '+row.nextPeriod+' margin '+(row.nextMargin===null?'UNAVAILABLE':row.nextMargin.toFixed(2)+'%'));
+  lines.push('Equal-weight mean of monthly spot benchmarks; not realized company costs. Missing months block means. Reporting-period alignment grants no point-in-time eligibility and performs no predictive test.');
  }
  lines.push('', 'CURATED QUARTERLY EVIDENCE — DAL; CONSOLIDATED GAAP; USD MILLIONS');
  for(const row of deltaQuarterlyEvidence.observations)lines.push(row.period+': revenue '+row.revenue+'; operating income '+row.operatingIncome+'; fuel expense '+row.fuelExpense+'; source '+deltaQuarterlyEvidence.sources[row.source]);

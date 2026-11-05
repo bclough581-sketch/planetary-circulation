@@ -92,6 +92,18 @@ const loadAudit=async data=>{
  document.getElementById('airline-case-toggle').handlers.click();
  assert.match(document.getElementById('jet-values').children[0].textContent,/Missing: 2025-02/);
  assert.match(document.getElementById('jet-values').children[1].textContent,/50.00%/);
+ let alignment=document.getElementById('jet-values').children[6];
+ assert.match(alignment.children[2].textContent,/0 complete/);
+ assert.equal(alignment.children[1].children[0].children[4].children[2].textContent,'Unavailable');
+ const completeJet={...jet,observations:[{period:'2025-01',value:2},{period:'2025-02',value:3},{period:'2025-03',value:4}],missing_months:[]};
+ await loadJet(completeJet);
+ alignment=document.getElementById('jet-values').children[6];
+ assert.match(alignment.children[2].textContent,/1 complete/);
+ assert.equal(alignment.children[1].children[0].children[4].children[2].textContent,'3.000');
+ assert.match(alignment.children[1].children[0].children[4].children[4].textContent,/2025Q2: 12.63%/);
+ assert.match(brief(),/mean spot USD\/gallon 3.000/);
+ await loadJet(jet);
+
  for(const changes of [{unit:'USD_per_barrel'},{missing_months:[]},{publication_time_verified:true},{observations:[...jet.observations,jet.observations[0]]},{source_url:'javascript:alert(1)'},{expected_return:1}]){
   await loadJet({...jet,...changes});
   assert.match(document.getElementById('jet-status').textContent,/rejected/);

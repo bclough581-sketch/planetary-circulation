@@ -21,6 +21,9 @@ const path=require('node:path');
    assert.equal(await page.locator('.case-domain').count(),3);
    assert.equal(await page.locator('#link-count').textContent(),'0 validated links');
    assert.equal(await page.locator('#count').textContent(),'0');
+   const jet={schema:'amalgam.jet-fuel-history.v1',source_url:'https://www.eia.gov/dnav/pet/hist/eer_epjk_pf4_rgc_dpgM.htm',source:'U.S. Energy Information Administration',series:'EER_EPJK_PF4_RGC_DPG',retrieved_utc:new Date().toISOString(),frequency:'monthly',unit:'USD_per_gallon',requested_start:'2025-01',requested_end:'2025-03',observations:[{period:'2025-01',value:2},{period:'2025-02',value:3},{period:'2025-03',value:4}],missing_months:[],excluded:[],publication_time_verified:false,predictive_advantage:'not_established',warning:'Research only'};
+   await page.locator('#jet-file').setInputFiles({name:'jet-fuel-history.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(jet))});
+   await page.getByText('1 complete fuel-quarter / next-quarter outcome pairs.',{exact:false}).waitFor();
    const downloadEvent=page.waitForEvent('download');
    await page.locator('#case-export').click();
    const download=await downloadEvent;
@@ -28,6 +31,7 @@ const path=require('node:path');
    const exported=fs.readFileSync('browser-layout/brief-'+width+'.txt','utf8');
    assert.match(exported,/predictive advantage NOT ESTABLISHED/);
    assert.match(exported,/UAL 2025: revenue 59070/);
+   assert.match(exported,/mean spot USD\/gallon 3.000/);
    const geometry=await page.evaluate(()=>{
     const boxes=[...document.querySelectorAll('.ring-node')].map(x=>x.getBoundingClientRect());
     const overlaps=[];
