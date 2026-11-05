@@ -28,7 +28,7 @@ button:focus-visible{outline:2px solid white} .domain{display:flex;justify-conte
 <h3>Decision-support boundary</h3><div id="decision-boundary">No dataset loaded. No stock-selection conclusion available.</div>
 <h3>Historical relationship readiness</h3><div id="readiness">No dataset loaded.</div>
 <h3>Source health and limitations</h3><div id="source-health">Load a dataset to inspect feed status.</div>
-<h3>Exclusion reasons</h3><div id="exclusion-reasons">No dataset loaded.</div>
+<h3>Exclusion reasons</h3><div id="exclusion-reasons">No dataset loaded.</div><details><summary>Inspect excluded observation IDs and reasons</summary><div id="excluded-ledger">No dataset loaded.</div></details>
 <p><label for="ledger-domain">Filter evidence ledger by domain</label> <select id="ledger-domain"><option value="all">All domains</option><option value="weather">Weather</option><option value="geopolitics">Geopolitics</option><option value="maritime">Maritime</option><option value="aviation">Aviation</option><option value="energy">Energy</option><option value="commodities">Commodities</option><option value="economics">Economics</option><option value="markets">Markets</option><option value="corporate">Corporate</option></select> <label for="ledger-order">Order</label> <select id="ledger-order"><option value="newest">Newest observations first</option><option value="oldest">Oldest observations first</option><option value="source">Source name A–Z</option></select> <label for="ledger-freshness">Freshness</label> <select id="ledger-freshness"><option value="all">All imported observations</option><option value="within">Within domain freshness window</option><option value="outside">Outside domain freshness window</option></select></p><p><label for="ledger-search">Find evidence by title, source, or observation ID</label> <input type="search" id="ledger-search" placeholder="Search imported evidence"></p><div id="details"></div></section>\n<section class="panel"><h2>Historical point-in-time exclusion audit</h2><p>Import point-in-time-audit.json from the cross-domain development workflow. This is separate from the live observation evidence ledger.</p><label for="historical-file">Select cross-domain-observation-panel.json</label> <input type="file" id="historical-file" accept=".json,application/json"><p id="historical-status">No historical panel loaded.</p><label for="audit-file">Select point-in-time-audit.json</label> <input type="file" id="audit-file" accept=".json,application/json"><p id="audit-status" class="warn">No historical audit loaded.</p><div id="audit-reasons"></div><div id="audit-dates"></div><p class="warn">Local imports are not authenticated. This display does not certify publication timing or trading eligibility.</p></section>
 <section class="panel"><h2>Historical descriptive context</h2><p>Import the descriptive-historical-research.json from the same development workflow run as the historical panel. Values are recalculated locally before display.</p><label for="descriptive-file">Select descriptive-historical-research.json</label> <input type="file" id="descriptive-file" accept=".json,application/json"><p id="descriptive-status" class="warn">No descriptive report loaded.</p><div id="descriptive-values"></div><p class="warn">Descriptive only. Neither the imported files nor historical publication times are authenticated in this browser. No predictive advantage is established.</p></section>
 <script>
@@ -257,6 +257,7 @@ document.getElementById('file').addEventListener('change',async e=>{
  displayedResearch=null;
  document.getElementById('decision-boundary').textContent='Import in progress. No stock-selection conclusion available.';
  document.getElementById('details').replaceChildren();
+ document.getElementById('excluded-ledger').replaceChildren();
  const file=e.target.files[0];if(!file)return;
  try{
   const content=await file.text();
@@ -349,8 +350,19 @@ document.getElementById('file').addEventListener('change',async e=>{
   for(const [reason,n] of [...reasons].sort((a,b)=>b[1]-a[1])){
    const p=document.createElement('p');p.textContent=n+' excluded: '+reason;reasonTarget.append(p);
   }
+  const excludedLedger=document.getElementById('excluded-ledger');excludedLedger.replaceChildren();
+  const sortedExcluded=[...data.excluded].sort((a,b)=>String(a.reason||'').localeCompare(String(b.reason||''))||String(a.id||'').localeCompare(String(b.id||'')));
+  const excludedHeader=document.createElement('p');
+  excludedHeader.textContent='Showing '+Math.min(100,sortedExcluded.length)+' of '+sortedExcluded.length+' pipeline-excluded records. These do not contribute to the ring. Exclusion IDs are not independent source verification.';
+  excludedLedger.append(excludedHeader);
+  for(const entry of sortedExcluded.slice(0,100)){
+   const row=document.createElement('p');
+   row.textContent='ID '+String(entry.id||'not provided')+' | reason '+String(entry.reason||'unspecified');
+   excludedLedger.append(row);
+  }
+  if(sortedExcluded.length>100){const warning=document.createElement('p');warning.className='warn';warning.textContent='Excluded ledger truncated at 100 entries.';excludedLedger.append(warning);}
   displayedResearch=data;
   renderEvidenceLedger();
- }catch(err){if(version!==researchImportVersion)return;displayedResearch=null;document.getElementById('count').textContent='—';document.getElementById('link-count').textContent='0 validated links';document.getElementById('domains').textContent='Dataset rejected. No evidence displayed.';document.getElementById('details').replaceChildren();document.getElementById('source-health').textContent='Dataset rejected.';document.getElementById('readiness').textContent='Dataset rejected.';document.getElementById('decision-boundary').textContent='Dataset rejected. No stock-selection conclusion available.';document.getElementById('exclusion-reasons').textContent='Dataset rejected.';document.getElementById('status').textContent='Unable to load file: '+err.message;}
+ }catch(err){if(version!==researchImportVersion)return;displayedResearch=null;document.getElementById('count').textContent='—';document.getElementById('link-count').textContent='0 validated links';document.getElementById('domains').textContent='Dataset rejected. No evidence displayed.';document.getElementById('details').replaceChildren();document.getElementById('source-health').textContent='Dataset rejected.';document.getElementById('readiness').textContent='Dataset rejected.';document.getElementById('excluded-ledger').textContent='Dataset rejected.';document.getElementById('decision-boundary').textContent='Dataset rejected. No stock-selection conclusion available.';document.getElementById('exclusion-reasons').textContent='Dataset rejected.';document.getElementById('status').textContent='Unable to load file: '+err.message;}
 });
 </script></body></html>
