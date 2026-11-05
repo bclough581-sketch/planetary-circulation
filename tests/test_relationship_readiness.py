@@ -28,6 +28,23 @@ class RelationshipReadinessTests(unittest.TestCase):
         self.assertEqual(result["multi_day_domains"], ["energy"])
         self.assertEqual(result["historical_relationships_validated"], 0)
 
+    def test_same_day_overlap_is_descriptive_not_predictive(self):
+        view = {"observations": [
+            {"domain": "weather", "observed_at": "2026-11-03T22:00:00-02:00"},
+            {"domain": "weather", "observed_at": "2026-11-04T06:00:00Z"},
+            {"domain": "weather", "observed_at": "2026-11-05T06:00:00Z"},
+            {"domain": "energy", "observed_at": "2026-11-04T01:00:00Z"},
+            {"domain": "energy", "observed_at": "2026-11-06T01:00:00Z"},
+            {"domain": "economics", "observed_at": "2026-11-06T02:00:00Z"},
+        ]}
+        result = audit_readiness(view)
+        self.assertEqual(result["same_utc_date_overlap"], {
+            "economics|energy": 1, "energy|weather": 1
+        })
+        self.assertEqual(result["historical_relationships_validated"], 0)
+        self.assertEqual(result["predictive_advantage"], "not_established")
+        self.assertEqual(result["status"], "not_ready")
+
     def test_multiple_dates_still_do_not_establish_predictive_edge(self):
         view = {"observations": [
             {"domain": "weather", "observed_at": "2026-11-03T12:00:00Z"},
