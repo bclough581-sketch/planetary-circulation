@@ -137,6 +137,8 @@ const loadAudit=async data=>{
  await load(good);
  assert.equal(document.getElementById('count').textContent,1);
  assert.equal(document.getElementById('link-count').textContent,'0 validated links');
+ assert.match(document.getElementById('details').children[1].textContent,/within domain freshness window/);
+ assert.match(document.getElementById('details').children[1].textContent,/source https:\/\/www.weather.gov\/documentation\/services-web-api/);
  assert.match(document.getElementById('readiness').children[0].textContent,/NOT READY/);
  for(const [name,change] of [
   ['inflated count',x=>x.domains.weather=20],
