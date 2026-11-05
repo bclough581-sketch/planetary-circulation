@@ -83,3 +83,32 @@ development branch.
 - The convergence ring must not imply validated relationships or predictive lift.
 
 **Predictive advantage: not established.** Production `main` is unchanged.
+
+
+## Reproducible airline research bundle
+
+The `airline-fuel-research` development workflow publishes
+`amalgam-airline-research-<run-id>` with the exact EIA monthly input,
+reviewed Delta quarterly input, generated panel, readable report and SHA-256
+manifest. A separate job downloads the bundle and reproduces its outputs.
+
+After extracting the bundle, use the code from that workflow's commit:
+
+```bash
+python -m intelligence.airline_research_panel --directory /path/to/bundle --verify
+```
+
+To regenerate outputs from the retained inputs, omit `--verify`. This never
+fetches new source data. The corporate input must match the reviewed canonical
+`intelligence/data/delta-quarterly-curated.json`. The viewer's embedded copy is
+checked against this same evidence by regression tests.
+
+Complete descriptive pairs require three fuel months and an observed next-quarter
+outcome. Gaps are not filled. The current 2025 fuel window and six curated Delta
+quarters yield only two complete lagged pairs. **Zero rows are trading eligible.**
+The report lists availability, sample size, benchmark scope, holdout and market-return
+blockers. No regression, predictive performance estimate or stock ranking is produced.
+
+Checksums and reproduction establish internal consistency, not independent source
+or publication-time authenticity. SEC automated collection remains separately
+blocked by HTTP 403; curated issuer evidence is explicitly labeled.

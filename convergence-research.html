@@ -100,24 +100,68 @@ function renderAirlinePeers(){
 }
 renderAirlinePeers();
 const deltaQuarterlyEvidence={
- schema:'amalgam.airline-quarterly-curated.v1',symbol:'DAL',basis:'consolidated_GAAP',unit:'USD_millions',
- reviewed_date:'2026-11-05',publication_time_verified:false,predictive_advantage:'not_established',
- input_mode:'manual_issuer_release_transcription',
- sources:{
-  Q1:'https://ir.delta.com/news/news-details/2025/Delta-Air-Lines-Announces-March-Quarter-2025-Financial-Results/default.aspx',
-  Q2:'https://ir.delta.com/news/news-details/2025/Delta-Air-Lines-Announces-June-Quarter-2025-Financial-Results/default.aspx',
-  Q3:'https://ir.delta.com/news/news-details/2025/Delta-Air-Lines-Announces-September-Quarter-2025-Financial-Results/default.aspx'
- },
- observations:[
-  {period:'2024Q1',revenue:13748,operatingIncome:614,fuelExpense:2598,source:'Q1'},
-  {period:'2024Q2',revenue:16658,operatingIncome:2267,fuelExpense:2813,source:'Q2'},
-  {period:'2024Q3',revenue:15677,operatingIncome:1397,fuelExpense:2747,source:'Q3'},
-  {period:'2025Q1',revenue:14040,operatingIncome:569,fuelExpense:2410,source:'Q1'},
-  {period:'2025Q2',revenue:16648,operatingIncome:2102,fuelExpense:2458,source:'Q2'},
-  {period:'2025Q3',revenue:16673,operatingIncome:1684,fuelExpense:2570,source:'Q3'}
- ],
- missing_quarters:['2024Q4','2025Q4'],
- warning:'Curated quarterly observations; not independent availability verification, causal inference or a backtest. Source comparisons are retrospective and exploratory.'
+  "schema": "amalgam.airline-quarterly-curated.v1",
+  "symbol": "DAL",
+  "basis": "consolidated_GAAP",
+  "unit": "USD_millions",
+  "reviewed_date": "2026-11-05",
+  "publication_time_verified": false,
+  "predictive_advantage": "not_established",
+  "input_mode": "manual_issuer_release_transcription",
+  "sources": {
+    "Q1": "https://ir.delta.com/news/news-details/2025/Delta-Air-Lines-Announces-March-Quarter-2025-Financial-Results/default.aspx",
+    "Q2": "https://ir.delta.com/news/news-details/2025/Delta-Air-Lines-Announces-June-Quarter-2025-Financial-Results/default.aspx",
+    "Q3": "https://ir.delta.com/news/news-details/2025/Delta-Air-Lines-Announces-September-Quarter-2025-Financial-Results/default.aspx"
+  },
+  "observations": [
+    {
+      "period": "2024Q1",
+      "revenue": 13748,
+      "operatingIncome": 614,
+      "fuelExpense": 2598,
+      "source": "Q1"
+    },
+    {
+      "period": "2024Q2",
+      "revenue": 16658,
+      "operatingIncome": 2267,
+      "fuelExpense": 2813,
+      "source": "Q2"
+    },
+    {
+      "period": "2024Q3",
+      "revenue": 15677,
+      "operatingIncome": 1397,
+      "fuelExpense": 2747,
+      "source": "Q3"
+    },
+    {
+      "period": "2025Q1",
+      "revenue": 14040,
+      "operatingIncome": 569,
+      "fuelExpense": 2410,
+      "source": "Q1"
+    },
+    {
+      "period": "2025Q2",
+      "revenue": 16648,
+      "operatingIncome": 2102,
+      "fuelExpense": 2458,
+      "source": "Q2"
+    },
+    {
+      "period": "2025Q3",
+      "revenue": 16673,
+      "operatingIncome": 1684,
+      "fuelExpense": 2570,
+      "source": "Q3"
+    }
+  ],
+  "missing_quarters": [
+    "2024Q4",
+    "2025Q4"
+  ],
+  "warning": "Curated quarterly observations; not independent availability verification, causal inference or a backtest. Source comparisons are retrospective and exploratory."
 };
 function renderCuratedQuarters(){
  const target=document.getElementById('quarterly-curated'),table=document.createElement('table');
