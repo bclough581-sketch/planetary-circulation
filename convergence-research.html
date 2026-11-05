@@ -297,14 +297,12 @@ document.getElementById('file').addEventListener('change',async e=>{
   const counts=Object.fromEntries(domains.map(domain=>[domain,0]));
   const ids=new Set();
   const maxAgeHours={weather:24,maritime:72,energy:168,economics:168};
-  let oldObservations=0;
   for(const event of data.observations){
    if(!Object.hasOwn(counts,event.domain)||!event.id||ids.has(event.id)||!event.source?.url||!event.observed_at)throw Error('Invalid or duplicate observation evidence');
    if(sourceUrls[event.source?.name]!==event.source?.url||sourceDomains[event.source?.name]!==event.domain)throw Error('Observation source identity mismatch');
    if(event.status!=='observed'||['prediction','probability','confidence_score','expected_return','target_price','validated_relationship'].some(field=>Object.hasOwn(event,field)))throw Error('Unsupported observation-level predictive claim');
    const observed=Date.parse(event.observed_at);
    if(!Number.isFinite(observed)||observed>generated+5*60*1000)throw Error('Invalid or future observation time');
-   if((Date.now()-observed)/3600000>(maxAgeHours[event.domain]??24))oldObservations++;
    ids.add(event.id);counts[event.domain]++;
   }
   if(!data.domains||Object.keys(data.domains).length!==domains.length||
@@ -319,6 +317,7 @@ document.getElementById('file').addEventListener('change',async e=>{
    if(age>=0&&age<=(maxAgeHours[event.domain]??24)&&(alertExpiry===null||(Number.isFinite(alertExpiry)&&alertExpiry>Date.now())))coverage.within++;else coverage.outside++;
    coverage.sources.add(event.source.name);
   }
+  const outsideViewerWindow=domains.reduce((sum,domain)=>sum+coverageByDomain[domain].outside,0);
   const populated=domains.filter(domain=>counts[domain]>0);
   const freshDomains=domains.filter(domain=>coverageByDomain[domain].within>0);
   const decision=document.getElementById('decision-boundary');decision.replaceChildren();
@@ -340,7 +339,7 @@ document.getElementById('file').addEventListener('change',async e=>{
    context.textContent=coverage.within+' within freshness window / '+coverage.outside+' outside / '+coverage.sources.size+' attributed sources'+(counts[domain]===0?' — NO IMPORTED EVIDENCE':'');
    row.append(name,count,context);target.append(row);
   }
-  document.getElementById('status').textContent=(stale?'STALE DATASET ('+Math.floor(ageHours)+' hours old). Not current. ':'Dataset generated '+data.generated_utc+'. ')+(oldObservations?oldObservations+' observations exceed their domain freshness window. ':'')+(data.message||'Research observations only');
+  document.getElementById('status').textContent=(stale?'STALE DATASET ('+Math.floor(ageHours)+' hours old). Not current. ':'Dataset generated '+data.generated_utc+'. ')+(outsideViewerWindow?outsideViewerWindow+' imported observations are outside viewer-time freshness or have expired/unverifiable NOAA alert expiry. ':'')+(data.message||'Research observations only');
   const readinessPanel=document.getElementById('readiness');readinessPanel.replaceChildren();
   const verdict=document.createElement('p');verdict.className='warn';verdict.textContent='NOT READY — zero historically validated relationships';readinessPanel.append(verdict);
   const coverage=document.createElement('p');coverage.textContent='Distinct observation dates by domain: '+JSON.stringify(readiness.distinct_observation_dates||{});readinessPanel.append(coverage);
