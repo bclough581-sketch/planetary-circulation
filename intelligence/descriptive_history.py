@@ -75,8 +75,10 @@ def main():
     parser.add_argument("--verify-report", help="Verify an existing descriptive JSON report against the supplied panel")
     args = parser.parse_args()
     panel = json.loads(Path(args.panel).read_text(encoding="utf-8"))
-    result = descriptive_report(panel)
-    Path(args.output).write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+    result = (verify_descriptive_report(panel, json.loads(Path(args.verify_report).read_text(encoding="utf-8")))
+              if args.verify_report else descriptive_report(panel))
+    if not args.verify_report:
+        Path(args.output).write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(result, indent=2))
 
 
