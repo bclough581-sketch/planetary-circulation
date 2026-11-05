@@ -205,6 +205,7 @@ const loadAudit=async data=>{
   ['missing feed health',x=>delete x.feed_health],
   ['accepted and excluded simultaneously',x=>x.excluded.push({id:'one',reason:'stale'})],
   ['excluded evidence missing reason',x=>x.excluded.push({id:'rejected',reason:''})],
+  ['duplicate excluded evidence ID',x=>x.excluded.push({id:'rejected',reason:'stale'},{id:'rejected',reason:'failed'})],
   ['event validated without evidence',x=>x.observations[0].status='validated'],
   ['embedded forecast probability',x=>x.observations[0].probability=0.9],
  ]) {
