@@ -111,6 +111,13 @@ class BundleVerificationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "independent SHA-256"):
             verify_downloaded_zip(archive)
 
+    def test_downloaded_zip_rejects_oversized_compressed_input(self):
+        archive = self.root / "oversized.zip"
+        with archive.open("wb") as stream:
+            stream.truncate(120_000_001)
+        with self.assertRaisesRegex(ValueError, "maximum compressed size"):
+            verify_downloaded_zip(archive, "0" * 64)
+
     def test_downloaded_zip_rejects_extra_member(self):
         archive = self.root / "download.zip"
         with ZipFile(archive, "w") as bundle:
