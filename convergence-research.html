@@ -307,6 +307,7 @@ document.getElementById('file').addEventListener('change',async e=>{
    ids.add(event.id);counts[event.domain]++;
   }
   if(data.excluded.some(item=>!item||typeof item.id!=='string'||!item.id.trim()||typeof item.reason!=='string'||!item.reason.trim()||ids.has(item.id)))throw Error('Invalid exclusion audit or accepted/excluded ID overlap');
+  if(new Set(data.excluded.map(item=>item.id)).size!==data.excluded.length)throw Error('Duplicate exclusion audit ID');
   if(!data.domains||Object.keys(data.domains).length!==domains.length||
      domains.some(domain=>data.domains[domain]!==counts[domain]))throw Error('Domain totals do not match observations');
   const readiness=data.relationship_readiness;
