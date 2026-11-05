@@ -138,6 +138,9 @@ async function verifyHistoricalPair(){
 document.getElementById('historical-file').addEventListener('change',async e=>{
  const file=e.target.files[0];if(!file)return;
  historicalPanel=null;
+ document.getElementById('descriptive-values').replaceChildren();
+ document.getElementById('descriptive-status').textContent='Historical panel changed; descriptive report must be reverified.';
+ document.getElementById('historical-status').textContent='Historical panel changed; audit must be reverified.';
  try{const data=JSON.parse(await file.text());if(data.schema!=='amalgam.cross-domain-observation-panel.v1'||!Array.isArray(data.observations))throw Error('Invalid historical panel');historicalPanel=data;}
  catch(err){document.getElementById('historical-status').textContent='Historical panel rejected: '+err.message;return;}
  await verifyDescriptive();
