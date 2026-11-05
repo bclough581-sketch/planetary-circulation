@@ -144,6 +144,8 @@ const loadAudit=async data=>{
  document.getElementById('ledger-freshness').value='all';
  document.getElementById('ledger-freshness').handlers.change();
  assert.equal(document.getElementById('count').textContent,1);
+ assert.match(document.getElementById('decision-boundary').children[0].textContent,/1\/9 domains have imported observations; 1\/9 have observations/);
+ assert.match(document.getElementById('decision-boundary').children[0].textContent,/NO VALIDATED STOCK-SELECTION SIGNAL/);
  assert.match(document.getElementById('domains').children[0].children[2].textContent,/1 within freshness window \/ 0 outside \/ 1 attributed sources/);
  assert.match(document.getElementById('domains').children[1].children[2].textContent,/NO IMPORTED EVIDENCE/);
  assert.equal(document.getElementById('link-count').textContent,'0 validated links');
