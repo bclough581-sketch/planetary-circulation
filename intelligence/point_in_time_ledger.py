@@ -32,15 +32,21 @@ def assess_candidate(record, decision_at):
         if not isinstance(record.get(field), str) or not record[field].strip():
             return {"eligible_for_review": False, "reason": "missing " + field,
                     "point_in_time_verified": False}
+    stamps = {}
     for field in ("observed_at", "published_at", "first_seen_at"):
         try:
             stamp = _utc(record.get(field))
         except ValueError:
             return {"eligible_for_review": False, "reason": "invalid " + field,
                     "point_in_time_verified": False}
+        stamps[field] = stamp
         if stamp > cutoff:
             return {"eligible_for_review": False, "reason": field + " postdates decision",
                     "point_in_time_verified": False}
+    if stamps["first_seen_at"] < stamps["published_at"]:
+        return {"eligible_for_review": False,
+                "reason": "capture predates claimed publication",
+                "point_in_time_verified": False}
     return {"eligible_for_review": True,
             "reason": "timestamps plausible; independent availability verification required",
             "point_in_time_verified": False}
