@@ -102,6 +102,10 @@ jobs:
           )
           print("Research artifact pre-upload integrity verified:", manifest["sha256"])
           PY
+      - name: Generate readable research artifact audit
+        run: |
+          python -m intelligence.research_artifact_audit research-view.json > research-view-audit.txt
+          cat research-view-audit.txt
       - name: Upload research dataset (not deployed)
         uses: actions/upload-artifact@v4
         with:
@@ -109,6 +113,7 @@ jobs:
           path: |
             research-view.json
             research-view-manifest.json
+            research-view-audit.txt
           retention-days: 30
 
   verify-uploaded-artifact:
