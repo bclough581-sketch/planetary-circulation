@@ -22,6 +22,31 @@ class ResearchViewTests(unittest.TestCase):
         self.assertTrue(any(x["reason"] == "source collector failed" for x in result["excluded"]))
         self.assertEqual(result["predictive_advantage"], "not_established")
 
+    def test_future_noaa_alert_is_excluded_without_losing_valid_energy(self):
+        now = datetime(2026, 11, 4, 12, tzinfo=timezone.utc)
+        snapshot = {
+            "hubs": {"HOU": {"src": "eia", "price": 72, "asof": "2026-11-03"}},
+            "status": {"eia": {"ok": True}},
+        }
+        alerts = {"features": [{
+            "id": "future-alert",
+            "properties": {
+                "sent": "2026-11-04T12:00:01Z",
+                "expires": "2026-11-04T14:00:00Z",
+                "event": "Test weather alert",
+            },
+        }]}
+        view = build(snapshot, alerts, now)
+        self.assertEqual(view["domains"]["energy"], 1)
+        self.assertEqual(view["domains"]["weather"], 0)
+        self.assertTrue(any(
+            item["id"] == "noaa:future-alert" and
+            item["reason"] == "observation postdates research generation"
+            for item in view["excluded"]
+        ))
+        self.assertTrue(validate_view(view))
+        self.assertEqual(view["predictive_advantage"], "not_established")
+
     def test_validation_rejects_misleading_totals_and_claims(self):
         now = datetime(2026, 11, 4, 12, tzinfo=timezone.utc)
         snapshot = {"hubs": {"HOU": {"src": "eia", "price": 72, "asof": "2026-11-03"}},
