@@ -38,11 +38,16 @@ function descriptiveStats(values){
  const sd=n>1?Math.sqrt(values.reduce((sum,x)=>sum+(x-mean)**2,0)/(n-1)):null;
  return {minimum:sorted[0],maximum:sorted[n-1],mean:Math.round((mean+Number.EPSILON)*10000)/10000,median:Math.round((median+Number.EPSILON)*10000)/10000,standard_deviation:sd===null?null:Math.round((sd+Number.EPSILON)*10000)/10000};
 }
-function verifyDescriptive(){
+async function verifyDescriptive(){
  const status=document.getElementById('descriptive-status'),target=document.getElementById('descriptive-values');target.replaceChildren();
  if(!descriptiveReport||!historicalPanel){status.textContent='Load both the historical panel and descriptive report.';return;}
  try{
   const r=descriptiveReport,rows=historicalPanel.observations;
+  if(!globalThis.crypto?.subtle)throw Error('SHA-256 unavailable for descriptive report binding');
+  if(typeof r.source_observations_sha256!=='string'||!/^[a-f0-9]{64}$/.test(r.source_observations_sha256))throw Error('Missing historical panel fingerprint');
+  const digest=await globalThis.crypto.subtle.digest('SHA-256',new TextEncoder().encode(canonicalJson(rows)));
+  const actual=Array.from(new Uint8Array(digest)).map(x=>x.toString(16).padStart(2,'0')).join('');
+  if(actual!==r.source_observations_sha256)throw Error('Descriptive report panel fingerprint mismatch');
   if(r.schema!=='amalgam.descriptive-historical-research.v1'||r.status!=='descriptive_only'||r.predictive_advantage!=='not_established'||
      !Array.isArray(r.relationships)||r.relationships.length||r.asof_eligible_dates!==0||historicalPanel.publication_time_verified!==false||
      !Array.isArray(rows)||!rows.length||r.matched_dates!==rows.length)throw Error('Unsupported descriptive claim or mismatched count');
@@ -64,7 +69,7 @@ function verifyDescriptive(){
   const spread=descriptiveStats(spreads),yieldStats=descriptiveStats(yields);
   const exactly=(obj,keys)=>obj&&typeof obj==='object'&&!Array.isArray(obj)&&
     Object.keys(obj).length===keys.length&&keys.every(key=>Object.hasOwn(obj,key));
-  if(!exactly(r,['schema','status','matched_dates','first_date','last_date',
+  if(!exactly(r,['schema','status','matched_dates','source_observations_sha256','first_date','last_date',
        'brent_minus_wti_usd_per_barrel','treasury_10y_percent','asof_eligible_dates',
        'relationships','predictive_advantage','warning']))
     throw Error('Unexpected or missing descriptive report fields');
@@ -88,7 +93,7 @@ function verifyDescriptive(){
 document.getElementById('descriptive-file').addEventListener('change',async e=>{
  const file=e.target.files[0];if(!file)return;descriptiveReport=null;
  try{descriptiveReport=JSON.parse(await file.text());}catch(err){document.getElementById('descriptive-status').textContent='Descriptive report rejected: '+err.message;return;}
- verifyDescriptive();
+ await verifyDescriptive();
 });
 let historicalPanel=null;
 let historicalAudit=null;
@@ -135,7 +140,7 @@ document.getElementById('historical-file').addEventListener('change',async e=>{
  historicalPanel=null;
  try{const data=JSON.parse(await file.text());if(data.schema!=='amalgam.cross-domain-observation-panel.v1'||!Array.isArray(data.observations))throw Error('Invalid historical panel');historicalPanel=data;}
  catch(err){document.getElementById('historical-status').textContent='Historical panel rejected: '+err.message;return;}
- verifyDescriptive();
+ await verifyDescriptive();
  await verifyHistoricalPair();
 });
 document.getElementById('audit-file').addEventListener('change',async e=>{
