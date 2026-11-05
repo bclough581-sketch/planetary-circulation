@@ -45,6 +45,18 @@ class RelationshipReadinessTests(unittest.TestCase):
         self.assertEqual(result["predictive_advantage"], "not_established")
         self.assertEqual(result["status"], "not_ready")
 
+    def test_observation_dates_never_imply_point_in_time_availability(self):
+        view = {"observations": [
+            {"domain": "energy", "observed_at": "2026-11-04T00:00:00Z"},
+            {"domain": "weather", "observed_at": "2026-11-04T00:00:00Z"},
+        ]}
+        result = audit_readiness(view)
+        self.assertEqual(result["same_utc_date_overlap"], {"energy|weather": 1})
+        self.assertEqual(result["point_in_time_availability"], "not_verified")
+        self.assertTrue(any("publicly available" in reason
+                            for reason in result["blocking_reasons"]))
+        self.assertEqual(result["predictive_advantage"], "not_established")
+
     def test_multiple_dates_still_do_not_establish_predictive_edge(self):
         view = {"observations": [
             {"domain": "weather", "observed_at": "2026-11-03T12:00:00Z"},
