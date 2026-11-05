@@ -19,7 +19,7 @@ class RelationshipReadinessTests(unittest.TestCase):
         view = {"observations": [
             {"domain": "energy", "observed_at": "2026-11-03T23:30:00-02:00"},
             {"domain": "energy", "observed_at": "2026-11-04T01:30:00Z"},
-            {"domain": "energy", "observed_at": "2026-11-05T01:30:00+02:00"},
+            {"domain": "energy", "observed_at": "2026-11-05T01:30:00+01:00"},
             {"domain": "weather", "observed_at": "2026-11-04T12:00:00"},
         ]}
         result = audit_readiness(view)
