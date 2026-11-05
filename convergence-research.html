@@ -40,6 +40,7 @@ input,select{max-width:100%}.panel{min-width:0}
 <p><label for="ledger-domain">Filter evidence ledger by domain</label> <select id="ledger-domain"><option value="all">All domains</option><option value="weather">Weather</option><option value="geopolitics">Geopolitics</option><option value="maritime">Maritime</option><option value="aviation">Aviation</option><option value="energy">Energy</option><option value="commodities">Commodities</option><option value="economics">Economics</option><option value="markets">Markets</option><option value="corporate">Corporate</option></select> <label for="ledger-order">Order</label> <select id="ledger-order"><option value="newest">Newest observations first</option><option value="oldest">Oldest observations first</option><option value="source">Source name A–Z</option></select> <label for="ledger-freshness">Freshness</label> <select id="ledger-freshness"><option value="all">All imported observations</option><option value="within">Within domain freshness window</option><option value="outside">Outside domain freshness window</option></select></p><p><label for="ledger-search">Find evidence by title, source, or observation ID</label> <input type="search" id="ledger-search" placeholder="Search imported evidence"></p><div id="details"></div></section>\n<section class="panel"><h2>Historical point-in-time exclusion audit</h2><p>Import point-in-time-audit.json from the cross-domain development workflow. This is separate from the live observation evidence ledger.</p><label for="historical-file">Select cross-domain-observation-panel.json</label> <input type="file" id="historical-file" accept=".json,application/json"><p id="historical-status">No historical panel loaded.</p><label for="audit-file">Select point-in-time-audit.json</label> <input type="file" id="audit-file" accept=".json,application/json"><p id="audit-status" class="warn">No historical audit loaded.</p><div id="audit-reasons"></div><div id="audit-dates"></div><p class="warn">Local imports are not authenticated. This display does not certify publication timing or trading eligibility.</p></section>
 <section class="panel" id="jet-fuel-case"><h2>Airline case: jet-fuel evidence</h2><p>Import jet-fuel-history.json from the airline-fuel-research workflow. This regional fuel-price benchmark is separate from the oil/Treasury panel and does not add validated convergence links.</p><label for="jet-file">Select monthly jet-fuel history</label> <input type="file" id="jet-file" accept=".json,application/json"><p id="jet-status" role="status">No jet-fuel evidence loaded.</p><div id="jet-values"></div></section>
 <section class="panel"><h2>Company evidence: Delta Air Lines (DAL)</h2><p>Curated historical comparison, not live coverage. Full-year consolidated GAAP figures; USD millions except fuel price. Manually checked November 5, 2026 against the January 13, 2026 results release filed as SEC Exhibit 99.1.</p><div id="delta-evidence"></div><p>Both years come from the same later release. This is retrospective evidence, unavailable as a complete comparison during 2025. It does not authenticate historical availability, establish causation, or add a validated ring link.</p></section>
+<section class="panel"><h2>Peer comparison: fuel savings and other costs</h2><p>Manually curated 2024–2025 consolidated GAAP comparison for DAL and UAL, checked November 5, 2026. USD millions. These two selected companies do not represent the whole sector.</p><div id="airline-peers" style="overflow-x:auto"></div><p>Non-fuel operating expense is calculated as revenue minus operating income minus reported fuel expense. It includes every other operating expense; it is not adjusted CASM or a pure measure of cost efficiency. Consolidation, refinery activity, capacity, route mix and accounting definitions limit cross-company comparability. This retrospective comparison cannot establish a trading edge.</p></section>
 <section class="panel"><h2>Historical descriptive context</h2><p>Import the descriptive-historical-research.json from the same development workflow run as the historical panel. Values are recalculated locally before display.</p><label for="descriptive-file">Select descriptive-historical-research.json</label> <input type="file" id="descriptive-file" accept=".json,application/json"><p id="descriptive-status" class="warn">No descriptive report loaded.</p><div id="descriptive-values"></div><p class="warn">Descriptive only. Neither the imported files nor historical publication times are authenticated in this browser. No predictive advantage is established.</p></section>
 <script>
 // Curated from the GAAP columns of the December-quarter/full-year results table.
@@ -68,6 +69,34 @@ function renderDeltaEvidence(){
  const link=document.createElement('a');link.href=deltaCompanyEvidence.source;link.textContent='Inspect the SEC-filed results table (GAAP columns)';link.target='_blank';link.rel='noopener noreferrer';target.append(link);
 }
 renderDeltaEvidence();
+const unitedCompanyEvidence={
+ source:'https://www.sec.gov/Archives/edgar/data/100517/000010051726000023/ual-20251231.htm',
+ rows:[{year:2024,revenue:57063,operatingIncome:5096,fuelExpense:11756},
+       {year:2025,revenue:59070,operatingIncome:4713,fuelExpense:11396}]
+};
+function airlineCostBridge(rows){
+ const [prior,current]=rows;
+ const nonFuel=row=>row.revenue-row.operatingIncome-row.fuelExpense;
+ return {revenueChange:current.revenue-prior.revenue,
+         fuelSavings:prior.fuelExpense-current.fuelExpense,
+         otherCostIncrease:nonFuel(current)-nonFuel(prior),
+         operatingIncomeChange:current.operatingIncome-prior.operatingIncome};
+}
+function renderAirlinePeers(){
+ const target=document.getElementById('airline-peers'),table=document.createElement('table');
+ const caption=document.createElement('caption');caption.textContent='Change in operating income = revenue change + fuel savings − increase in other operating costs';table.append(caption);
+ const header=document.createElement('tr');
+ for(const label of ['Company','Revenue change','Fuel savings','Other operating cost increase','Operating income change']){const th=document.createElement('th');th.textContent=label;th.setAttribute('scope','col');header.append(th);}table.append(header);
+ for(const [name,evidence] of [['DAL',deltaCompanyEvidence],['UAL',unitedCompanyEvidence]]){
+  const bridge=airlineCostBridge(evidence.rows),tr=document.createElement('tr');
+  for(const value of [name,bridge.revenueChange,bridge.fuelSavings,bridge.otherCostIncrease,bridge.operatingIncomeChange]){const td=document.createElement('td');td.textContent=String(value);tr.append(td);}table.append(tr);
+ }
+ target.append(table);
+ const p=document.createElement('p');p.textContent='Interpretation: in both companies, higher revenue and fuel savings were outweighed by higher other operating costs. This accounting bridge explains the change in reported operating income, not the causes of those costs. It does not estimate the isolated effect of fuel prices or rank the stocks.';target.append(p);
+ const link=document.createElement('a');link.href=unitedCompanyEvidence.source;link.textContent='UAL 2025 Form 10-K: consolidated statements (2025 and 2024)';link.target='_blank';link.rel='noopener noreferrer';target.append(link);
+ const deltaLink=document.createElement('a');deltaLink.href=deltaCompanyEvidence.source;deltaLink.textContent=' | DAL source and definitions';deltaLink.target='_blank';deltaLink.rel='noopener noreferrer';target.append(deltaLink);
+}
+renderAirlinePeers();
 let jetImportVersion=0;
 document.getElementById('jet-file').addEventListener('change',async e=>{
  const version=++jetImportVersion,target=document.getElementById('jet-values'),status=document.getElementById('jet-status');

@@ -32,6 +32,14 @@ const loadAudit=async data=>{
  await document.getElementById('audit-file').handlers.change({target:{files:[{text:async()=>JSON.stringify(data)}]}});
 };
 (async()=>{
+ const peers=document.getElementById('airline-peers').children[0];
+ assert.deepEqual(peers.children[2].children.map(x=>x.textContent),['DAL','1721','747','2641','-173']);
+ assert.deepEqual(peers.children[3].children.map(x=>x.textContent),['UAL','2007','360','2750','-383']);
+ for(const row of peers.children.slice(2)){
+  const values=row.children.slice(1).map(x=>Number(x.textContent));
+  assert.equal(values[0]+values[1]-values[2],values[3],'Cost bridge reconciles');
+ }
+
  const company=document.getElementById('delta-evidence');
  const companyTable=company.children[0];
  assert.equal(companyTable.children[2].children[3].textContent,'10566');
