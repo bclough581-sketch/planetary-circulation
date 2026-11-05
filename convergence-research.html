@@ -63,8 +63,13 @@ function verifyDescriptive(){
   }
   const spread=descriptiveStats(spreads),yieldStats=descriptiveStats(yields);
   const expected={...spread,positive_dates:spreads.filter(x=>x>0).length,zero_dates:spreads.filter(x=>x===0).length,negative_dates:spreads.filter(x=>x<0).length};
+  const spreadKeys=Object.keys(expected),yieldKeys=Object.keys(yieldStats);
+  if(!r.brent_minus_wti_usd_per_barrel||Object.keys(r.brent_minus_wti_usd_per_barrel).length!==spreadKeys.length||
+     !r.treasury_10y_percent||Object.keys(r.treasury_10y_percent).length!==yieldKeys.length)
+     throw Error('Unexpected or missing descriptive statistics');
   for(const [key,value] of Object.entries(expected))if(r.brent_minus_wti_usd_per_barrel?.[key]!==value)throw Error('Brent–WTI statistic mismatch: '+key);
   for(const [key,value] of Object.entries(yieldStats))if(r.treasury_10y_percent?.[key]!==value)throw Error('Treasury statistic mismatch: '+key);
+  if(typeof r.warning!=='string'||!r.warning.includes('no predictive lift'))throw Error('Missing descriptive-only limitation');
   status.textContent='Descriptive statistics MATCH the supplied historical panel; upstream authenticity NOT verified.';
   for(const line of [
    'Matched dates: '+rows.length+' | '+dates[0]+' to '+dates[dates.length-1],
