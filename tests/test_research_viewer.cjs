@@ -77,6 +77,8 @@ const loadAudit=async data=>{
  assert.match(document.getElementById('historical-status').textContent,/Historical panel rejected/);
  await document.getElementById('historical-file').handlers.change({target:{files:[{text:async()=>JSON.stringify(panel)}]}});
  assert.match(document.getElementById('descriptive-status').textContent,/MATCH/);
+ assert.match(document.getElementById('historical-status').textContent,/Load both historical panel and audit/);
+ await loadAudit(audit);
  assert.match(document.getElementById('historical-status').textContent,/fingerprint MATCH/);
  assert.match(document.getElementById('audit-status').textContent,/2 excluded/);
  assert.match(document.getElementById('audit-status').textContent,/Imported audit claims/);
