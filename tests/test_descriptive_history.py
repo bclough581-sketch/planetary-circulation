@@ -21,6 +21,9 @@ class DescriptiveHistoryTests(unittest.TestCase):
         result = descriptive_report(self.panel)
         self.assertEqual(result["matched_dates"], 2)
         self.assertEqual(result["brent_minus_wti_usd_per_barrel"]["mean"], 1)
+        self.assertEqual(result["brent_minus_wti_usd_per_barrel"]["median"], 1)
+        self.assertEqual(result["brent_minus_wti_usd_per_barrel"]["standard_deviation"], 2.8284)
+        self.assertEqual(result["treasury_10y_percent"]["median"], 4.2)
         self.assertEqual(result["brent_minus_wti_usd_per_barrel"]["positive_dates"], 1)
         self.assertEqual(result["brent_minus_wti_usd_per_barrel"]["negative_dates"], 1)
         self.assertEqual(result["asof_eligible_dates"], 0)
@@ -36,6 +39,12 @@ class DescriptiveHistoryTests(unittest.TestCase):
         self.panel["observations"][0]["wti_usd_per_barrel"] = float("nan")
         with self.assertRaises(ValueError):
             descriptive_report(self.panel)
+
+    def test_single_observation_has_no_sample_standard_deviation(self):
+        self.panel["observations"] = self.panel["observations"][:1]
+        report = descriptive_report(self.panel)
+        self.assertIsNone(report["brent_minus_wti_usd_per_barrel"]["standard_deviation"])
+        self.assertIsNone(report["treasury_10y_percent"]["standard_deviation"])
 
     def test_verify_report_against_panel(self):
         report = descriptive_report(self.panel)
