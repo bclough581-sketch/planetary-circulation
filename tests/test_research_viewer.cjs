@@ -153,6 +153,12 @@ const loadAudit=async data=>{
  assert.match(document.getElementById('details').children[1].textContent,/imported snapshot age 1h/);
  assert.match(document.getElementById('details').children[1].textContent,/source https:\/\/www.weather.gov\/documentation\/services-web-api/);
  assert.match(document.getElementById('details').children[1].textContent,/evidence gaps: Verified market impact; Independent cross-domain explanation/);
+ assert.match(document.getElementById('details').children[1].textContent,/no numeric or text measurement supplied/);
+ const measured={...good,observations:[{...event,value:1.23,unit:'baseline ratio',metadata:{...event.metadata,asof:'2026-11-04'}}]};
+ await load(measured);
+ assert.match(document.getElementById('details').children[1].textContent,/reported value 1.23 baseline ratio/);
+ assert.match(document.getElementById('details').children[1].textContent,/source as-of 2026-11-04/);
+ await load(good);
  document.getElementById('ledger-domain').value='energy';
  document.getElementById('ledger-domain').handlers.change();
  assert.equal(document.getElementById('details').children.length,1);
