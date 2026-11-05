@@ -39,7 +39,7 @@ def verify_downloaded_zip(zip_path, published_sha256=None, check_github=False, f
             github = verify_github_run(tmp, fetch_json=fetch_json, artifact_zip=zip_path) if check_github else None
     return {
         "schema": "amalgam.local-artifact-verification.v1",
-        "status": "github_published_zip_digest_and_internal_consistency_matched",
+        "status": ("github_published_zip_digest_and_internal_consistency_matched" if check_github else "supplied_digest_and_internal_consistency_matched"),
         "zip_sha256": actual,
         "workflow_run_id": result["workflow_run_id"],
         "commit_sha": manifest["commit_sha"],
@@ -47,7 +47,7 @@ def verify_downloaded_zip(zip_path, published_sha256=None, check_github=False, f
         "matched_observation_dates": result["observations"],
         "predictive_advantage": "not_established",
         "github_run": github,
-        "warning": ("GitHub run and published ZIP digest independently cross-checked; upstream observations and historical publication times remain unauthenticated." if check_github else "Published digest must be obtained independently from GitHub. This does not authenticate upstream observations or historical publication times."),
+        "warning": ("GitHub run and published ZIP digest independently cross-checked; upstream observations and historical publication times remain unauthenticated." if check_github else "The supplied digest was NOT independently authenticated by this tool. Obtain it independently from GitHub; upstream observations and historical publication times remain unauthenticated."),
     }
 
 
