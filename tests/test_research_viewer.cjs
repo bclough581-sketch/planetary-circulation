@@ -135,6 +135,14 @@ const loadAudit=async data=>{
  assert.match(document.getElementById('audit-status').textContent,/Audit rejected/);
 
  await load(good);
+ document.getElementById('ledger-freshness').value='within';
+ document.getElementById('ledger-freshness').handlers.change();
+ assert.equal(document.getElementById('details').children.length,2);
+ document.getElementById('ledger-freshness').value='outside';
+ document.getElementById('ledger-freshness').handlers.change();
+ assert.equal(document.getElementById('details').children.length,1);
+ document.getElementById('ledger-freshness').value='all';
+ document.getElementById('ledger-freshness').handlers.change();
  assert.equal(document.getElementById('count').textContent,1);
  assert.equal(document.getElementById('link-count').textContent,'0 validated links');
  assert.match(document.getElementById('details').children[1].textContent,/within domain freshness window/);
@@ -142,7 +150,7 @@ const loadAudit=async data=>{
  document.getElementById('ledger-domain').value='energy';
  document.getElementById('ledger-domain').handlers.change();
  assert.equal(document.getElementById('details').children.length,1);
- assert.match(document.getElementById('details').children[0].textContent,/excluded observations/);
+ assert.match(document.getElementById('details').children[0].textContent,/0 matching imported observations/);
  document.getElementById('ledger-domain').value='all';
  document.getElementById('ledger-domain').handlers.change();
  assert.match(document.getElementById('details').children[1].textContent,/weather/);
