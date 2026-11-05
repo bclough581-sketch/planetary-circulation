@@ -1,6 +1,6 @@
 import unittest
 
-from intelligence.descriptive_history import descriptive_report
+from intelligence.descriptive_history import descriptive_report, verify_descriptive_report
 
 
 class DescriptiveHistoryTests(unittest.TestCase):
@@ -34,6 +34,22 @@ class DescriptiveHistoryTests(unittest.TestCase):
 
     def test_rejects_nonfinite_numbers(self):
         self.panel["observations"][0]["wti_usd_per_barrel"] = float("nan")
+        with self.assertRaises(ValueError):
+            descriptive_report(self.panel)
+
+    def test_verify_report_against_panel(self):
+        report = descriptive_report(self.panel)
+        result = verify_descriptive_report(self.panel, report)
+        self.assertEqual(result["status"], "verified_against_supplied_panel")
+
+    def test_verify_report_rejects_modified_spread(self):
+        report = descriptive_report(self.panel)
+        report["brent_minus_wti_usd_per_barrel"]["mean"] = 99
+        with self.assertRaises(ValueError):
+            verify_descriptive_report(self.panel, report)
+
+    def test_rejects_noncanonical_date(self):
+        self.panel["observations"][0]["date"] = "2025-1-2"
         with self.assertRaises(ValueError):
             descriptive_report(self.panel)
 
