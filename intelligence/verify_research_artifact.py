@@ -32,6 +32,29 @@ def _parse_json(data):
 
 
 
+def create_research_manifest(payload, commit_sha, workflow_run_id):
+    """Build a provenance manifest from the exact bytes destined for upload."""
+    if len(payload) > MAX_MEMBER_BYTES:
+        raise ValueError("research artifact payload too large")
+    view = _parse_json(payload)
+    validate_view(view)
+    manifest = {
+        "schema": "amalgam.research-view-artifact-manifest.v1",
+        "commit_sha": commit_sha,
+        "workflow_run_id": str(workflow_run_id),
+        "file": "research-view.json",
+        "sha256": hashlib.sha256(payload).hexdigest(),
+        "generated_utc": view["generated_utc"],
+        "observation_count": len(view["observations"]),
+        "excluded_count": len(view["excluded"]),
+        "predictive_advantage": view["predictive_advantage"],
+    }
+    encoded = (json.dumps(manifest, indent=2, allow_nan=False) + "\n").encode("utf-8")
+    verify_research_payload(payload, encoded, expected_commit=commit_sha,
+                            expected_run=workflow_run_id)
+    return encoded
+
+
 def verify_research_payload(payload, manifest_bytes, expected_commit=None, expected_run=None):
     """Validate raw research JSON and manifest with the same rules used for ZIPs."""
     if len(payload) > MAX_MEMBER_BYTES or len(manifest_bytes) > MAX_MEMBER_BYTES:
