@@ -139,6 +139,13 @@ const loadAudit=async data=>{
  assert.equal(document.getElementById('link-count').textContent,'0 validated links');
  assert.match(document.getElementById('details').children[1].textContent,/within domain freshness window/);
  assert.match(document.getElementById('details').children[1].textContent,/source https:\/\/www.weather.gov\/documentation\/services-web-api/);
+ document.getElementById('ledger-domain').value='energy';
+ document.getElementById('ledger-domain').handlers.change();
+ assert.equal(document.getElementById('details').children.length,1);
+ assert.match(document.getElementById('details').children[0].textContent,/excluded observations/);
+ document.getElementById('ledger-domain').value='all';
+ document.getElementById('ledger-domain').handlers.change();
+ assert.match(document.getElementById('details').children[1].textContent,/weather/);
  assert.match(document.getElementById('readiness').children[0].textContent,/NOT READY/);
  for(const [name,change] of [
   ['inflated count',x=>x.domains.weather=20],
