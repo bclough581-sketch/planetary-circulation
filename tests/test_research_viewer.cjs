@@ -146,6 +146,7 @@ const loadAudit=async data=>{
  assert.equal(document.getElementById('count').textContent,1);
  assert.equal(document.getElementById('link-count').textContent,'0 validated links');
  assert.match(document.getElementById('details').children[1].textContent,/within domain freshness window/);
+ assert.match(document.getElementById('details').children[1].textContent,/imported snapshot age 1h/);
  assert.match(document.getElementById('details').children[1].textContent,/source https:\/\/www.weather.gov\/documentation\/services-web-api/);
  document.getElementById('ledger-domain').value='energy';
  document.getElementById('ledger-domain').handlers.change();
