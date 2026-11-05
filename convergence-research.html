@@ -90,6 +90,8 @@ async function verifyDescriptive(){
    'Matched dates: '+rows.length+' | '+dates[0]+' to '+dates[dates.length-1],
    'Brent minus WTI (USD/barrel): mean '+spread.mean+' | median '+spread.median+' | standard deviation '+spread.standard_deviation+' | range '+spread.minimum+'–'+spread.maximum,
    'Treasury 10-year yield (%): mean '+yieldStats.mean+' | median '+yieldStats.median+' | standard deviation '+yieldStats.standard_deviation+' | range '+yieldStats.minimum+'–'+yieldStats.maximum,
+   'Spread direction (Brent minus WTI): '+expected.positive_dates+' positive | '+expected.zero_dates+' zero | '+expected.negative_dates+' negative days',
+   'Observed endpoints: '+dates[0]+' spread '+spreads[0]+' USD/barrel, Treasury 10Y '+yields[0]+'% | '+dates[dates.length-1]+' spread '+spreads[spreads.length-1]+' USD/barrel, Treasury 10Y '+yields[yields.length-1]+'%',
    'Point-in-time eligible: 0 | validated predictive relationships: 0'
   ]){const p=document.createElement('p');p.textContent=line;target.append(p);}
  }catch(err){if(historicalPanel!==panelAtStart||descriptiveReport!==reportAtStart)return;status.textContent='Descriptive report REJECTED: '+err.message;}
