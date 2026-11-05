@@ -56,6 +56,8 @@ def eligible(event, snapshot, now=None):
             return False, 'invalid alert expiry'
         if expiry <= now:
             return False, 'alert expired'
-    if age_days < -1 or age_days > MAX_AGE_DAYS.get(event.get('domain'), 1):
+    if age_days < 0:
+        return False, 'observation postdates research generation'
+    if age_days > MAX_AGE_DAYS.get(event.get('domain'), 1):
         return False, 'outside freshness window'
     return True, None
