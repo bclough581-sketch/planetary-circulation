@@ -60,6 +60,8 @@ const loadAudit=async data=>{
  assert.match(document.getElementById('descriptive-status').textContent,/REJECTED/);
  await loadDescriptive({...descriptive,warning:'Predictive performance is proven.'});
  assert.match(document.getElementById('descriptive-status').textContent,/REJECTED/);
+ await loadDescriptive({...descriptive,stock_pick_confidence:0.99});
+ assert.match(document.getElementById('descriptive-status').textContent,/REJECTED/);
  assert.match(document.getElementById('descriptive-status').textContent,/REJECTED/);
  assert.equal(document.getElementById('descriptive-values').children.length,0);
  await loadDescriptive(descriptive);
