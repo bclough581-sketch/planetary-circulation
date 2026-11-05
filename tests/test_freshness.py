@@ -27,6 +27,20 @@ class FreshnessTests(unittest.TestCase):
     def test_invalid_noaa_expiry_rejected(self):
         self.assertEqual(eligible(self.weather("bad"), self.snapshot, self.now)[1], "invalid alert expiry")
 
+    def test_malformed_source_and_metadata_are_excluded_without_crash(self):
+        for field, value, reason in [
+            ("source", None, "invalid source provenance"),
+            ("source", "NOAA", "invalid source provenance"),
+            ("metadata", None, "invalid observation metadata"),
+            ("metadata", "invalid", "invalid observation metadata"),
+        ]:
+            with self.subTest(field=field, value=value):
+                event = self.weather("2026-11-04T13:00:00Z")
+                event[field] = value
+                self.assertEqual(eligible(event, self.snapshot, self.now)[1], reason)
+        self.assertEqual(eligible(None, self.snapshot, self.now)[1],
+                         "invalid observation record")
+
     def test_unknown_source_rejected(self):
         event = self.weather("2026-11-04T13:00:00Z")
         event["source"]["name"] = "Unverified feed"
