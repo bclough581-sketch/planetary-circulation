@@ -5,6 +5,7 @@ Observation-date alignment does not prove trade-time availability.
 import argparse
 import json
 import math
+from datetime import date
 from pathlib import Path
 
 
@@ -17,6 +18,8 @@ def descriptive_report(panel):
     if not isinstance(rows, list) or not rows:
         raise ValueError("no historical observations")
     dates = [row["date"] for row in rows]
+    if any(not isinstance(day, str) or date.fromisoformat(day).isoformat() != day for day in dates):
+        raise ValueError("invalid or noncanonical observation date")
     if dates != sorted(set(dates)):
         raise ValueError("observations must be sorted by unique dates")
     spreads = []
@@ -55,10 +58,21 @@ def descriptive_report(panel):
     }
 
 
+def verify_descriptive_report(panel, report):
+    """Check a separately downloaded report against a retained source panel."""
+    if not isinstance(report, dict) or report != descriptive_report(panel):
+        raise ValueError("descriptive report does not match the source panel")
+    return {"status": "verified_against_supplied_panel",
+            "matched_dates": report["matched_dates"],
+            "predictive_advantage": "not_established",
+            "warning": "The supplied panel must be authenticated separately. This does not establish historical availability or predictive lift."}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--panel", required=True)
     parser.add_argument("--output", default="descriptive-historical-research.json")
+    parser.add_argument("--verify-report", help="Verify an existing descriptive JSON report against the supplied panel")
     args = parser.parse_args()
     panel = json.loads(Path(args.panel).read_text(encoding="utf-8"))
     result = descriptive_report(panel)
