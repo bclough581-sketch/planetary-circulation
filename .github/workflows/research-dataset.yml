@@ -68,9 +68,38 @@ jobs:
           assert result["relationships"] == []
           assert all(x["source"]["url"] and x["observed_at"] for x in result["observations"])
           PY
+      - name: Record research artifact provenance and digest
+        env:
+          AMALGAM_COMMIT: ${{ github.sha }}
+          AMALGAM_RUN_ID: ${{ github.run_id }}
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          payload = Path("research-view.json").read_bytes()
+          view = json.loads(payload)
+          manifest = {
+              "schema": "amalgam.research-view-artifact-manifest.v1",
+              "commit_sha": os.environ["AMALGAM_COMMIT"],
+              "workflow_run_id": os.environ["AMALGAM_RUN_ID"],
+              "file": "research-view.json",
+              "sha256": hashlib.sha256(payload).hexdigest(),
+              "generated_utc": view["generated_utc"],
+              "observation_count": len(view["observations"]),
+              "excluded_count": len(view["excluded"]),
+              "predictive_advantage": view["predictive_advantage"],
+          }
+          Path("research-view-manifest.json").write_text(
+              json.dumps(manifest, indent=2) + "\\n", encoding="utf-8")
+          print("Research dataset SHA-256:", manifest["sha256"])
+          PY
       - name: Upload research dataset (not deployed)
         uses: actions/upload-artifact@v4
         with:
           name: amalgam-research-view-${{ github.run_id }}
-          path: research-view.json
+          path: |
+            research-view.json
+            research-view-manifest.json
           retention-days: 30
