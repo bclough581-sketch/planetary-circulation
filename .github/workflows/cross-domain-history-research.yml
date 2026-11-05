@@ -74,6 +74,8 @@ jobs:
           assert verdict["status"] == "verified_internal_consistency"
           print("Retained-file audit consistency:", verdict["status"])
           PY
+      - name: Export descriptive-only historical research summary
+        run: python -m intelligence.descriptive_history --panel cross-domain-observation-panel.json --output descriptive-historical-research.json
       - name: Audit exact-date source coverage
         run: python -m intelligence.coverage_audit --energy eia-history-research.json --treasury treasury-history-research.json --panel cross-domain-observation-panel.json --output historical-coverage-audit.json
       - name: Record artifact provenance and file checksums
@@ -131,4 +133,10 @@ jobs:
             point-in-time-audit.json
             historical-coverage-audit.json
             research-artifact-manifest.json
+          retention-days: 30
+      - name: Retain descriptive-only report separately from verified research bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: amalgam-descriptive-history-${{ github.run_id }}
+          path: descriptive-historical-research.json
           retention-days: 30
