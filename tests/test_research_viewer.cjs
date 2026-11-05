@@ -25,7 +25,7 @@ const load=async data=>{
 };
 const names=['weather','geopolitics','maritime','aviation','energy','commodities','economics','markets','corporate'];
 const empty=()=>Object.fromEntries(names.map(x=>[x,0]));
-const event={id:'one',domain:'weather',title:'Test',observed_at:'2026-11-04T12:00:00Z',metadata:{expires:'2026-11-05T12:00:00Z'},source:{name:'NOAA National Weather Service',url:'https://www.weather.gov/documentation/services-web-api'}};
+const event={id:'one',domain:'weather',title:'Test',observed_at:'2026-11-04T12:00:00Z',metadata:{expires:'2026-11-05T12:00:00Z'},missing:['Verified market impact','Independent cross-domain explanation'],source:{name:'NOAA National Weather Service',url:'https://www.weather.gov/documentation/services-web-api'}};
 const good={schema:'amalgam.research.v1',observations:[event],excluded:[],relationships:[],domains:{...empty(),weather:1},predictive_advantage:'not_established',generated_utc:'2026-11-04T19:00:00Z',licensing:{portwatch_commercial_reuse:'permission_not_verified'},feed_health:[{feed:'eia',condition:'eligible_source'}],relationship_readiness:{status:'not_ready',historical_relationships_validated:0,predictive_advantage:'not_established',distinct_observation_dates:{weather:1},blocking_reasons:['No historical panel']}};
 const loadAudit=async data=>{
  await document.getElementById('audit-file').handlers.change({target:{files:[{text:async()=>JSON.stringify(data)}]}});
@@ -152,6 +152,7 @@ const loadAudit=async data=>{
  assert.match(document.getElementById('details').children[1].textContent,/within domain freshness window/);
  assert.match(document.getElementById('details').children[1].textContent,/imported snapshot age 1h/);
  assert.match(document.getElementById('details').children[1].textContent,/source https:\/\/www.weather.gov\/documentation\/services-web-api/);
+ assert.match(document.getElementById('details').children[1].textContent,/evidence gaps: Verified market impact; Independent cross-domain explanation/);
  document.getElementById('ledger-domain').value='energy';
  document.getElementById('ledger-domain').handlers.change();
  assert.equal(document.getElementById('details').children.length,1);
