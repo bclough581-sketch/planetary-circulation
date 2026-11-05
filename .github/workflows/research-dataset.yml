@@ -96,27 +96,22 @@ jobs:
           print("Research dataset SHA-256:", manifest["sha256"])
           PY
       - name: Verify research artifact manifest before upload
+        env:
+          AMALGAM_COMMIT: ${{ github.sha }}
+          AMALGAM_RUN_ID: ${{ github.run_id }}
         run: |
           python - <<'PY'
-          import hashlib
-          import json
+          import os
           from pathlib import Path
-          from intelligence.research_view import validate_view
+          from intelligence.verify_research_artifact import verify_research_payload
 
-          payload = Path("research-view.json").read_bytes()
-          manifest = json.loads(Path("research-view-manifest.json").read_text(encoding="utf-8"))
-          view = json.loads(payload)
-          validate_view(view)
-          assert manifest["schema"] == "amalgam.research-view-artifact-manifest.v1"
-          assert manifest["file"] == "research-view.json"
-          assert manifest["sha256"] == hashlib.sha256(payload).hexdigest()
-          assert manifest["generated_utc"] == view["generated_utc"]
-          assert type(manifest["observation_count"]) is int
-          assert manifest["observation_count"] == len(view["observations"])
-          assert type(manifest["excluded_count"]) is int
-          assert manifest["excluded_count"] == len(view["excluded"])
-          assert manifest["predictive_advantage"] == view["predictive_advantage"]
-          print("Research artifact pre-upload integrity verification passed")
+          manifest = verify_research_payload(
+              Path("research-view.json").read_bytes(),
+              Path("research-view-manifest.json").read_bytes(),
+              expected_commit=os.environ["AMALGAM_COMMIT"],
+              expected_run=os.environ["AMALGAM_RUN_ID"],
+          )
+          print("Research artifact pre-upload integrity verified:", manifest["sha256"])
           PY
       - name: Upload research dataset (not deployed)
         uses: actions/upload-artifact@v4
