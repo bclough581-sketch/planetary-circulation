@@ -3,7 +3,7 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
 (async()=>{
- const browser=await chromium.launch({headless:true});
+ const browser=await chromium.launch({headless:true,channel:'chrome'});
  fs.mkdirSync('browser-layout',{recursive:true});
  try{
   for(const width of [1280,390,320]){
