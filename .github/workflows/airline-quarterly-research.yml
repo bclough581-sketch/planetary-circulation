@@ -2,7 +2,7 @@ name: airline-quarterly-research
 on:
   push:
     branches: [amalgam-event-foundation]
-    paths: ['intelligence/airline_quarterly.py', 'tests/test_airline_quarterly.py', '.github/workflows/airline-quarterly-research.yml']
+    paths: ['intelligence/airline_quarterly.py', 'tests/test_airline_quarterly.py', 'intelligence/airline_quarterly_audit.py', 'tests/test_airline_quarterly_audit.py', '.github/workflows/airline-quarterly-research.yml']
   workflow_dispatch: {}
 permissions:
   contents: read
@@ -17,13 +17,17 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: python -m unittest discover -s tests -p 'test_airline_quarterly.py' -v
+      - run: python -m unittest discover -s tests -p 'test_airline_quarterly*.py' -v
       - name: Collect SEC facts using authorized project identification
         env:
           SEC_CONTACT_EMAIL: ${{ secrets.SEC_CONTACT_EMAIL }}
-        run: python -m intelligence.airline_quarterly --output airline-quarterly.json
+        run: |
+          python -m intelligence.airline_quarterly --start-year 2014 --end-year 2025 --retain-inputs sec-quarterly-bundle --output sec-quarterly-bundle/airline-quarterly.json
+          cp intelligence/data/delta-quarterly-curated.json sec-quarterly-bundle/
+          python -m intelligence.airline_quarterly_audit --directory sec-quarterly-bundle
+          python -m intelligence.airline_quarterly_audit --directory sec-quarterly-bundle --verify
       - uses: actions/upload-artifact@v4
         with:
           name: amalgam-airline-quarterly-${{ github.run_id }}
-          path: airline-quarterly.json
+          path: sec-quarterly-bundle/
           retention-days: 30

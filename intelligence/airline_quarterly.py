@@ -1,5 +1,6 @@
 """Quarterly consolidated SEC facts for research; no as-of eligibility grant."""
 import argparse
+import hashlib
 import json
 import math
 import os
@@ -86,6 +87,7 @@ def main():
     parser.add_argument("--end-year", type=int, default=2025)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--input-dir", type=Path, help="Directory containing officially downloaded CIK##########.json companyfacts files")
+    parser.add_argument("--retain-inputs", type=Path, help="Save exact companyfacts response bytes for reproduction")
     args = parser.parse_args()
     user_agent = None if args.input_dir else sec_user_agent(os.environ.get("SEC_CONTACT_EMAIL"))
     companies = []
@@ -93,23 +95,32 @@ def main():
         url = f"https://data.sec.gov/api/xbrl/companyfacts/CIK{cik:010d}.json"
         request = urllib.request.Request(url, headers={"User-Agent": user_agent or "AMALGAM local research", "Accept-Encoding": "identity"})
         if args.input_dir:
-            payload = json.loads((args.input_dir / f"CIK{cik:010d}.json").read_text(encoding="utf-8"))
+            raw = (args.input_dir / f"CIK{cik:010d}.json").read_bytes()
+            payload = json.loads(raw)
         else:
             if companies:
                 time.sleep(0.2)
             try:
                 with urllib.request.urlopen(request, timeout=45) as response:
-                    payload = json.load(response)
+                    raw = response.read(20_000_001)
+                    if len(raw) > 20_000_000:
+                        raise ValueError("SEC response exceeds retention limit")
+                    payload = json.loads(raw)
             except urllib.error.HTTPError as exc:
                 raise RuntimeError(f"SEC access failed (HTTP {exc.code}) for {symbol}; no quarterly dataset produced. Officially downloaded companyfacts files can be processed with --input-dir.") from None
+        if args.retain_inputs:
+            args.retain_inputs.mkdir(parents=True, exist_ok=True)
+            (args.retain_inputs / f"CIK{cik:010d}.json").write_bytes(raw)
         company = normalize(payload, symbol, args.start_year, args.end_year)
         if not company["observations"]:
             raise ValueError("no paired quarterly facts for " + symbol)
+        company["source_response_sha256"] = hashlib.sha256(raw).hexdigest()
         company["source_url"] = url
         company["input_mode"] = "local_unverified_file" if args.input_dir else "sec_api_response"
         companies.append(company)
         print(symbol, "paired quarters:", len(company["observations"]), "missing:", company["missing_quarters"])
     result = {"schema": "amalgam.airline-quarterly.v1", "retrieved_utc": datetime.now(timezone.utc).isoformat(),
+              "requested_start_year": args.start_year, "requested_end_year": args.end_year,
               "companies": companies, "publication_time_verified": False, "predictive_advantage": "not_established",
               "warning": "Earliest retained filing claims are not authenticated availability. Current API facts may reflect revisions. No synthesized Q4, fuel costs, market returns or predictive evaluation."}
     args.output.write_text(json.dumps(result, indent=2, allow_nan=False)+"\n", encoding="utf-8")

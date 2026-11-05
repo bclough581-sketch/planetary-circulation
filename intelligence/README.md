@@ -127,3 +127,27 @@ Local `--input-dir` processing requires no contact or network access.
 
 Until the owner configures the contact, the SEC workflow stops before making
 requests. The separate issuer-curated/EIA research pipeline remains usable.
+
+
+## Retained SEC quarterly corpus
+
+`airline_quarterly --retain-inputs DIRECTORY --output DIRECTORY/airline-quarterly.json`
+retains the exact responses and records SHA-256 digests with normalized facts.
+The 2014–2025 request currently yields 59 direct calendar quarters (DAL 28,
+UAL 31). Source concept coverage leaves explicit early-period and Q4 gaps.
+No new concept is silently spliced into a series to fill them.
+
+With both CIK responses, normalized data and the reviewed issuer input in one folder:
+
+```bash
+python -m intelligence.airline_quarterly_audit --directory DIRECTORY
+python -m intelligence.airline_quarterly_audit --directory DIRECTORY --verify
+```
+
+The audit reproduces every normalized fact from the retained responses and
+compares overlapping DAL revenue and operating income with the curated issuer
+releases. Current six overlaps match exactly. That is consistency evidence,
+not authenticated historical availability. The audit retains mismatches if any;
+it does not rewrite either source. The corpus includes no new fuel-expense facts.
+Network collection requires an owner-authorized SEC contact; local verification
+requires no contact and sends no requests.
