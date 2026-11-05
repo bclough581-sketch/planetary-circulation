@@ -28,7 +28,7 @@ button:focus-visible{outline:2px solid white} .domain{display:flex;justify-conte
 <h3>Historical relationship readiness</h3><div id="readiness">No dataset loaded.</div>
 <h3>Source health and limitations</h3><div id="source-health">Load a dataset to inspect feed status.</div>
 <h3>Exclusion reasons</h3><div id="exclusion-reasons">No dataset loaded.</div>
-<p><label for="ledger-domain">Filter evidence ledger by domain</label> <select id="ledger-domain"><option value="all">All domains</option><option value="weather">Weather</option><option value="geopolitics">Geopolitics</option><option value="maritime">Maritime</option><option value="aviation">Aviation</option><option value="energy">Energy</option><option value="commodities">Commodities</option><option value="economics">Economics</option><option value="markets">Markets</option><option value="corporate">Corporate</option></select> <label for="ledger-order">Order</label> <select id="ledger-order"><option value="newest">Newest observations first</option><option value="oldest">Oldest observations first</option><option value="source">Source name A–Z</option></select></p><div id="details"></div></section>\n<section class="panel"><h2>Historical point-in-time exclusion audit</h2><p>Import point-in-time-audit.json from the cross-domain development workflow. This is separate from the live observation evidence ledger.</p><label for="historical-file">Select cross-domain-observation-panel.json</label> <input type="file" id="historical-file" accept=".json,application/json"><p id="historical-status">No historical panel loaded.</p><label for="audit-file">Select point-in-time-audit.json</label> <input type="file" id="audit-file" accept=".json,application/json"><p id="audit-status" class="warn">No historical audit loaded.</p><div id="audit-reasons"></div><div id="audit-dates"></div><p class="warn">Local imports are not authenticated. This display does not certify publication timing or trading eligibility.</p></section>
+<p><label for="ledger-domain">Filter evidence ledger by domain</label> <select id="ledger-domain"><option value="all">All domains</option><option value="weather">Weather</option><option value="geopolitics">Geopolitics</option><option value="maritime">Maritime</option><option value="aviation">Aviation</option><option value="energy">Energy</option><option value="commodities">Commodities</option><option value="economics">Economics</option><option value="markets">Markets</option><option value="corporate">Corporate</option></select> <label for="ledger-order">Order</label> <select id="ledger-order"><option value="newest">Newest observations first</option><option value="oldest">Oldest observations first</option><option value="source">Source name A–Z</option></select> <label for="ledger-freshness">Freshness</label> <select id="ledger-freshness"><option value="all">All imported observations</option><option value="within">Within domain freshness window</option><option value="outside">Outside domain freshness window</option></select></p><div id="details"></div></section>\n<section class="panel"><h2>Historical point-in-time exclusion audit</h2><p>Import point-in-time-audit.json from the cross-domain development workflow. This is separate from the live observation evidence ledger.</p><label for="historical-file">Select cross-domain-observation-panel.json</label> <input type="file" id="historical-file" accept=".json,application/json"><p id="historical-status">No historical panel loaded.</p><label for="audit-file">Select point-in-time-audit.json</label> <input type="file" id="audit-file" accept=".json,application/json"><p id="audit-status" class="warn">No historical audit loaded.</p><div id="audit-reasons"></div><div id="audit-dates"></div><p class="warn">Local imports are not authenticated. This display does not certify publication timing or trading eligibility.</p></section>
 <section class="panel"><h2>Historical descriptive context</h2><p>Import the descriptive-historical-research.json from the same development workflow run as the historical panel. Values are recalculated locally before display.</p><label for="descriptive-file">Select descriptive-historical-research.json</label> <input type="file" id="descriptive-file" accept=".json,application/json"><p id="descriptive-status" class="warn">No descriptive report loaded.</p><div id="descriptive-values"></div><p class="warn">Descriptive only. Neither the imported files nor historical publication times are authenticated in this browser. No predictive advantage is established.</p></section>
 <script>
 let descriptiveReport=null;
@@ -210,10 +210,17 @@ const renderEvidenceLedger=()=>{
  if(!displayedResearch)return;
  const data=displayedResearch;
  const domain=document.getElementById('ledger-domain').value||'all';
- const selected=(domain==='all'?data.observations:data.observations.filter(event=>event.domain===domain)).slice();
+ const maxAgeHours={weather:24,maritime:72,energy:168,economics:168};
+ const freshnessFilter=document.getElementById('ledger-freshness').value||'all';
+ const selected=data.observations.filter(event=>{
+  if(domain!=='all'&&event.domain!==domain)return false;
+  if(freshnessFilter==='all')return true;
+  const age=(Date.now()-Date.parse(event.observed_at))/3600000;
+  const within=age>=0&&age<=(maxAgeHours[event.domain]??24);
+  return freshnessFilter==='within'?within:!within;
+ });
  const order=document.getElementById('ledger-order').value||'newest';
  selected.sort((a,b)=>order==='source'?(a.source.name.localeCompare(b.source.name)||b.observed_at.localeCompare(a.observed_at)||a.id.localeCompare(b.id)):order==='oldest'?(a.observed_at.localeCompare(b.observed_at)||a.id.localeCompare(b.id)):(b.observed_at.localeCompare(a.observed_at)||a.id.localeCompare(b.id)));
- const maxAgeHours={weather:24,maritime:72,energy:168,economics:168};
  for(const event of selected.slice(0,100)){
   const p=document.createElement('p');
   const observed=Date.parse(event.observed_at);
@@ -223,10 +230,11 @@ const renderEvidenceLedger=()=>{
   ledger.append(p);
  }
  if(selected.length>100){const notice=document.createElement('p');notice.className='warn';notice.textContent='Showing first 100 of '+selected.length+' observations in selected domain. Ledger display is truncated; domain totals cover the complete imported dataset.';ledger.prepend(notice);}
- const excluded=document.createElement('p');excluded.className='warn';excluded.textContent=data.excluded.length+' excluded observations (stale, missing or source failure); domain filter applies to eligible evidence only';ledger.prepend(excluded);
+ const excluded=document.createElement('p');excluded.className='warn';excluded.textContent='Showing '+Math.min(selected.length,100)+' of '+selected.length+' matching imported observations; '+data.excluded.length+' pipeline-excluded observations are not included. Freshness is reassessed using the viewer clock and does not change pipeline eligibility.';ledger.prepend(excluded);
 };
 document.getElementById('ledger-domain').addEventListener('change',renderEvidenceLedger);
 document.getElementById('ledger-order').addEventListener('change',renderEvidenceLedger);
+document.getElementById('ledger-freshness').addEventListener('change',renderEvidenceLedger);
 document.getElementById('file').addEventListener('change',async e=>{
  const file=e.target.files[0];if(!file)return;
  try{
