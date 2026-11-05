@@ -46,7 +46,9 @@ def audit_readiness(view):
     # Candidate review is diagnostic only, never a historical trading eligibility grant.
     candidate_review = Counter()
     candidate_block_reasons = Counter()
-    if generated is not None:
+    if generated is None:
+        candidate_review["not_assessed"] = len(observations)
+    else:
         for event in observations:
             metadata = event.get("metadata")
             source = event.get("source")
