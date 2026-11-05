@@ -147,6 +147,21 @@ class PointInTimeLedgerRegressionTests(unittest.TestCase):
         self.assertFalse(result["point_in_time_verified"])
         self.assertFalse(result["eligible_for_review"])
 
+    def test_cutoff_is_timezone_normalized_and_inclusive(self):
+        from intelligence.point_in_time_ledger import assess_candidate
+        record = {
+            "id": "boundary", "domain": "energy",
+            "source_url": "https://www.eia.gov/opendata/",
+            "observed_at": "2026-11-01T00:00:00Z",
+            "published_at": "2026-11-04T06:00:00-05:00",
+            "first_seen_at": "2026-11-04T12:00:00Z",
+        }
+        at_cutoff = assess_candidate(record, "2026-11-04T07:00:00-05:00")
+        before_cutoff = assess_candidate(record, "2026-11-04T11:59:59Z")
+        self.assertTrue(at_cutoff["eligible_for_review"])
+        self.assertFalse(at_cutoff["point_in_time_verified"])
+        self.assertFalse(before_cutoff["eligible_for_review"])
+
     def test_plausible_capture_never_verifies_availability(self):
         from intelligence.point_in_time_ledger import assess_candidate
         record = {
