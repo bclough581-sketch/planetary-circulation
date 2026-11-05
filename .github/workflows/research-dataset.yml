@@ -144,12 +144,16 @@ jobs:
 
           folder = Path("verified-artifact")
           actual = {p.name for p in folder.iterdir() if p.is_file()}
-          assert actual == {"research-view.json", "research-view-manifest.json"}, "unexpected downloaded artifact files"
+          assert actual == {"research-view.json", "research-view-manifest.json", "research-view-audit.txt"}, "unexpected downloaded artifact files"
           manifest = verify_research_payload(
               (folder / "research-view.json").read_bytes(),
               (folder / "research-view-manifest.json").read_bytes(),
               expected_commit=os.environ["AMALGAM_COMMIT"],
               expected_run=os.environ["AMALGAM_RUN_ID"],
           )
-          print("Downloaded artifact verified:", manifest["sha256"])
+          from intelligence.research_artifact_audit import summarize, render_text
+          import json
+          expected_audit = render_text(summarize(json.loads((folder / "research-view.json").read_bytes())))
+          assert (folder / "research-view-audit.txt").read_text(encoding="utf-8") == expected_audit, "downloaded audit summary mismatch"
+          print("Downloaded artifact and audit verified:", manifest["sha256"])
           PY
