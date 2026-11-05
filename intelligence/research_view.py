@@ -32,6 +32,10 @@ def validate_view(view):
         if not event.get("id") or event["id"] in seen:
             raise ValueError("missing or duplicate observation ID")
         seen.add(event["id"])
+        if event.get("status") != "observed":
+            raise ValueError("research observation must remain observed, not validated or predicted")
+        if any(field in event for field in ("prediction", "probability", "confidence_score", "expected_return", "target_price", "validated_relationship")):
+            raise ValueError("unsupported observation-level predictive claim")
         if not isinstance(event.get("source"), dict) or not event["source"].get("url") or not event.get("observed_at"):
             raise ValueError("observation missing provenance")
         expected[event["domain"]] += 1
