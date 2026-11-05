@@ -73,6 +73,36 @@ class ResearchArtifactVerificationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "exactly"):
             verify_research_zip(self.path)
 
+    @patch("intelligence.verify_research_artifact.validate_view", return_value=True)
+    def test_rejects_run_id_mismatch(self, _):
+        self.write()
+        with self.assertRaisesRegex(ValueError, "workflow run ID mismatch"):
+            verify_research_zip(self.path, self.commit, "999999")
+
+    @patch("intelligence.verify_research_artifact.validate_view", return_value=True)
+    def test_rejects_manifest_schema_change(self, _):
+        self.write(lambda m: m.update(schema="unknown"))
+        with self.assertRaisesRegex(ValueError, "schema"):
+            verify_research_zip(self.path)
+
+    @patch("intelligence.verify_research_artifact.validate_view", return_value=True)
+    def test_rejects_predictive_claim_change(self, _):
+        self.write(lambda m: m.update(predictive_advantage="established"))
+        with self.assertRaisesRegex(ValueError, "disagrees"):
+            verify_research_zip(self.path)
+
+    @patch("intelligence.verify_research_artifact.validate_view", return_value=True)
+    def test_rejects_noninteger_count(self, _):
+        self.write(lambda m: m.update(observation_count=True))
+        with self.assertRaisesRegex(ValueError, "disagrees"):
+            verify_research_zip(self.path)
+
+    @patch("intelligence.verify_research_artifact.validate_view", return_value=True)
+    def test_rejects_manifest_extra_field(self, _):
+        self.write(lambda m: m.update(unverified_claim=True))
+        with self.assertRaisesRegex(ValueError, "unexpected"):
+            verify_research_zip(self.path)
+
     @patch("intelligence.verify_research_artifact.validate_view", side_effect=ValueError("invalid view"))
     def test_calls_research_view_validation(self, _):
         self.write()
