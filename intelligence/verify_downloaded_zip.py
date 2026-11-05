@@ -21,7 +21,13 @@ def verify_downloaded_zip(zip_path, published_sha256=None, check_github=False, f
     )):
         raise ValueError("expected SHA-256 must be 64 lowercase hex characters")
     zip_path = Path(zip_path)
-    actual = hashlib.sha256(zip_path.read_bytes()).hexdigest()
+    if zip_path.stat().st_size > 120_000_000:
+        raise ValueError("ZIP exceeds maximum compressed size")
+    digest = hashlib.sha256()
+    with zip_path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    actual = digest.hexdigest()
     if published_sha256 is not None and actual != published_sha256:
         raise ValueError("GitHub-published ZIP SHA-256 mismatch")
     expected = EXPECTED | {"research-artifact-manifest.json"}
