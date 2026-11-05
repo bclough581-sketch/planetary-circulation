@@ -32,6 +32,12 @@ const loadAudit=async data=>{
  await document.getElementById('audit-file').handlers.change({target:{files:[{text:async()=>JSON.stringify(data)}]}});
 };
 (async()=>{
+ const brief=()=>decodeURIComponent(document.getElementById('case-export').href.split(',').slice(1).join(','));
+ assert.match(brief(),/NOT LOADED/);
+ assert.match(brief(),/cannot serve as untouched holdout/);
+ assert.match(brief(),/DAL 2025: revenue 63364/);
+ assert.match(brief(),/UAL 2025: revenue 59070/);
+
  document.getElementById('airline-case-toggle').handlers.click();
  assert.equal(document.getElementById('case-path').hidden,false);
  assert.match(document.getElementById('case-path').children[2].textContent,/not loaded/);
@@ -65,6 +71,8 @@ const loadAudit=async data=>{
  const jet={schema:'amalgam.jet-fuel-history.v1',source_url:'https://www.eia.gov/dnav/pet/hist/eer_epjk_pf4_rgc_dpgM.htm',source:'U.S. Energy Information Administration',series:'EER_EPJK_PF4_RGC_DPG',retrieved_utc:'2026-11-04T12:00:00Z',frequency:'monthly',unit:'USD_per_gallon',requested_start:'2025-01',requested_end:'2025-03',observations:[{period:'2025-01',value:2},{period:'2025-03',value:3}],missing_months:['2025-02'],excluded:[],publication_time_verified:false,predictive_advantage:'not_established',warning:'Research only'};
  const loadJet=async data=>document.getElementById('jet-file').handlers.change({target:{files:[{text:async()=>JSON.stringify(data)}]}});
  await loadJet(jet);
+ assert.match(brief(),/2025-01: 2 USD\/gallon/);
+ assert.match(brief(),/Missing months: 2025-02/);
  document.getElementById('airline-case-toggle').handlers.click();
  assert.match(document.getElementById('case-path').children[2].textContent,/benchmark imported/);
  document.getElementById('airline-case-toggle').handlers.click();
@@ -73,6 +81,8 @@ const loadAudit=async data=>{
  for(const changes of [{unit:'USD_per_barrel'},{missing_months:[]},{publication_time_verified:true},{observations:[...jet.observations,jet.observations[0]]},{source_url:'javascript:alert(1)'},{expected_return:1}]){
   await loadJet({...jet,...changes});
   assert.match(document.getElementById('jet-status').textContent,/rejected/);
+  assert.match(brief(),/NOT LOADED/);
+  assert.doesNotMatch(brief(),/2025-01: 2 USD/);
   assert.equal(document.getElementById('jet-values').children.length,0);
  }
  let finishOldJet;

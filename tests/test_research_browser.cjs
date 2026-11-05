@@ -21,6 +21,13 @@ const path=require('node:path');
    assert.equal(await page.locator('.case-domain').count(),3);
    assert.equal(await page.locator('#link-count').textContent(),'0 validated links');
    assert.equal(await page.locator('#count').textContent(),'0');
+   const downloadEvent=page.waitForEvent('download');
+   await page.locator('#case-export').click();
+   const download=await downloadEvent;
+   await download.saveAs('browser-layout/brief-'+width+'.txt');
+   const exported=fs.readFileSync('browser-layout/brief-'+width+'.txt','utf8');
+   assert.match(exported,/predictive advantage NOT ESTABLISHED/);
+   assert.match(exported,/UAL 2025: revenue 59070/);
    const geometry=await page.evaluate(()=>{
     const boxes=[...document.querySelectorAll('.ring-node')].map(x=>x.getBoundingClientRect());
     const overlaps=[];
