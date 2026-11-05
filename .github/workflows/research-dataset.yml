@@ -10,6 +10,7 @@ on:
       - 'tests/test_research_view.py'
       - 'tests/test_energy_overlay.py'
       - 'tests/test_eia_research_snapshot.py'
+      - 'tests/test_relationship_readiness.py'
   workflow_dispatch: {}
 permissions:
   contents: read
