@@ -32,6 +32,17 @@ const loadAudit=async data=>{
  await document.getElementById('audit-file').handlers.change({target:{files:[{text:async()=>JSON.stringify(data)}]}});
 };
 (async()=>{
+ document.getElementById('airline-case-toggle').handlers.click();
+ assert.equal(document.getElementById('case-path').hidden,false);
+ assert.match(document.getElementById('case-path').children[2].textContent,/not loaded/);
+ const caseNodes=document.getElementById('ring-domains').children.filter(x=>x.className.includes('case-domain'));
+ assert.equal(caseNodes.length,3);
+ assert.ok(caseNodes.every(x=>x.disabled),'Case selection must not enable observation filters without data');
+ assert.equal(document.getElementById('airline-case-toggle').attributes['aria-pressed'],'true');
+ document.getElementById('airline-case-toggle').handlers.click();
+ assert.equal(document.getElementById('case-path').hidden,true);
+ assert.ok(document.getElementById('ring-domains').children.every(x=>!x.className.includes('case-domain')));
+
  const peers=document.getElementById('airline-peers').children[0];
  assert.deepEqual(peers.children[2].children.map(x=>x.textContent),['DAL','1721','747','2641','-173']);
  assert.deepEqual(peers.children[3].children.map(x=>x.textContent),['UAL','2007','360','2750','-383']);
@@ -54,6 +65,9 @@ const loadAudit=async data=>{
  const jet={schema:'amalgam.jet-fuel-history.v1',source_url:'https://www.eia.gov/dnav/pet/hist/eer_epjk_pf4_rgc_dpgM.htm',source:'U.S. Energy Information Administration',series:'EER_EPJK_PF4_RGC_DPG',retrieved_utc:'2026-11-04T12:00:00Z',frequency:'monthly',unit:'USD_per_gallon',requested_start:'2025-01',requested_end:'2025-03',observations:[{period:'2025-01',value:2},{period:'2025-03',value:3}],missing_months:['2025-02'],excluded:[],publication_time_verified:false,predictive_advantage:'not_established',warning:'Research only'};
  const loadJet=async data=>document.getElementById('jet-file').handlers.change({target:{files:[{text:async()=>JSON.stringify(data)}]}});
  await loadJet(jet);
+ document.getElementById('airline-case-toggle').handlers.click();
+ assert.match(document.getElementById('case-path').children[2].textContent,/benchmark imported/);
+ document.getElementById('airline-case-toggle').handlers.click();
  assert.match(document.getElementById('jet-values').children[0].textContent,/Missing: 2025-02/);
  assert.match(document.getElementById('jet-values').children[1].textContent,/50.00%/);
  for(const changes of [{unit:'USD_per_barrel'},{missing_months:[]},{publication_time_verified:true},{observations:[...jet.observations,jet.observations[0]]},{source_url:'javascript:alert(1)'},{expected_return:1}]){

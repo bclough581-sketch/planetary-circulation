@@ -17,6 +17,10 @@ const path=require('node:path');
    assert.equal(await page.locator('#ledger-domain').inputValue(),'weather');
    await page.locator('#ring-all').click();
    assert.equal(await page.locator('#ledger-domain').inputValue(),'all');
+   await page.locator('#airline-case-toggle').click();
+   assert.equal(await page.locator('.case-domain').count(),3);
+   assert.equal(await page.locator('#link-count').textContent(),'0 validated links');
+   assert.equal(await page.locator('#count').textContent(),'0');
    const geometry=await page.evaluate(()=>{
     const boxes=[...document.querySelectorAll('.ring-node')].map(x=>x.getBoundingClientRect());
     const overlaps=[];
