@@ -142,6 +142,7 @@ let historicalImportVersion=0;
 document.getElementById('historical-file').addEventListener('change',async e=>{
  const file=e.target.files[0];if(!file)return;const version=++historicalImportVersion;
  historicalPanel=null;
+ ++auditImportVersion;
  historicalAudit=null;
  document.getElementById('audit-reasons').replaceChildren();
  document.getElementById('audit-dates').replaceChildren();
@@ -154,14 +155,17 @@ document.getElementById('historical-file').addEventListener('change',async e=>{
  await verifyDescriptive();
  await verifyHistoricalPair();
 });
+let auditImportVersion=0;
 document.getElementById('audit-file').addEventListener('change',async e=>{
- const file=e.target.files[0];if(!file)return;
+ const file=e.target.files[0];if(!file)return;const version=++auditImportVersion;
  const status=document.getElementById('audit-status');
  const reasons=document.getElementById('audit-reasons');
  const dates=document.getElementById('audit-dates');
  reasons.replaceChildren();dates.replaceChildren();historicalAudit=null;
+ status.textContent='Audit changed; verification required.';
  try{
   const audit=JSON.parse(await file.text());
+  if(version!==auditImportVersion)return;
   if(audit.predictive_advantage!=='not_established'||audit.status!=='blocked'||
      !Array.isArray(audit.blocked)||!Number.isSafeInteger(audit.blocked_count)||
      !Number.isSafeInteger(audit.usable_count)||audit.usable_count!==0||
@@ -183,7 +187,7 @@ document.getElementById('audit-file').addEventListener('change',async e=>{
    const p=document.createElement('p');p.textContent=item.date+' | '+item.reason;detail.append(p);
   }
   dates.append(detail);historicalAudit=audit;await verifyHistoricalPair();
- }catch(err){status.textContent='Audit rejected: '+err.message;reasons.replaceChildren();dates.replaceChildren();}
+ }catch(err){if(version!==auditImportVersion)return;status.textContent='Audit rejected: '+err.message;reasons.replaceChildren();dates.replaceChildren();}
 });
 const domains=['weather','geopolitics','maritime','aviation','energy','commodities','economics','markets','corporate'];
 document.getElementById('file').addEventListener('change',async e=>{
