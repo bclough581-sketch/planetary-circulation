@@ -11,6 +11,7 @@ on:
       - 'intelligence/audit_validation.py'
       - 'tests/test_audit_validation.py'
       - 'intelligence/verify_bundle.py'
+      - 'intelligence/verify_downloaded_zip.py'
       - 'tests/test_verify_bundle.py'
       - 'intelligence/coverage_audit.py'
       - 'tests/test_coverage_audit.py'
