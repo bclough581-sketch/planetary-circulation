@@ -5,6 +5,7 @@ Observation-date alignment does not prove trade-time availability.
 import argparse
 import json
 import math
+import statistics
 from datetime import date
 from pathlib import Path
 
@@ -43,6 +44,8 @@ def descriptive_report(panel):
         "brent_minus_wti_usd_per_barrel": {
             "minimum": min(spreads), "maximum": max(spreads),
             "mean": round(sum(spreads) / len(spreads), 4),
+            "median": round(statistics.median(spreads), 4),
+            "standard_deviation": round(statistics.stdev(spreads), 4) if len(spreads) > 1 else None,
             "positive_dates": sum(value > 0 for value in spreads),
             "zero_dates": sum(value == 0 for value in spreads),
             "negative_dates": sum(value < 0 for value in spreads),
@@ -50,11 +53,13 @@ def descriptive_report(panel):
         "treasury_10y_percent": {
             "minimum": min(yields), "maximum": max(yields),
             "mean": round(sum(yields) / len(yields), 4),
+            "median": round(statistics.median(yields), 4),
+            "standard_deviation": round(statistics.stdev(yields), 4) if len(yields) > 1 else None,
         },
         "asof_eligible_dates": 0,
         "relationships": [],
         "predictive_advantage": "not_established",
-        "warning": "Descriptive statistics only. Observation dates are not authenticated publication timestamps; no predictive lift, causation, or tradability is inferred.",
+        "warning": "Descriptive statistics only. Standard deviation measures historical dispersion, not forecast risk. Observation dates are not authenticated publication timestamps; no predictive lift, causation, or tradability is inferred.",
     }
 
 
