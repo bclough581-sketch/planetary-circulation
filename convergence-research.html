@@ -25,6 +25,7 @@ button:focus-visible{outline:2px solid white} .domain{display:flex;justify-conte
 <input type="file" id="file" accept=".json,application/json">
 <p id="status" class="warn">No data loaded. Nothing here is live.</p>
 <p class="warn">Local JSON imports are checked for internal consistency, not authenticity. This viewer cannot verify that a file came from GitHub Actions or that its source observations are genuine. Use the development workflow artifact as the provenance reference.</p>
+<h3>Decision-support boundary</h3><div id="decision-boundary">No dataset loaded. No stock-selection conclusion available.</div>
 <h3>Historical relationship readiness</h3><div id="readiness">No dataset loaded.</div>
 <h3>Source health and limitations</h3><div id="source-health">Load a dataset to inspect feed status.</div>
 <h3>Exclusion reasons</h3><div id="exclusion-reasons">No dataset loaded.</div>
@@ -245,6 +246,7 @@ document.getElementById('ledger-search').addEventListener('input',renderEvidence
 document.getElementById('file').addEventListener('change',async e=>{
  const version=++researchImportVersion;
  displayedResearch=null;
+ document.getElementById('decision-boundary').textContent='Import in progress. No stock-selection conclusion available.';
  document.getElementById('details').replaceChildren();
  const file=e.target.files[0];if(!file)return;
  try{
@@ -294,6 +296,14 @@ document.getElementById('file').addEventListener('change',async e=>{
    if(age>=0&&age<=(maxAgeHours[event.domain]??24))coverage.within++;else coverage.outside++;
    coverage.sources.add(event.source.name);
   }
+  const populated=domains.filter(domain=>counts[domain]>0);
+  const freshDomains=domains.filter(domain=>coverageByDomain[domain].within>0);
+  const decision=document.getElementById('decision-boundary');decision.replaceChildren();
+  const verdict=document.createElement('p');verdict.className='warn';
+  verdict.textContent='NO VALIDATED STOCK-SELECTION SIGNAL — '+populated.length+'/9 domains have imported observations; '+freshDomains.length+'/9 have observations within viewer-time freshness windows; 0 validated cross-domain links.';
+  decision.append(verdict);
+  const limit=document.createElement('p');limit.textContent='Evidence breadth and freshness are descriptive, not predictive. Missing domains, unverified historical publication timing, and absent validated outcomes prevent a supported stock ranking or probability estimate.';
+  decision.append(limit);
   const verified=0;
   document.getElementById('count').textContent=data.observations.length;
   document.getElementById('link-count').textContent=verified+' validated links';
@@ -331,6 +341,6 @@ document.getElementById('file').addEventListener('change',async e=>{
   }
   displayedResearch=data;
   renderEvidenceLedger();
- }catch(err){if(version!==researchImportVersion)return;displayedResearch=null;document.getElementById('count').textContent='—';document.getElementById('link-count').textContent='0 validated links';document.getElementById('domains').textContent='Dataset rejected. No evidence displayed.';document.getElementById('details').replaceChildren();document.getElementById('source-health').textContent='Dataset rejected.';document.getElementById('readiness').textContent='Dataset rejected.';document.getElementById('exclusion-reasons').textContent='Dataset rejected.';document.getElementById('status').textContent='Unable to load file: '+err.message;}
+ }catch(err){if(version!==researchImportVersion)return;displayedResearch=null;document.getElementById('count').textContent='—';document.getElementById('link-count').textContent='0 validated links';document.getElementById('domains').textContent='Dataset rejected. No evidence displayed.';document.getElementById('details').replaceChildren();document.getElementById('source-health').textContent='Dataset rejected.';document.getElementById('readiness').textContent='Dataset rejected.';document.getElementById('decision-boundary').textContent='Dataset rejected. No stock-selection conclusion available.';document.getElementById('exclusion-reasons').textContent='Dataset rejected.';document.getElementById('status').textContent='Unable to load file: '+err.message;}
 });
 </script></body></html>
