@@ -69,6 +69,8 @@ class BundleVerificationTests(unittest.TestCase):
                          arcname="research-artifact-manifest.json")
         digest = hashlib.sha256(archive.read_bytes()).hexdigest()
         report = verify_downloaded_zip(archive, digest)
+        self.assertEqual(report["status"], "supplied_digest_and_internal_consistency_matched")
+        self.assertIn("NOT independently authenticated", report["warning"])
         self.assertEqual(report["research_files_verified"], 5)
         self.assertEqual(report["matched_observation_dates"], 1)
         self.assertEqual(report["predictive_advantage"], "not_established")
@@ -94,6 +96,7 @@ class BundleVerificationTests(unittest.TestCase):
                     "name": "intelligence-cross-domain-history-research",
                     "html_url": self.manifest["workflow_url"]}
         result = verify_downloaded_zip(archive, check_github=True, fetch_json=fake_fetch)
+        self.assertEqual(result["status"], "github_published_zip_digest_and_internal_consistency_matched")
         self.assertEqual(result["github_run"]["status"], "github_artifact_zip_digest_matched")
         def mismatched_fetch(url):
             result = fake_fetch(url)
