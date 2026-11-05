@@ -5,6 +5,7 @@ This is a readiness audit, not a relationship detector or backtest.
 from collections import Counter
 from datetime import datetime, timezone
 from itertools import combinations
+from .point_in_time_ledger import assess_candidate
 
 
 def audit_readiness(view):
@@ -41,6 +42,23 @@ def audit_readiness(view):
                 publication_after_generation[event["domain"]] += 1
         except (KeyError, ValueError, TypeError, AttributeError):
             continue
+    # Existing source observations lack verified first-seen/publication evidence.
+    # Candidate review is diagnostic only, never a historical trading eligibility grant.
+    candidate_review = Counter()
+    if generated is not None:
+        for event in observations:
+            metadata = event.get("metadata")
+            source = event.get("source")
+            candidate = {
+                "id": event.get("id"),
+                "domain": event.get("domain"),
+                "source_url": source.get("url") if isinstance(source, dict) else None,
+                "observed_at": event.get("observed_at"),
+                "published_at": metadata.get("published_at") if isinstance(metadata, dict) else None,
+                "first_seen_at": metadata.get("first_seen_at") if isinstance(metadata, dict) else None,
+            }
+            outcome = assess_candidate(candidate, generated.isoformat())
+            candidate_review["reviewable" if outcome["eligible_for_review"] else "blocked"] += 1
     domain_dates = {domain: len(days) for domain, days in sorted(dated.items())}
     multi_day_domains = sorted(domain for domain, days in domain_dates.items() if days >= 2)
     same_utc_date_overlap = {
@@ -57,6 +75,7 @@ def audit_readiness(view):
         "multi_day_domains": multi_day_domains,
         "same_utc_date_overlap": same_utc_date_overlap,
         "point_in_time_availability": "not_verified",
+        "historical_candidate_review": dict(sorted(candidate_review.items())),
         "unverified_publication_timestamp_claims": dict(sorted(publication_timestamp_claims.items())),
         "publication_claims_after_generation": dict(sorted(publication_after_generation.items())),
         "blocking_reasons": [
