@@ -38,6 +38,14 @@ def validate_view(view):
             raise ValueError("unsupported observation-level predictive claim")
         if not isinstance(event.get("source"), dict) or not event["source"].get("url") or not event.get("observed_at"):
             raise ValueError("observation missing provenance")
+        try:
+            observed = datetime.fromisoformat(event["observed_at"].replace("Z", "+00:00"))
+            if observed.tzinfo is None or observed.utcoffset() is None:
+                raise ValueError("timezone missing")
+            if observed > stamp:
+                raise ValueError("observation postdates research generation")
+        except (ValueError, TypeError, AttributeError) as exc:
+            raise ValueError("invalid or future research observation timestamp") from exc
         expected[event["domain"]] += 1
     if counts != expected:
         raise ValueError("domain counts disagree with evidence")
