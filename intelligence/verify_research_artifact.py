@@ -17,19 +17,8 @@ MAX_MEMBER_BYTES = 15_000_000
 MAX_ZIP_BYTES = 20_000_000
 
 
-def verify_research_zip(path, expected_commit=None, expected_run=None):
-    path = Path(path)
-    if path.stat().st_size > MAX_ZIP_BYTES:
-        raise ValueError("research artifact ZIP too large")
-    with zipfile.ZipFile(path) as archive:
-        entries = archive.infolist()
-        if len(entries) != 2 or {item.filename for item in entries} != EXPECTED:
-            raise ValueError("research artifact must contain exactly the expected files")
-        if any(item.is_dir() or item.file_size > MAX_MEMBER_BYTES
-               or item.flag_bits & 1 for item in entries):
-            raise ValueError("unsafe research artifact member")
-        payload = archive.read("research-view.json")
-        manifest_bytes = archive.read("research-view-manifest.json")
+def verify_research_payload(payload, manifest_bytes, expected_commit=None, expected_run=None):
+    """Validate raw research JSON and manifest with the same rules used for ZIPs."""
     view = json.loads(payload)
     manifest = json.loads(manifest_bytes)
     if not isinstance(manifest, dict) or manifest.get("schema") != "amalgam.research-view-artifact-manifest.v1":
@@ -59,6 +48,22 @@ def verify_research_zip(path, expected_commit=None, expected_run=None):
             or manifest["predictive_advantage"] != view["predictive_advantage"]):
         raise ValueError("research artifact manifest disagrees with dataset")
     return manifest
+
+
+def verify_research_zip(path, expected_commit=None, expected_run=None):
+    path = Path(path)
+    if path.stat().st_size > MAX_ZIP_BYTES:
+        raise ValueError("research artifact ZIP too large")
+    with zipfile.ZipFile(path) as archive:
+        entries = archive.infolist()
+        if len(entries) != 2 or {item.filename for item in entries} != EXPECTED:
+            raise ValueError("research artifact must contain exactly the expected files")
+        if any(item.is_dir() or item.file_size > MAX_MEMBER_BYTES
+               or item.flag_bits & 1 for item in entries):
+            raise ValueError("unsafe research artifact member")
+        payload = archive.read("research-view.json")
+        manifest_bytes = archive.read("research-view-manifest.json")
+    return verify_research_payload(payload, manifest_bytes, expected_commit, expected_run)
 
 
 def main():
