@@ -47,6 +47,13 @@ const loadAudit=async data=>{
   asof_eligible_dates:0,relationships:[],predictive_advantage:'not_established',warning:'Descriptive only; no predictive lift is inferred.'};
  await loadDescriptive(descriptive);
  assert.match(document.getElementById('descriptive-status').textContent,/MATCH/);
+ const airlineCase=document.getElementById('descriptive-values').children[7];
+ assert.match(airlineCase.children[0].textContent,/airline fuel-cost pressure/);
+ assert.match(airlineCase.children[2].textContent,/Brent 75 → 76 USD\/barrel \(1.33%\)/);
+ assert.match(airlineCase.children[2].textContent,/10.0 basis points/);
+ assert.match(airlineCase.children[3].textContent,/not two independent confirmations/);
+ assert.match(airlineCase.children[8].textContent,/Not tested/);
+
  assert.match(document.getElementById('descriptive-values').children[1].textContent,/median 5/);
  assert.match(document.getElementById('descriptive-values').children[3].textContent,/2 positive \\| 0 zero \\| 0 negative/);
  assert.match(document.getElementById('descriptive-values').children[4].textContent,/0 calendar gaps longer than 3 days \\| longest 1 days/);

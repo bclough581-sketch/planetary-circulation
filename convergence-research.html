@@ -105,7 +105,28 @@ async function verifyDescriptive(){
    'Observed endpoints: '+dates[0]+' spread '+spreads[0]+' USD/barrel, Treasury 10Y '+yields[0]+'% | '+dates[dates.length-1]+' spread '+spreads[spreads.length-1]+' USD/barrel, Treasury 10Y '+yields[yields.length-1]+'%',
    'Point-in-time eligible: 0 | validated predictive relationships: 0'
   ]){const p=document.createElement('p');p.textContent=line;target.append(p);}
+  target.append(airlineResearchCase(rows));
  }catch(err){if(historicalPanel!==panelAtStart||descriptiveReport!==reportAtStart)return;status.textContent='Descriptive report REJECTED: '+err.message;}
+}
+function airlineResearchCase(rows){
+ const section=document.createElement('section');section.className='panel';
+ const heading=document.createElement('h3');heading.textContent='Research case: airline fuel-cost pressure';section.append(heading);
+ const first=rows[0],last=rows[rows.length-1];
+ const change=key=>((last[key]/first[key]-1)*100).toFixed(2);
+ const yieldChange=((last.treasury_10y_percent-first.treasury_10y_percent)*100).toFixed(1);
+ const lines=[
+  'QUESTION — Could energy costs and financing conditions put pressure on airline margins? This is an untested sector hypothesis, not an airline stock recommendation.',
+  'OBSERVED IN THE IMPORTED PANEL — '+first.date+' to '+last.date+' ('+rows.length+' matched dates): Brent '+first.brent_usd_per_barrel+' → '+last.brent_usd_per_barrel+' USD/barrel ('+change('brent_usd_per_barrel')+'%); WTI '+first.wti_usd_per_barrel+' → '+last.wti_usd_per_barrel+' USD/barrel ('+change('wti_usd_per_barrel')+'%); Treasury 10-year yield '+first.treasury_10y_percent+' → '+last.treasury_10y_percent+'% ('+yieldChange+' basis points). Endpoint comparisons are descriptive; they do not establish a trend or causation.',
+  'PROPOSED TRANSMISSION — Energy: crude costs may affect jet-fuel prices. Economics: financing conditions may affect borrowing costs. Aviation/corporate: fuel purchases and refinancing could affect airline margins. Only energy and economics are represented in this historical panel; the airline effects have not been observed here. Brent and WTI are related benchmarks, not two independent confirmations.',
+  'ALTERNATIVE EXPLANATIONS — Jet-fuel refining margins can move differently from crude. Hedging, fuel contracts, fare changes, passenger demand, fleet efficiency and debt maturity can offset or delay an effect. Treasury yields are not an airline borrowing rate. Higher oil prices can also coincide with stronger demand.',
+  'DECISION USE — Investigate fuel exposure and refinancing needs in airline filings before interpreting this context. The panel alone cannot establish whether any airline benefits, suffers, or is attractively valued. No aviation, corporate or market-return evidence is supplied here.',
+  'NEXT EVIDENCE — Jet-fuel prices and airline fuel cost per gallon; fuel consumption, hedging and operating margin disclosures; passenger demand and fares; debt terms; sector and broad-market total returns. Record source, units, reporting period, retrieval time and independently verified availability time for each observation.',
+  'TEST PLAN (DRAFT, NOT PREREGISTERED) — Before examining outcomes, freeze the airline universe, data vintages and exclusions. Primary hypothesis: a higher monthly jet-fuel price change predicts lower next-quarter operating margin, controlling for prior margin, demand and seasonality. Compare against a model using those controls alone. Use chronological training and a locked final holdout; evaluate out-of-sample error and uncertainty with dependence-aware intervals. Failure to improve on the control model counts against the hypothesis. A separate stock-return hypothesis, benchmark and costs must be registered before claiming investment value.',
+  'CURRENT RESULT — Not tested. Historical publication availability is unverified; predictive advantage is not established. One date provides no change evidence; a longer panel still does not supply the missing airline outcomes.'
+ ];
+ for(const text of lines){const p=document.createElement('p');p.textContent=text;section.append(p);}
+ const reference=document.createElement('a');reference.href='https://www.iata.org/en/iata-repository/publications/economic-reports/airfare-jet-fuel-price-and-inflation/';reference.textContent='Mechanism reference: IATA on airfare, jet fuel and inflation';reference.target='_blank';reference.rel='noopener noreferrer';section.append(reference);
+ return section;
 }
 let descriptiveImportVersion=0;
 document.getElementById('descriptive-file').addEventListener('change',async e=>{
