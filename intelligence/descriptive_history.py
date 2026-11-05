@@ -18,6 +18,12 @@ def descriptive_report(panel):
         raise ValueError("unsupported panel schema")
     if panel.get("predictive_advantage") != "not_established" or panel.get("publication_time_verified") is not False:
         raise ValueError("unsupported predictive or publication claim")
+    if panel.get("point_in_time_tradability", "not_established") != "not_established":
+        raise ValueError("unsupported point-in-time tradability claim")
+    if panel.get("alignment", "exact_observation_date_only") != "exact_observation_date_only":
+        raise ValueError("unsupported historical alignment claim")
+    if panel.get("relationships", []) != []:
+        raise ValueError("unsupported historical relationship claim")
     rows = panel.get("observations")
     if not isinstance(rows, list) or not rows:
         raise ValueError("no historical observations")
