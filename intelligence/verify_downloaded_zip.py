@@ -10,10 +10,10 @@ import tempfile
 from pathlib import Path
 from zipfile import ZipFile
 
-from intelligence.verify_bundle import EXPECTED, verify_bundle
+from intelligence.verify_bundle import EXPECTED, verify_bundle, verify_github_run
 
 
-def verify_downloaded_zip(zip_path, published_sha256):
+def verify_downloaded_zip(zip_path, published_sha256, check_github=False, fetch_json=None):
     if not isinstance(published_sha256, str) or len(published_sha256) != 64 or any(
         ch not in "0123456789abcdef" for ch in published_sha256
     ):
@@ -34,6 +34,7 @@ def verify_downloaded_zip(zip_path, published_sha256):
                 (Path(tmp) / entry.filename).write_bytes(archive.read(entry))
             result = verify_bundle(tmp)
             manifest = json.loads((Path(tmp) / "research-artifact-manifest.json").read_text())
+            github = verify_github_run(tmp, fetch_json=fetch_json, artifact_zip=zip_path) if check_github else None
     return {
         "schema": "amalgam.local-artifact-verification.v1",
         "status": "github_published_zip_digest_and_internal_consistency_matched",
@@ -43,7 +44,8 @@ def verify_downloaded_zip(zip_path, published_sha256):
         "research_files_verified": result["files"],
         "matched_observation_dates": result["observations"],
         "predictive_advantage": "not_established",
-        "warning": "Published digest must be obtained independently from GitHub. This does not authenticate upstream observations or historical publication times.",
+        "github_run": github,
+        "warning": ("GitHub run and published ZIP digest independently cross-checked; upstream observations and historical publication times remain unauthenticated." if check_github else "Published digest must be obtained independently from GitHub. This does not authenticate upstream observations or historical publication times."),
     }
 
 
@@ -51,9 +53,10 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("zip_path")
     parser.add_argument("--github-sha256", required=True, help="Digest copied independently from GitHub artifact metadata, without sha256: prefix")
+    parser.add_argument("--check-github", action="store_true", help="Query GitHub Actions and cross-check run, commit, artifact and published ZIP digest")
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
-    report = verify_downloaded_zip(args.zip_path, args.github_sha256)
+    report = verify_downloaded_zip(args.zip_path, args.github_sha256, check_github=args.check_github)
     output = json.dumps(report, indent=2) + "\n"
     if args.output:
         args.output.write_text(output, encoding="utf-8")
