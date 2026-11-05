@@ -34,9 +34,11 @@ def audit_readiness(view):
         "distinct_observation_dates": domain_dates,
         "multi_day_domains": multi_day_domains,
         "same_utc_date_overlap": same_utc_date_overlap,
+        "point_in_time_availability": "not_verified",
         "blocking_reasons": [
             "No preregistered historical cross-domain hypothesis, lag, outcome, or control group is present.",
             "No aligned historical panel and out-of-sample evaluation is present.",
+            "Observation timestamps do not establish when source data became publicly available.",
             "A single research snapshot cannot establish cross-domain predictive lift.",
         ],
     }
