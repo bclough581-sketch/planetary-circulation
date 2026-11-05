@@ -16,6 +16,8 @@ def summarize(view):
          "collector_ok": item.get("collector_ok") is True}
         for item in view["feed_health"]
     ]
+    if view["predictive_advantage"] != "not_established" and not view["relationships"]:
+        raise ValueError("predictive claim without validated relationships")
     return {
         "generated_utc": view["generated_utc"],
         "included_observations": len(view["observations"]),
@@ -28,9 +30,12 @@ def summarize(view):
         "historical_candidate_review": readiness["historical_candidate_review"],
         "historical_candidate_block_reasons": readiness["historical_candidate_block_reasons"],
         "validated_relationships": len(view["relationships"]),
+        "relationship_claims": view["relationships"],
         "predictive_advantage": view["predictive_advantage"],
         "portwatch_commercial_reuse": view["licensing"]["portwatch_commercial_reuse"],
         "blocking_reasons": readiness["blocking_reasons"],
+        "publication_claims_after_generation": readiness["publication_claims_after_generation"],
+        "unverified_publication_timestamp_claims": readiness["unverified_publication_timestamp_claims"],
     }
 
 
@@ -51,6 +56,8 @@ def render_text(summary):
         ("EXCLUSION REASONS", summary["exclusion_reasons"]),
         ("HISTORICAL CANDIDATE REVIEW", summary["historical_candidate_review"]),
         ("HISTORICAL BLOCK REASONS", summary["historical_candidate_block_reasons"]),
+        ("UNVERIFIED PUBLICATION TIMESTAMP CLAIMS", summary["unverified_publication_timestamp_claims"]),
+        ("PUBLICATION CLAIMS AFTER GENERATION", summary["publication_claims_after_generation"]),
     ):
         lines.append("")
         lines.append(label)
