@@ -151,6 +151,21 @@ class RelationshipReadinessTests(unittest.TestCase):
         self.assertEqual(result["point_in_time_availability"], "not_verified")
         self.assertEqual(result["predictive_advantage"], "not_established")
 
+    def test_invalid_source_provenance_is_explained_in_readiness(self):
+        view = {"generated_utc": "2026-11-04T12:00:00Z",
+                "observations": [
+                    {"id": "bad-url", "domain": "energy",
+                     "observed_at": "2026-11-01T00:00:00Z",
+                     "source": {"url": "not-a-public-url"},
+                     "metadata": {"published_at": "2026-11-02T00:00:00Z",
+                                  "first_seen_at": "2026-11-03T00:00:00Z"}},
+                ]}
+        result = audit_readiness(view)
+        self.assertEqual(result["historical_candidate_review"], {"blocked": 1})
+        self.assertEqual(result["historical_candidate_block_reasons"],
+                         {"invalid source_url": 1})
+        self.assertEqual(result["predictive_advantage"], "not_established")
+
     def test_multiple_dates_still_do_not_establish_predictive_edge(self):
         view = {"observations": [
             {"domain": "weather", "observed_at": "2026-11-03T12:00:00Z"},
