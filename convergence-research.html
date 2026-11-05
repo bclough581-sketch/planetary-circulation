@@ -103,7 +103,7 @@ async function verifyDescriptive(){
 }
 let descriptiveImportVersion=0;
 document.getElementById('descriptive-file').addEventListener('change',async e=>{
- const file=e.target.files[0];if(!file)return;const version=++descriptiveImportVersion;descriptiveReport=null;
+ const file=e.target.files[0];if(!file){document.getElementById('status').textContent='No dataset selected. Nothing is live.';return;}const version=++descriptiveImportVersion;descriptiveReport=null;
  document.getElementById('descriptive-values').replaceChildren();
  document.getElementById('descriptive-status').textContent='Descriptive report changed; verification required.';
  try{const parsed=JSON.parse(await file.text());if(version!==descriptiveImportVersion)return;descriptiveReport=parsed;}catch(err){if(version!==descriptiveImportVersion)return;document.getElementById('descriptive-status').textContent='Descriptive report rejected: '+err.message;return;}
@@ -259,6 +259,13 @@ document.getElementById('ledger-search').addEventListener('input',renderEvidence
 document.getElementById('file').addEventListener('change',async e=>{
  const version=++researchImportVersion;
  displayedResearch=null;
+ document.getElementById('count').textContent='—';
+ document.getElementById('link-count').textContent='0 validated links';
+ document.getElementById('domains').textContent='Awaiting replacement dataset. Previous coverage cleared.';
+ document.getElementById('status').textContent='Import in progress. Previous dataset no longer displayed.';
+ document.getElementById('readiness').textContent='Awaiting replacement dataset.';
+ document.getElementById('source-health').textContent='Awaiting replacement dataset.';
+ document.getElementById('exclusion-reasons').textContent='Awaiting replacement dataset.';
  document.getElementById('decision-boundary').textContent='Import in progress. No stock-selection conclusion available.';
  document.getElementById('details').replaceChildren();
  document.getElementById('excluded-ledger').replaceChildren();
