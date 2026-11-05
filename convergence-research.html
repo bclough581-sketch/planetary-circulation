@@ -71,6 +71,9 @@ async function verifyDescriptive(){
    spreads.push(Math.round((b-w)*1000000)/1000000);yields.push(y);
   }
   const spread=descriptiveStats(spreads),yieldStats=descriptiveStats(yields);
+  const calendarGaps=dates.slice(1).map((date,i)=>Math.round((Date.parse(date+'T00:00:00Z')-Date.parse(dates[i]+'T00:00:00Z'))/86400000));
+  const longestCalendarGap=calendarGaps.length?Math.max(...calendarGaps):0;
+  const gapsOverThreeDays=calendarGaps.filter(days=>days>3).length;
   const exactly=(obj,keys)=>obj&&typeof obj==='object'&&!Array.isArray(obj)&&
     Object.keys(obj).length===keys.length&&keys.every(key=>Object.hasOwn(obj,key));
   if(!exactly(r,['schema','status','matched_dates','source_observations_sha256','first_date','last_date',
@@ -91,6 +94,7 @@ async function verifyDescriptive(){
    'Brent minus WTI (USD/barrel): mean '+spread.mean+' | median '+spread.median+' | standard deviation '+spread.standard_deviation+' | range '+spread.minimum+'–'+spread.maximum,
    'Treasury 10-year yield (%): mean '+yieldStats.mean+' | median '+yieldStats.median+' | standard deviation '+yieldStats.standard_deviation+' | range '+yieldStats.minimum+'–'+yieldStats.maximum,
    'Spread direction (Brent minus WTI): '+expected.positive_dates+' positive | '+expected.zero_dates+' zero | '+expected.negative_dates+' negative days',
+   'Observation spacing: '+gapsOverThreeDays+' calendar gaps longer than 3 days | longest '+longestCalendarGap+' days (weekends/holidays may explain gaps; not a completeness audit)',
    'Observed endpoints: '+dates[0]+' spread '+spreads[0]+' USD/barrel, Treasury 10Y '+yields[0]+'% | '+dates[dates.length-1]+' spread '+spreads[spreads.length-1]+' USD/barrel, Treasury 10Y '+yields[yields.length-1]+'%',
    'Point-in-time eligible: 0 | validated predictive relationships: 0'
   ]){const p=document.createElement('p');p.textContent=line;target.append(p);}
