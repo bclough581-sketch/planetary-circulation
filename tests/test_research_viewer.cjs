@@ -245,6 +245,6 @@ const loadAudit=async data=>{
  const stale=JSON.parse(JSON.stringify(good));stale.generated_utc='2026-11-02T12:00:00Z';stale.observations[0].observed_at='2026-11-02T11:00:00Z';
  await load(stale);
  assert.match(document.getElementById('status').textContent,/STALE DATASET/);
- assert.match(document.getElementById('status').textContent,/observations exceed their domain freshness window/);
+ assert.match(document.getElementById('status').textContent,/imported observations are outside viewer-time freshness/);
  console.log('Viewer JavaScript interaction checks passed: valid load + 15 rejected imports + stale warning');
 })().catch(err=>{console.error(err);process.exitCode=1;});
