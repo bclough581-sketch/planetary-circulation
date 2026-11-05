@@ -95,7 +95,7 @@ class HistoricalPanelTests(unittest.TestCase):
         view["relationship_readiness"]["observation_counts"] = {"weather": 1}
         view["relationship_readiness"]["distinct_observation_dates"] = {"weather": 1}
         view["relationship_readiness"]["multi_day_domains"] = []
-        with self.assertRaisesRegex(ValueError, "postdates capture"):
+        with self.assertRaisesRegex(ValueError, "invalid or future research observation timestamp"):
             build_panel([view])
 
 
