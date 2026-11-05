@@ -18,7 +18,10 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m unittest discover -s tests -p 'test_airline_quarterly.py' -v
-      - run: python -m intelligence.airline_quarterly --output airline-quarterly.json
+      - name: Collect SEC facts using authorized project identification
+        env:
+          SEC_CONTACT_EMAIL: ${{ secrets.SEC_CONTACT_EMAIL }}
+        run: python -m intelligence.airline_quarterly --output airline-quarterly.json
       - uses: actions/upload-artifact@v4
         with:
           name: amalgam-airline-quarterly-${{ github.run_id }}

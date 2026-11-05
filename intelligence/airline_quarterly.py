@@ -2,6 +2,8 @@
 import argparse
 import json
 import math
+import os
+import time
 import re
 import urllib.request
 import urllib.error
@@ -11,6 +13,12 @@ from pathlib import Path
 COMPANIES = {"DAL": 27904, "UAL": 100517}
 TAGS = {"revenue_usd": ("RevenueFromContractWithCustomerExcludingAssessedTax", "Revenues", "SalesRevenueNet"),
         "operating_income_usd": ("OperatingIncomeLoss",)}
+
+
+def sec_user_agent(contact):
+    if not isinstance(contact, str) or not re.fullmatch(r"[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}", contact):
+        raise ValueError("Set SEC_CONTACT_EMAIL to an authorized project contact email; no SEC request sent")
+    return "AMALGAM research " + contact
 
 
 def normalize(payload, symbol, start_year, end_year):
@@ -79,13 +87,16 @@ def main():
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--input-dir", type=Path, help="Directory containing officially downloaded CIK##########.json companyfacts files")
     args = parser.parse_args()
+    user_agent = None if args.input_dir else sec_user_agent(os.environ.get("SEC_CONTACT_EMAIL"))
     companies = []
     for symbol, cik in COMPANIES.items():
         url = f"https://data.sec.gov/api/xbrl/companyfacts/CIK{cik:010d}.json"
-        request = urllib.request.Request(url, headers={"User-Agent": "AMALGAM research github.com/bclough581-sketch/planetary-circulation", "Accept-Encoding": "identity"})
+        request = urllib.request.Request(url, headers={"User-Agent": user_agent or "AMALGAM local research", "Accept-Encoding": "identity"})
         if args.input_dir:
             payload = json.loads((args.input_dir / f"CIK{cik:010d}.json").read_text(encoding="utf-8"))
         else:
+            if companies:
+                time.sleep(0.2)
             try:
                 with urllib.request.urlopen(request, timeout=45) as response:
                     payload = json.load(response)

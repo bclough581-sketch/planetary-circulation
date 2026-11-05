@@ -104,11 +104,26 @@ fetches new source data. The corporate input must match the reviewed canonical
 checked against this same evidence by regression tests.
 
 Complete descriptive pairs require three fuel months and an observed next-quarter
-outcome. Gaps are not filled. The current 2025 fuel window and six curated Delta
-quarters yield only two complete lagged pairs. **Zero rows are trading eligible.**
+outcome. Gaps are not filled. The 2024–2025 fuel window and eight curated Delta
+quarters yield only seven complete lagged pairs. **Zero rows are trading eligible.**
 The report lists availability, sample size, benchmark scope, holdout and market-return
 blockers. No regression, predictive performance estimate or stock ranking is produced.
 
 Checksums and reproduction establish internal consistency, not independent source
 or publication-time authenticity. SEC automated collection remains separately
 blocked by HTTP 403; curated issuer evidence is explicitly labeled.
+
+
+## SEC quarterly collector access checkpoint
+
+SEC's [declared automated access guidance](https://www.sec.gov/search-filings/edgar-search-assistance/accessing-edgar-data)
+shows project identification with an administrative contact email. The collector
+now requires an authorized `SEC_CONTACT_EMAIL` environment value for network
+requests; the GitHub workflow reads the repository secret with that name.
+No personal contact address is hardcoded or printed. This identification may
+help with classification but does not guarantee access from GitHub runner IPs.
+HTTP 403 remains a failure, with no proxy or access-control circumvention.
+Local `--input-dir` processing requires no contact or network access.
+
+Until the owner configures the contact, the SEC workflow stops before making
+requests. The separate issuer-curated/EIA research pipeline remains usable.

@@ -34,17 +34,17 @@ const loadAudit=async data=>{
 (async()=>{
  const quarters=document.getElementById('quarterly-curated');
  const quarterData=JSON.parse(decodeURIComponent(quarters.children[2].href.split(',').slice(1).join(',')));
- assert.equal(quarterData.observations.length,6);
+ assert.equal(quarterData.observations.length,8);
  assert.equal(quarterData.publication_time_verified,false);
  assert.equal(quarterData.input_mode,'manual_issuer_release_transcription');
  const quarterRows=quarterData.observations;
- assert.equal(new Set(quarterRows.map(x=>x.period)).size,6);
- for(let i=0;i<3;i++){
-  assert.ok(quarterRows[i+3].fuelExpense<quarterRows[i].fuelExpense);
-  const marginChange=quarterRows[i+3].operatingIncome/quarterRows[i+3].revenue-quarterRows[i].operatingIncome/quarterRows[i].revenue;
+ assert.equal(new Set(quarterRows.map(x=>x.period)).size,8);
+ for(let i=0;i<4;i++){
+  assert.ok(quarterRows[i+4].fuelExpense<quarterRows[i].fuelExpense);
+  const marginChange=quarterRows[i+4].operatingIncome/quarterRows[i+4].revenue-quarterRows[i].operatingIncome/quarterRows[i].revenue;
   assert.equal(marginChange>0,i===2);
  }
- assert.deepEqual(quarterData.missing_quarters,['2024Q4','2025Q4']);
+ assert.deepEqual(quarterData.missing_quarters,[]);
 
  const brief=()=>decodeURIComponent(document.getElementById('case-export').href.split(',').slice(1).join(','));
  assert.match(brief(),/NOT LOADED/);
@@ -94,13 +94,13 @@ const loadAudit=async data=>{
  assert.match(document.getElementById('jet-values').children[1].textContent,/50.00%/);
  let alignment=document.getElementById('jet-values').children[6];
  assert.match(alignment.children[2].textContent,/0 complete/);
- assert.equal(alignment.children[1].children[0].children[4].children[2].textContent,'Unavailable');
+ assert.equal(alignment.children[1].children[0].children[5].children[2].textContent,'Unavailable');
  const completeJet={...jet,observations:[{period:'2025-01',value:2},{period:'2025-02',value:3},{period:'2025-03',value:4}],missing_months:[]};
  await loadJet(completeJet);
  alignment=document.getElementById('jet-values').children[6];
  assert.match(alignment.children[2].textContent,/1 complete/);
- assert.equal(alignment.children[1].children[0].children[4].children[2].textContent,'3.000');
- assert.match(alignment.children[1].children[0].children[4].children[4].textContent,/2025Q2: 12.63%/);
+ assert.equal(alignment.children[1].children[0].children[5].children[2].textContent,'3.000');
+ assert.match(alignment.children[1].children[0].children[5].children[4].textContent,/2025Q2: 12.63%/);
  assert.match(brief(),/mean spot USD\/gallon 3.000/);
  await loadJet(jet);
 

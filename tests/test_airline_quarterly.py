@@ -1,5 +1,5 @@
 import unittest
-from intelligence.airline_quarterly import normalize
+from intelligence.airline_quarterly import normalize, sec_user_agent
 
 class QuarterlyTests(unittest.TestCase):
     def payload(self):
@@ -34,3 +34,8 @@ class QuarterlyTests(unittest.TestCase):
         result=normalize(p,'DAL',2025,2025)
         self.assertEqual(result['observations'][0]['filed_date_claim'],'2025-07-15')
         self.assertEqual(result['observations'][0]['metrics']['revenue_usd']['value'],100)
+
+    def test_sec_contact_required_and_no_header_injection(self):
+        for contact in (None, '', 'https://project.example', 'a@example.com\r\nInjected: yes'):
+            with self.assertRaises(ValueError):sec_user_agent(contact)
+        self.assertEqual(sec_user_agent('research@example.com'),'AMALGAM research research@example.com')

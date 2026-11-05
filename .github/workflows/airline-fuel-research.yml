@@ -23,7 +23,7 @@ jobs:
           EIA_API_KEY: ${{ secrets.EIA_API_KEY }}
         run: |
           mkdir airline-bundle
-          python -m intelligence.jet_fuel_history --start 2025-01 --end 2025-12 --output airline-bundle/jet-fuel-history.json
+          python -m intelligence.jet_fuel_history --start 2024-01 --end 2025-12 --output airline-bundle/jet-fuel-history.json
           cp intelligence/data/delta-quarterly-curated.json airline-bundle/
           python -m intelligence.airline_research_panel --directory airline-bundle
           python -m intelligence.airline_research_panel --directory airline-bundle --verify

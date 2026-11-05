@@ -10,7 +10,8 @@
   "sources": {
     "Q1": "https://ir.delta.com/news/news-details/2025/Delta-Air-Lines-Announces-March-Quarter-2025-Financial-Results/default.aspx",
     "Q2": "https://ir.delta.com/news/news-details/2025/Delta-Air-Lines-Announces-June-Quarter-2025-Financial-Results/default.aspx",
-    "Q3": "https://ir.delta.com/news/news-details/2025/Delta-Air-Lines-Announces-September-Quarter-2025-Financial-Results/default.aspx"
+    "Q3": "https://ir.delta.com/news/news-details/2025/Delta-Air-Lines-Announces-September-Quarter-2025-Financial-Results/default.aspx",
+    "Q4": "https://ir.delta.com/news/news-details/2026/Delta-Air-Lines-Announces-December-Quarter-and-Full-Year-2025-Financial-Results/default.aspx"
   },
   "observations": [
     {
@@ -35,6 +36,13 @@
       "source": "Q3"
     },
     {
+      "period": "2024Q4",
+      "revenue": 15559,
+      "operatingIncome": 1717,
+      "fuelExpense": 2409,
+      "source": "Q4"
+    },
+    {
       "period": "2025Q1",
       "revenue": 14040,
       "operatingIncome": 569,
@@ -54,11 +62,31 @@
       "operatingIncome": 1684,
       "fuelExpense": 2570,
       "source": "Q3"
+    },
+    {
+      "period": "2025Q4",
+      "revenue": 16003,
+      "operatingIncome": 1467,
+      "fuelExpense": 2380,
+      "source": "Q4"
     }
   ],
-  "missing_quarters": [
-    "2024Q4",
-    "2025Q4"
-  ],
-  "warning": "Curated quarterly observations; not independent availability verification, causal inference or a backtest. Source comparisons are retrospective and exploratory."
+  "missing_quarters": [],
+  "warning": "Curated quarterly observations; not independent availability verification, causal inference or a backtest. Source comparisons are retrospective and exploratory.",
+  "annual_comparisons": [
+    {
+      "year": 2024,
+      "revenue": 61643,
+      "operatingIncome": 5995,
+      "fuelExpense": 10566,
+      "source": "Q4"
+    },
+    {
+      "year": 2025,
+      "revenue": 63364,
+      "operatingIncome": 5822,
+      "fuelExpense": 9819,
+      "source": "Q4"
+    }
+  ]
 }

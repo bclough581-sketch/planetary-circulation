@@ -10,7 +10,7 @@ from .verify_research_artifact import _parse_json
 CORPORATE = Path(__file__).parent / 'data' / 'delta-quarterly-curated.json'
 BLOCKERS = [
     'Historical availability is not independently verified; zero rows granted trading eligibility.',
-    'Six curated quarters from one selected company; Q4 and broader sector coverage missing.',
+    'Eight curated quarters from one selected company; broader sector and multi-cycle coverage missing.',
     'Regional monthly spot prices differ from realized company fuel prices and consumption.',
     'Exploratory outcomes already inspected; no registered hypothesis, controls or untouched holdout.',
     'No market returns, valuation or transaction-cost evaluation.'
@@ -59,8 +59,17 @@ def build(fuel, corporate):
                      'corporate_source_url': corporate['sources'][outcome['source']],
                      'pair_complete': not reasons, 'pair_exclusions': reasons,
                      'trading_eligible': False})
+    reconciliation = []
+    for annual in corporate['annual_comparisons']:
+        quarter_rows = [r for r in corporate['observations'] if r['period'].startswith(str(annual['year']))]
+        reconciliation.append({'year': annual['year'], 'source_url': corporate['sources'][annual['source']],
+            'quarter_count': len(quarter_rows),
+            'quarter_sum_minus_annual_usd_millions': {key: sum(r[key] for r in quarter_rows)-annual[key]
+                for key in ('revenue', 'operatingIncome', 'fuelExpense')}})
     return {'schema': 'amalgam.airline-research-panel.v1', 'rows': rows,
             'complete_lagged_pairs': sum(r['pair_complete'] for r in rows),
+            'annual_reconciliation': reconciliation,
+            'reconciliation_warning': 'Small residuals are retained; rounding or revisions have not been independently resolved.',
             'trading_eligible_rows': 0, 'predictive_advantage': 'not_established',
             'evaluation_status': 'blocked', 'blocking_reasons': BLOCKERS,
             'fuel_aggregation': 'equal_weight_mean_of_three_monthly_spot_benchmarks',
@@ -76,6 +85,9 @@ def report(panel):
              'Period | Fuel mean USD/gallon | Next period | Next margin % | Pair exclusions']
     for row in panel['rows']:
         lines.append(f"{row['period']} | {row['mean_spot_usd_per_gallon']} | {row['next_period']} | {row['next_margin_percent']} | {', '.join(row['pair_exclusions']) or 'none (descriptive pair only)'}")
+    lines.extend(['', 'QUARTER SUM MINUS ANNUAL (USD MILLIONS)', panel['reconciliation_warning']])
+    for item in panel['annual_reconciliation']:
+        lines.append(str(item['year']) + ': ' + str(item['quarter_sum_minus_annual_usd_millions']))
     lines.extend(['', 'EVALUATION BLOCKERS'] + panel['blocking_reasons'])
     lines.extend(['', 'SOURCE REFERENCES', panel['fuel_source_url']])
     lines.extend(sorted({r['corporate_source_url'] for r in panel['rows']}))

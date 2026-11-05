@@ -42,7 +42,7 @@ input,select{max-width:100%}.panel{min-width:0}
 <section class="panel" id="jet-fuel-case"><h2>Airline case: jet-fuel evidence</h2><p>Import jet-fuel-history.json from the airline-fuel-research workflow. This regional fuel-price benchmark is separate from the oil/Treasury panel and does not add validated convergence links.</p><label for="jet-file">Select monthly jet-fuel history</label> <input type="file" id="jet-file" accept=".json,application/json"><p id="jet-status" role="status">No jet-fuel evidence loaded.</p><div id="jet-values"></div></section>
 <section class="panel"><h2>Company evidence: Delta Air Lines (DAL)</h2><p>Curated historical comparison, not live coverage. Full-year consolidated GAAP figures; USD millions except fuel price. Manually checked November 5, 2026 against the January 13, 2026 results release filed as SEC Exhibit 99.1.</p><div id="delta-evidence"></div><p>Both years come from the same later release. This is retrospective evidence, unavailable as a complete comparison during 2025. It does not authenticate historical availability, establish causation, or add a validated ring link.</p></section>
 <section class="panel" id="company-case"><h2>Peer comparison: fuel savings and other costs</h2><p>Manually curated 2024–2025 consolidated GAAP comparison for DAL and UAL, checked November 5, 2026. USD millions. These two selected companies do not represent the whole sector.</p><div id="airline-peers" style="overflow-x:auto"></div><p>Non-fuel operating expense is calculated as revenue minus operating income minus reported fuel expense. It includes every other operating expense; it is not adjusted CASM or a pure measure of cost efficiency. Consolidation, refinery activity, capacity, route mix and accounting definitions limit cross-company comparability. This retrospective comparison cannot establish a trading edge.</p></section>
-<section class="panel"><h2>Quarterly outcomes: Delta</h2><p>Six manually curated quarterly observations from 2025 issuer releases, including their 2024 comparisons. Consolidated GAAP; USD millions. These are direct quarterly figures, not year-to-date totals. Checked November 5, 2026; not an automated SEC collection.</p><div id="quarterly-curated" style="overflow-x:auto"></div><p>Reporting periods are not availability timestamps. Historical publication availability remains unverified. This small exploratory sample cannot validate a lagged hypothesis or represent the airline sector.</p></section>
+<section class="panel"><h2>Quarterly outcomes: Delta</h2><p>Eight manually curated quarterly observations from 2025–2026 issuer releases, including their 2024 comparisons. Consolidated GAAP; USD millions. These are direct quarterly figures, not year-to-date totals. Checked November 5, 2026; not an automated SEC collection.</p><div id="quarterly-curated" style="overflow-x:auto"></div><p>Reporting periods are not availability timestamps. Historical publication availability remains unverified. This small exploratory sample cannot validate a lagged hypothesis or represent the airline sector.</p></section>
 <section class="panel"><h2>Historical descriptive context</h2><p>Import the descriptive-historical-research.json from the same development workflow run as the historical panel. Values are recalculated locally before display.</p><label for="descriptive-file">Select descriptive-historical-research.json</label> <input type="file" id="descriptive-file" accept=".json,application/json"><p id="descriptive-status" class="warn">No descriptive report loaded.</p><div id="descriptive-values"></div><p class="warn">Descriptive only. Neither the imported files nor historical publication times are authenticated in this browser. No predictive advantage is established.</p></section>
 <script>
 // Curated from the GAAP columns of the December-quarter/full-year results table.
@@ -111,7 +111,8 @@ const deltaQuarterlyEvidence={
   "sources": {
     "Q1": "https://ir.delta.com/news/news-details/2025/Delta-Air-Lines-Announces-March-Quarter-2025-Financial-Results/default.aspx",
     "Q2": "https://ir.delta.com/news/news-details/2025/Delta-Air-Lines-Announces-June-Quarter-2025-Financial-Results/default.aspx",
-    "Q3": "https://ir.delta.com/news/news-details/2025/Delta-Air-Lines-Announces-September-Quarter-2025-Financial-Results/default.aspx"
+    "Q3": "https://ir.delta.com/news/news-details/2025/Delta-Air-Lines-Announces-September-Quarter-2025-Financial-Results/default.aspx",
+    "Q4": "https://ir.delta.com/news/news-details/2026/Delta-Air-Lines-Announces-December-Quarter-and-Full-Year-2025-Financial-Results/default.aspx"
   },
   "observations": [
     {
@@ -136,6 +137,13 @@ const deltaQuarterlyEvidence={
       "source": "Q3"
     },
     {
+      "period": "2024Q4",
+      "revenue": 15559,
+      "operatingIncome": 1717,
+      "fuelExpense": 2409,
+      "source": "Q4"
+    },
+    {
       "period": "2025Q1",
       "revenue": 14040,
       "operatingIncome": 569,
@@ -155,13 +163,33 @@ const deltaQuarterlyEvidence={
       "operatingIncome": 1684,
       "fuelExpense": 2570,
       "source": "Q3"
+    },
+    {
+      "period": "2025Q4",
+      "revenue": 16003,
+      "operatingIncome": 1467,
+      "fuelExpense": 2380,
+      "source": "Q4"
     }
   ],
-  "missing_quarters": [
-    "2024Q4",
-    "2025Q4"
-  ],
-  "warning": "Curated quarterly observations; not independent availability verification, causal inference or a backtest. Source comparisons are retrospective and exploratory."
+  "missing_quarters": [],
+  "warning": "Curated quarterly observations; not independent availability verification, causal inference or a backtest. Source comparisons are retrospective and exploratory.",
+  "annual_comparisons": [
+    {
+      "year": 2024,
+      "revenue": 61643,
+      "operatingIncome": 5995,
+      "fuelExpense": 10566,
+      "source": "Q4"
+    },
+    {
+      "year": 2025,
+      "revenue": 63364,
+      "operatingIncome": 5822,
+      "fuelExpense": 9819,
+      "source": "Q4"
+    }
+  ]
 };
 function renderCuratedQuarters(){
  const target=document.getElementById('quarterly-curated'),table=document.createElement('table');
@@ -173,7 +201,7 @@ function renderCuratedQuarters(){
   const td=document.createElement('td'),link=document.createElement('a');link.href=deltaQuarterlyEvidence.sources[row.source];link.textContent='Issuer release';link.target='_blank';link.rel='noopener noreferrer';td.append(link);tr.append(td);table.append(tr);
  }
  target.append(table);
- const summary=document.createElement('p');summary.textContent='Coverage: Q1–Q3 of 2024 and 2025; Q4 not included. In all three matched quarters fuel expense declined year over year. Calculated operating margin fell in Q1 and Q2, and rose in Q3. These contemporaneous comparisons do not test whether fuel prices predict next-quarter margins.';target.append(summary);
+ const summary=document.createElement('p');summary.textContent='Coverage: all four quarters of 2024 and 2025. In all four matched quarters fuel expense declined year over year. Calculated operating margin fell in Q1, Q2 and Q4, and rose in Q3. Quarterly sums differ from the later reported annual totals by USD 1 million for 2024 revenue and fuel expense in each year; causes remain unresolved. No source values have been adjusted. These contemporaneous comparisons do not test whether fuel prices predict next-quarter margins.';target.append(summary);
  const link=document.createElement('a');link.textContent='Download curated quarterly evidence (JSON)';link.download='delta-quarterly-curated.json';link.href='data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(deltaQuarterlyEvidence,null,2));target.append(link);
 }
 renderCuratedQuarters();
@@ -495,7 +523,7 @@ function airlineResearchBrief(){
  }
  lines.push('', 'CURATED QUARTERLY EVIDENCE — DAL; CONSOLIDATED GAAP; USD MILLIONS');
  for(const row of deltaQuarterlyEvidence.observations)lines.push(row.period+': revenue '+row.revenue+'; operating income '+row.operatingIncome+'; fuel expense '+row.fuelExpense+'; source '+deltaQuarterlyEvidence.sources[row.source]);
- lines.push('Coverage excludes 2024Q4 and 2025Q4. Manually curated from later issuer releases, not automated SEC extraction; historical availability unverified.');
+ lines.push('Coverage includes all quarters of 2024 and 2025. Manually curated from later issuer releases, not automated SEC extraction; historical availability unverified.');
  lines.push('', 'INTERPRETATION AND LIMITS',
   'In both companies, other operating cost increases outweighed revenue growth and fuel savings. This accounting identity does not isolate fuel-price causation.',
   'The imported fuel series and company figures have not been statistically aligned or evaluated together. Annual company figures and monthly regional prices have different scope and timing.',
