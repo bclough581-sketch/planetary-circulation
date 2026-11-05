@@ -301,6 +301,7 @@ document.getElementById('file').addEventListener('change',async e=>{
   for(const event of data.observations){
    if(!Object.hasOwn(counts,event.domain)||!event.id||ids.has(event.id)||!event.source?.url||!event.observed_at)throw Error('Invalid or duplicate observation evidence');
    if(sourceUrls[event.source?.name]!==event.source?.url||sourceDomains[event.source?.name]!==event.domain)throw Error('Observation source identity mismatch');
+   if(event.status!=='observed'||['prediction','probability','confidence_score','expected_return','target_price','validated_relationship'].some(field=>Object.hasOwn(event,field)))throw Error('Unsupported observation-level predictive claim');
    const observed=Date.parse(event.observed_at);
    if(!Number.isFinite(observed)||observed>generated+5*60*1000)throw Error('Invalid or future observation time');
    if((Date.now()-observed)/3600000>(maxAgeHours[event.domain]??24))oldObservations++;
