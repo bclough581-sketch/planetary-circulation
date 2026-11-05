@@ -9,6 +9,10 @@ class JetFuelTests(unittest.TestCase):
     def build_rows(self, rows, total=None):
         return build("2025-01", "2025-03", key="test", fetch=lambda _: {"response": {"data": rows, "total": len(rows) if total is None else total}})
 
+    def test_api_unit_notation(self):
+        result = self.build_rows([{**self.row(), "units": "$/GAL"}])
+        self.assertEqual(result["unit"], "USD_per_gallon")
+
     def test_gaps_and_boundaries(self):
         result = self.build_rows([self.row()])
         self.assertEqual(result["missing_months"], ["2025-02", "2025-03"])

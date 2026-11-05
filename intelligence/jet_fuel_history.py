@@ -55,7 +55,7 @@ def build(start, end, key=None, fetch=None):
         period = row.get("period")
         if row.get("series") != SERIES or period not in expected:
             raise ValueError("unexpected series or period")
-        if row.get("units") != "Dollars per Gallon":
+        if row.get("units") not in ("Dollars per Gallon", "$/GAL"):
             raise ValueError("unexpected jet-fuel unit")
         raw = row.get("value")
         try:
