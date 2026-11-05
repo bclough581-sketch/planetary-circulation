@@ -1,6 +1,6 @@
 """Build an auditable, non-predictive JSON research view."""
 import json
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from .assemble import assemble
 from .feed_audit import audit
@@ -18,6 +18,8 @@ def validate_view(view):
         stamp = datetime.fromisoformat(view["generated_utc"].replace("Z", "+00:00"))
         if stamp.tzinfo is None or stamp.utcoffset() is None:
             raise ValueError("timezone missing")
+        if stamp > datetime.now(timezone.utc) + timedelta(minutes=5):
+            raise ValueError("research generation timestamp is in the future")
     except (KeyError, ValueError, TypeError, AttributeError) as exc:
         raise ValueError("missing or invalid research generation timestamp") from exc
     observations = view.get("observations")
