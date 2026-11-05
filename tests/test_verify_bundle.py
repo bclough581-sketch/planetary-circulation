@@ -93,7 +93,7 @@ class BundleVerificationTests(unittest.TestCase):
                     "status": "completed", "conclusion": "success",
                     "name": "intelligence-cross-domain-history-research",
                     "html_url": self.manifest["workflow_url"]}
-        result = verify_downloaded_zip(archive, digest, check_github=True, fetch_json=fake_fetch)
+        result = verify_downloaded_zip(archive, check_github=True, fetch_json=fake_fetch)
         self.assertEqual(result["github_run"]["status"], "github_artifact_zip_digest_matched")
         def mismatched_fetch(url):
             result = fake_fetch(url)
@@ -101,7 +101,12 @@ class BundleVerificationTests(unittest.TestCase):
                 result["artifacts"][0]["digest"] = "sha256:" + "0" * 64
             return result
         with self.assertRaisesRegex(ValueError, "ZIP digest mismatch"):
-            verify_downloaded_zip(archive, digest, check_github=True, fetch_json=mismatched_fetch)
+            verify_downloaded_zip(archive, check_github=True, fetch_json=mismatched_fetch)
+
+    def test_downloaded_zip_requires_independent_digest_or_github(self):
+        archive = self.root / "download.zip"
+        with self.assertRaisesRegex(ValueError, "independent SHA-256"):
+            verify_downloaded_zip(archive)
 
     def test_downloaded_zip_rejects_extra_member(self):
         archive = self.root / "download.zip"
