@@ -106,6 +106,8 @@ class RelationshipReadinessTests(unittest.TestCase):
         result = audit_readiness(view)
         self.assertEqual(result["historical_candidate_review"],
                          {"blocked": 2, "reviewable": 1})
+        self.assertEqual(result["historical_candidate_block_reasons"],
+                         {"invalid published_at": 1, "published_at postdates decision": 1})
         self.assertEqual(result["point_in_time_availability"], "not_verified")
         self.assertEqual(result["predictive_advantage"], "not_established")
 
