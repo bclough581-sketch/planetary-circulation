@@ -1,5 +1,6 @@
 """Candidate point-in-time ledger checks; never certify publication or predictive edge."""
 from datetime import datetime, timezone
+from urllib.parse import urlsplit
 
 
 def _utc(value):
@@ -32,6 +33,15 @@ def assess_candidate(record, decision_at):
         if not isinstance(record.get(field), str) or not record[field].strip():
             return {"eligible_for_review": False, "reason": "missing " + field,
                     "point_in_time_verified": False}
+    url = record["source_url"].strip()
+    try:
+        parsed = urlsplit(url)
+        valid_url = parsed.scheme in ("http", "https") and bool(parsed.hostname)
+    except ValueError:
+        valid_url = False
+    if not valid_url:
+        return {"eligible_for_review": False, "reason": "invalid source_url",
+                "point_in_time_verified": False}
     stamps = {}
     for field in ("observed_at", "published_at", "first_seen_at"):
         try:
