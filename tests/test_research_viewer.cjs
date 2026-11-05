@@ -68,6 +68,12 @@ const loadAudit=async data=>{
  assert.equal(document.getElementById('descriptive-values').children.length,0);
  await loadDescriptive(descriptive);
  assert.match(document.getElementById('descriptive-status').textContent,/MATCH/);
+ await document.getElementById('historical-file').handlers.change({target:{files:[{text:async()=>'{broken json'}]}});
+ assert.equal(document.getElementById('descriptive-values').children.length,0);
+ assert.match(document.getElementById('descriptive-status').textContent,/must be reverified/);
+ assert.match(document.getElementById('historical-status').textContent,/Historical panel rejected/);
+ await document.getElementById('historical-file').handlers.change({target:{files:[{text:async()=>JSON.stringify(panel)}]}});
+ assert.match(document.getElementById('descriptive-status').textContent,/MATCH/);
  assert.match(document.getElementById('historical-status').textContent,/fingerprint MATCH/);
  assert.match(document.getElementById('audit-status').textContent,/2 excluded/);
  await loadAudit({...audit,blocked:[{date:'2025-01-02',reason:'missing_independent_availability_evidence'},{date:'2025-01-03',reason:'publication_record_not_independently_authenticated'}]});
