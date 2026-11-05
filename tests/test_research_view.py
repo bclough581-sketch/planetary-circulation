@@ -30,7 +30,7 @@ class ResearchViewTests(unittest.TestCase):
         self.assertTrue(validate_view(good))
         self.assertEqual(good["generated_utc"], "2026-11-04T12:00:00+00:00")
         self.assertEqual(good["relationship_readiness"]["status"], "not_ready")
-        for mutation in ("count", "duplicate", "claim", "source", "license", "health", "timestamp", "readiness_missing", "readiness_forged", "readiness_dates", "event_status", "event_probability", "naive_observation", "post_generation_observation", "forged_source_name", "forged_source_domain", "exclusion_overlap", "exclusion_missing_reason"):
+        for mutation in ("count", "duplicate", "claim", "source", "license", "health", "timestamp", "readiness_missing", "readiness_forged", "readiness_dates", "event_status", "event_probability", "naive_observation", "post_generation_observation", "forged_source_name", "forged_source_domain", "exclusion_overlap", "exclusion_missing_reason", "exclusion_duplicate"):
             bad = deepcopy(good)
             if mutation == "count":
                 bad["domains"]["energy"] = 20
@@ -51,6 +51,8 @@ class ResearchViewTests(unittest.TestCase):
                 bad["relationship_readiness"]["distinct_observation_dates"]["energy"] = 999
             elif mutation == "exclusion_overlap":
                 bad["excluded"].append({"id": bad["observations"][0]["id"], "reason": "stale"})
+            elif mutation == "exclusion_duplicate":
+                bad["excluded"].extend([{"id": "duplicate-excluded", "reason": "stale"}, {"id": "duplicate-excluded", "reason": "failed"}])
             elif mutation == "exclusion_missing_reason":
                 bad["excluded"].append({"id": "test-excluded", "reason": ""})
             elif mutation == "forged_source_name":
