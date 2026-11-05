@@ -211,6 +211,12 @@ const loadAudit=async data=>{
  await pending;
  assert.equal(document.getElementById('count').textContent,1);
  assert.match(document.getElementById('details').children[1].textContent,/weather/);
+ const withExclusions={...good,excluded:[{id:'rejected-1',reason:'outside freshness window'},{id:'rejected-2',reason:'source collector failed'}]};
+ await load(withExclusions);
+ assert.match(document.getElementById('excluded-ledger').children[0].textContent,/2 of 2 pipeline-excluded/);
+ assert.match(document.getElementById('excluded-ledger').children[1].textContent,/rejected-1|rejected-2/);
+ await load(good);
+ assert.match(document.getElementById('excluded-ledger').children[0].textContent,/0 of 0 pipeline-excluded/);
  const expired=JSON.parse(JSON.stringify(good));expired.observations[0].metadata.expires='2026-11-04T18:00:00Z';
  await load(expired);
  assert.match(document.getElementById('details').children[1].textContent,/WEATHER ALERT EXPIRED/);
