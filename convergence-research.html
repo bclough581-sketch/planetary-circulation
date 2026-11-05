@@ -213,6 +213,15 @@ const renderEvidenceLedger=()=>{
  const data=displayedResearch;
  const domain=document.getElementById('ledger-domain').value||'all';
  const maxAgeHours={weather:24,maritime:72,energy:168,economics:168};
+ const isWithinViewerWindow=event=>{
+  const age=(Date.now()-Date.parse(event.observed_at))/3600000;
+  if(age<0||age>(maxAgeHours[event.domain]??24))return false;
+  if(event.domain==='weather'&&event.source.name==='NOAA National Weather Service'){
+   const expiry=Date.parse(event.metadata?.expires);
+   if(!Number.isFinite(expiry)||expiry<=Date.now())return false;
+  }
+  return true;
+ };
  const freshnessFilter=document.getElementById('ledger-freshness').value||'all';
  const query=(document.getElementById('ledger-search').value||'').trim().toLocaleLowerCase();
  const datasetGenerated=Date.parse(data.generated_utc);
@@ -221,8 +230,7 @@ const renderEvidenceLedger=()=>{
   if(domain!=='all'&&event.domain!==domain)return false;
   if(query&&![event.title,event.source.name,event.id,event.domain].some(value=>String(value||'').toLocaleLowerCase().includes(query)))return false;
   if(freshnessFilter==='all')return true;
-  const age=(Date.now()-Date.parse(event.observed_at))/3600000;
-  const within=age>=0&&age<=(maxAgeHours[event.domain]??24);
+  const within=isWithinViewerWindow(event);
   return freshnessFilter==='within'?within:!within;
  });
  const order=document.getElementById('ledger-order').value||'newest';
@@ -231,7 +239,8 @@ const renderEvidenceLedger=()=>{
   const p=document.createElement('p');
   const observed=Date.parse(event.observed_at);
   const age=(Date.now()-observed)/3600000;
-  const freshness=age<0?'FUTURE RELATIVE TO VIEWER CLOCK':age>(maxAgeHours[event.domain]??24)?'EXCEEDS DOMAIN FRESHNESS WINDOW':'within domain freshness window';
+  const expiredAlert=event.domain==='weather'&&event.source.name==='NOAA National Weather Service'&&(!Number.isFinite(Date.parse(event.metadata?.expires))||Date.parse(event.metadata.expires)<=Date.now());
+  const freshness=age<0?'FUTURE RELATIVE TO VIEWER CLOCK':expiredAlert?'WEATHER ALERT EXPIRED OR EXPIRY UNVERIFIABLE':age>(maxAgeHours[event.domain]??24)?'EXCEEDS DOMAIN FRESHNESS WINDOW':'within domain freshness window';
   const snapshotContext=datasetAgeHours>24?' | IMPORTED SNAPSHOT OLDER THAN 24 HOURS':' | imported snapshot age '+Math.max(0,Math.floor(datasetAgeHours))+'h';
   p.textContent=event.domain+' | '+event.title+' | observed '+event.observed_at+' | '+freshness+snapshotContext+' | '+event.source.name+' | source '+event.source.url;
   ledger.append(p);
@@ -293,7 +302,8 @@ document.getElementById('file').addEventListener('change',async e=>{
   for(const event of data.observations){
    const coverage=coverageByDomain[event.domain];
    const age=(Date.now()-Date.parse(event.observed_at))/3600000;
-   if(age>=0&&age<=(maxAgeHours[event.domain]??24))coverage.within++;else coverage.outside++;
+   const alertExpiry=event.domain==='weather'&&event.source.name==='NOAA National Weather Service'?Date.parse(event.metadata?.expires):null;
+   if(age>=0&&age<=(maxAgeHours[event.domain]??24)&&(alertExpiry===null||(Number.isFinite(alertExpiry)&&alertExpiry>Date.now())))coverage.within++;else coverage.outside++;
    coverage.sources.add(event.source.name);
   }
   const populated=domains.filter(domain=>counts[domain]>0);
