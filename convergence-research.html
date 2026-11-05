@@ -38,7 +38,9 @@ function descriptiveStats(values){
  const sd=n>1?Math.sqrt(values.reduce((sum,x)=>sum+(x-mean)**2,0)/(n-1)):null;
  return {minimum:sorted[0],maximum:sorted[n-1],mean:Math.round((mean+Number.EPSILON)*10000)/10000,median:Math.round((median+Number.EPSILON)*10000)/10000,standard_deviation:sd===null?null:Math.round((sd+Number.EPSILON)*10000)/10000};
 }
+let descriptiveVerificationVersion=0;
 async function verifyDescriptive(){
+ const verification=++descriptiveVerificationVersion;
  const panelAtStart=historicalPanel,reportAtStart=descriptiveReport;
  const status=document.getElementById('descriptive-status'),target=document.getElementById('descriptive-values');target.replaceChildren();
  if(!descriptiveReport||!historicalPanel){status.textContent='Load both the historical panel and descriptive report.';return;}
@@ -59,7 +61,7 @@ async function verifyDescriptive(){
   if(dates.some((d,i)=>!validDate(d)||(i>0&&dates[i-1]>=d))||
      r.first_date!==dates[0]||r.last_date!==dates[dates.length-1])throw Error('Invalid or mismatched dates');
   const digest=await globalThis.crypto.subtle.digest('SHA-256',new TextEncoder().encode(canonicalJson(rows)));
-  if(historicalPanel!==panelAtStart||descriptiveReport!==reportAtStart)return;
+  if(verification!==descriptiveVerificationVersion||historicalPanel!==panelAtStart||descriptiveReport!==reportAtStart)return;
   const actual=Array.from(new Uint8Array(digest)).map(x=>x.toString(16).padStart(2,'0')).join('');
   if(actual!==r.source_observations_sha256)throw Error('Descriptive report panel fingerprint mismatch');
   const spreads=[],yields=[];
@@ -107,7 +109,9 @@ const canonicalJson=value=>{
  if(value&&typeof value==='object')return '{'+Object.keys(value).sort().map(key=>JSON.stringify(key)+':'+canonicalJson(value[key])).join(',')+'}';
  return JSON.stringify(value);
 };
+let historicalVerificationVersion=0;
 async function verifyHistoricalPair(){
+ const verification=++historicalVerificationVersion;
  const status=document.getElementById('historical-status');
  const panelAtStart=historicalPanel,auditAtStart=historicalAudit;
  if(!historicalPanel||!historicalAudit){status.textContent='Load both historical panel and audit to verify their binding.';return;}
@@ -121,7 +125,7 @@ async function verifyHistoricalPair(){
   const canonical=canonicalJson(historicalPanel.observations);
   const bytes=new TextEncoder().encode(canonical);
   const digest=await globalThis.crypto.subtle.digest('SHA-256',bytes);
-  if(historicalPanel!==panelAtStart||historicalAudit!==auditAtStart)return;
+  if(verification!==historicalVerificationVersion||historicalPanel!==panelAtStart||historicalAudit!==auditAtStart)return;
   const actual=Array.from(new Uint8Array(digest)).map(x=>x.toString(16).padStart(2,'0')).join('');
   if(actual!==historicalAudit.source_observations_sha256)throw Error('Panel fingerprint mismatch');
   if(historicalAudit.blocked_count!==historicalPanel.observations.length||
