@@ -21,6 +21,13 @@ def audit_readiness(view):
             continue
     # A source-supplied timestamp is an audit lead, never proof of public availability.
     publication_timestamp_claims = Counter()
+    publication_after_generation = Counter()
+    try:
+        generated = datetime.fromisoformat(view["generated_utc"].replace("Z", "+00:00"))
+        if generated.tzinfo is None or generated.utcoffset() is None:
+            generated = None
+    except (KeyError, ValueError, TypeError, AttributeError):
+        generated = None
     for event in observations:
         try:
             value = event.get("metadata", {}).get("published_at")
@@ -30,6 +37,8 @@ def audit_readiness(view):
             if published.tzinfo is None or published.utcoffset() is None:
                 continue
             publication_timestamp_claims[event["domain"]] += 1
+            if generated is not None and published > generated:
+                publication_after_generation[event["domain"]] += 1
         except (KeyError, ValueError, TypeError, AttributeError):
             continue
     domain_dates = {domain: len(days) for domain, days in sorted(dated.items())}
@@ -49,6 +58,7 @@ def audit_readiness(view):
         "same_utc_date_overlap": same_utc_date_overlap,
         "point_in_time_availability": "not_verified",
         "unverified_publication_timestamp_claims": dict(sorted(publication_timestamp_claims.items())),
+        "publication_claims_after_generation": dict(sorted(publication_after_generation.items())),
         "blocking_reasons": [
             "No preregistered historical cross-domain hypothesis, lag, outcome, or control group is present.",
             "No aligned historical panel and out-of-sample evaluation is present.",
