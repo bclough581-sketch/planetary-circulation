@@ -111,6 +111,17 @@ class RelationshipReadinessTests(unittest.TestCase):
         self.assertEqual(result["point_in_time_availability"], "not_verified")
         self.assertEqual(result["predictive_advantage"], "not_established")
 
+    def test_missing_generation_cutoff_is_not_silently_treated_as_zero_candidates(self):
+        view = {"observations": [
+            {"id": "undated", "domain": "energy",
+             "observed_at": "2026-11-01T00:00:00Z",
+             "source": {"url": "https://www.eia.gov/opendata/"}, "metadata": {}},
+        ]}
+        result = audit_readiness(view)
+        self.assertEqual(result["historical_candidate_review"], {"not_assessed": 1})
+        self.assertEqual(result["historical_candidate_block_reasons"], {})
+        self.assertEqual(result["point_in_time_availability"], "not_verified")
+
     def test_historical_block_reasons_include_inconsistent_capture_order(self):
         view = {"generated_utc": "2026-11-04T12:00:00Z", "observations": [
             {"id": "early", "domain": "energy",
