@@ -47,6 +47,11 @@ const loadAudit=async data=>{
  await loadDescriptive(descriptive);
  assert.match(document.getElementById('descriptive-status').textContent,/MATCH/);
  assert.match(document.getElementById('descriptive-values').children[1].textContent,/median 5/);
+ await document.getElementById('descriptive-file').handlers.change({target:{files:[{text:async()=>'{broken report'}]}});
+ assert.equal(document.getElementById('descriptive-values').children.length,0);
+ assert.match(document.getElementById('descriptive-status').textContent,/Descriptive report rejected/);
+ await loadDescriptive(descriptive);
+ assert.match(document.getElementById('descriptive-status').textContent,/MATCH/);
  const impossiblePanel={...panel,observations:panel.observations.map((x,i)=>i===0?{...x,date:'2025-02-30'}:x)};
  await document.getElementById('historical-file').handlers.change({target:{files:[{text:async()=>JSON.stringify(impossiblePanel)}]}});
  await loadDescriptive({...descriptive,first_date:'2025-02-30'});
