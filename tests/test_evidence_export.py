@@ -6,7 +6,7 @@ import sys
 import tempfile
 from pathlib import Path
 from intelligence.events import observation, relationship, export_graph
-from intelligence.ingest import snapshot_graph
+from intelligence.ingest import snapshot_graph, assess_snapshot_freshness
 
 
 class EvidenceExportTests(unittest.TestCase):
@@ -26,6 +26,13 @@ class EvidenceExportTests(unittest.TestCase):
         self.assertEqual(result["relationships"][0]["predictive_advantage"], "not_established")
         self.assertEqual(result["relationships"][0]["counterarguments"], ["Alternative explanation"])
         self.assertEqual(result["events"][0]["observed_at"], "2026-11-05T12:00:00Z")
+
+    def test_freshness_is_relative_to_snapshot_not_now(self):
+        event = {"id": "a", "domain": "markets", "observed_at": "2026-11-05T12:00:00Z"}
+        self.assertEqual(assess_snapshot_freshness([event], "2026-11-05T13:00:00Z")[0]["state"], "within_review_window")
+        self.assertEqual(assess_snapshot_freshness([event], "2026-11-07T13:00:00Z")[0]["state"], "review_needed")
+        self.assertEqual(assess_snapshot_freshness([event], "2026-11-05T11:00:00Z")[0]["state"], "future_dated")
+        self.assertEqual(assess_snapshot_freshness([event], None)[0]["state"], "unknown")
 
     def test_existing_snapshot_adapter_excludes_incomplete_rows(self):
         snapshot = {"hubs": {
