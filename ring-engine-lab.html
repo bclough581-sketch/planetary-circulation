@@ -45,6 +45,16 @@ function evidenceView(id){
   const p=document.createElement("p");p.textContent=e.title+" — "+e.status+" · "+e.observed_at+" · "+e.source.name+(e.missing.length?" · Missing: "+e.missing.join(", "):"");target.append(p);
  }
  if(events.length>30){const p=document.createElement("p");p.textContent="Showing first 30 records.";target.append(p)}
+ const byId=new Map(imported.events.map(e=>[e.id,e]));
+ const related=imported.relationships.filter(r=>domainLayer[byId.get(r.from_event).domain]===id||domainLayer[byId.get(r.to_event).domain]===id);
+ const relHeading=document.createElement("p");relHeading.textContent=related.length+" attributed relationship(s) touching this layer. Relationship labels are supplied by the imported file, not independently verified.";target.append(relHeading);
+ for(const r of related.slice(0,30)){
+  const from=byId.get(r.from_event),to=byId.get(r.to_event);
+  const p=document.createElement("p");
+  p.textContent=from.title+" → "+to.title+" — "+r.kind+" · "+r.status+" · "+r.explanation+" · Evidence IDs: "+r.evidence_ids.join(", ");
+  target.append(p);
+ }
+ if(related.length>30){const p=document.createElement("p");p.textContent="Showing first 30 relationships.";target.append(p)}
  if(id==="sector"){const p=document.createElement("p");p.textContent="Sector attribution requires an explicit validated mapping; no sector inferred from other domains.";target.append(p)}
 }
 
