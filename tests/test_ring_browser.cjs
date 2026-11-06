@@ -74,7 +74,8 @@ const fs=require("node:fs");
   await page.locator("#layerButtons").getByRole("button",{name:"Geopolitical"}).click();
   assert.match(await page.locator("#observations").innerText(),/Synthetic shipping restriction → Synthetic price movement/);
   const fixturePath=path.resolve(__dirname,"generated-evidence-fixture.json");
-  if(fs.existsSync(fixturePath)){
+  assert.ok(fs.existsSync(fixturePath),"Python-generated canonical fixture is required");
+  {
     const canonical=fs.readFileSync(fixturePath);
     await page.locator("#evidenceFile").setInputFiles({name:"canonical.json",mimeType:"application/json",buffer:canonical});
     await page.getByText("2 observations, 1 relationships loaded locally.",{exact:false}).waitFor();
