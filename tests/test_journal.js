@@ -51,7 +51,7 @@ ok(csv.split('\r\n')[0].startsWith('"id","created"'),'header row');
 const bk=J.toBackup(list),r=J.parseBackup(bk);
 ok(r.ok&&r.entries.length===4,'backup round trip');
 ok(!J.parseBackup('not json').ok&&!J.parseBackup('{"a":1}').ok&&!J.parseBackup('{"app":"amalgam-journal","entries":"x"}').ok,'junk backups rejected');
-const evilBk=JSON.stringify({app:'amalgam-journal',entries:[{ticker:'<img src=x onerror=alert(1)>',reason:'<script>x</script>',type:'x',gates:{g1:'<b>'}}]});
+const evilBk=JSON.stringify({app:'amalgam-journal',version:1,entries:[{ticker:'<img src=x onerror=alert(1)>',reason:'<script>x</script>',type:'x',gates:{g1:'<b>'}}]});
 const rr=J.parseBackup(evilBk);
 ok(rr.ok&&/^[A-Z0-9.\-]{1,10}$/.test(rr.entries[0].ticker),'restored ticker has no markup characters and is capped ('+rr.entries[0].ticker+')');
 ok(rr.entries[0].gates.g1==='unchecked','restored gate value validated');
@@ -63,5 +63,32 @@ const m=J.merge(a,b);
 ok(m.length===3,'merge keeps union');
 ok(m.filter(x=>x.id==='1')[0].reason==='new','newer copy wins');
 const m2=J.merge(b,a);ok(m2.filter(x=>x.id==='1')[0].reason==='new','older never overwrites newer');
+
+
+// --- red-team fixes (ChatGPT review, Nov 6) ---
+// CSV: leading whitespace / BOM before a formula marker is defused
+const csv2=J.toCsv([e({ticker:'WS',reason:'  =1+1',evidence:'\uFEFF=2+2',size:'\t=3'})]);
+ok(csv2.indexOf('"\'  =1+1"')>=0,'leading spaces before = defused');
+ok(csv2.indexOf('"\'\uFEFF=2+2"')>=0,'BOM before = defused');
+ok(csv2.indexOf('"\'\t=3"')>=0,'leading tab defused');
+// ids: unsafe ids replaced, __proto__ entry survives a merge
+const pe=J.normalize({id:'__proto__',ticker:'PROTO'});
+ok(pe.id!=='__proto__'&&/^[A-Za-z0-9_\-]{1,40}$/.test(pe.id),'__proto__ id replaced with a safe id');
+const mm=J.merge([],J.parseBackup(JSON.stringify({app:'amalgam-journal',version:1,entries:[{id:'__proto__',ticker:'PROTO'}]})).entries);
+ok(mm.length===1&&mm[0].ticker==='PROTO','entry with __proto__ id is kept, not silently lost');
+// backup version
+ok(!J.parseBackup(JSON.stringify({app:'amalgam-journal',version:999,entries:[]})).ok,'unknown backup version rejected');
+ok(!J.parseBackup(JSON.stringify({app:'amalgam-journal',entries:[]})).ok,'missing backup version rejected');
+// lossy restore is disclosed
+const lossy=J.parseBackup(JSON.stringify({app:'amalgam-journal',version:1,entries:[{id:'a1',ticker:'L',reason:'x'.repeat(700)},{ticker:'N'}]}));
+ok(lossy.ok&&lossy.clipped===1&&lossy.renamed===1,'clipped and renamed counts reported ('+lossy.clipped+','+lossy.renamed+')');
+// read failure never becomes an empty journal
+ok(J.readStore(null).state==='empty'&&J.readStore('').state==='empty','nothing stored = empty');
+const bad1=J.readStore('{not json');ok(bad1.state==='failed'&&bad1.raw==='{not json'&&bad1.list.length===0,'invalid JSON = failed, raw kept');
+ok(J.readStore('{"a":1}').state==='failed','non-array JSON = failed');
+ok(J.readStore('[]').state==='ok','empty array = ok');
+// merge never loses either side's distinct cards
+const ma=[e({id:'x1',updated:'2026-01-01'})],mb=[e({id:'x2',updated:'2026-01-01'})];
+ok(J.merge(ma,mb).length===2,'merge of distinct ids keeps both');
 
 console.log(bad?'FAILED':'ALL PASS');process.exit(bad?1:0)

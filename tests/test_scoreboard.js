@@ -6,8 +6,11 @@ ok(d.counters.every(c=>c.length===2&&c[0]&&c[1]),'counters are label/value pairs
 ok(d.tracks.length>=2&&d.tracks.every(t=>t.rows.every(r=>r.length===t.cols.length)),'every track row matches its columns');
 ok(d.tracks.every(t=>t.verdictDate&&t.verdictRule&&t.disclosure),'every track states verdict date, rule and disclosure');
 const V=['FAIL','DEAD','CLOSED','NOT AN EDGE'];
-ok(d.graveyard.every(g=>V.includes(g.verdict)&&g.name&&g.numbers&&g.read&&g.kind),'every graveyard row complete, verdict in allowed set');
+ok(d.graveyard.every(g=>V.includes(g.verdict)&&g.id&&g.name&&g.numbers&&g.read&&g.kind&&g.source&&g.check),'every graveyard row has id, numbers, source and check status, verdict in allowed set');
+ok(new Set(d.graveyard.map(g=>g.id)).size===d.graveyard.length,'premise ids are unique');
+ok(d.tracks.every(t=>t.source),'every track cites its lock');
+ok(JSON.stringify(d).toLowerCase().indexOf('every idea')<0&&JSON.stringify(d).indexOf('No edge found')<0,'no overclaiming headline ("every idea", "No edge found")');
 const all=JSON.stringify(d).toLowerCase();
 ['buy now','guaranteed','sure thing','recommend you','you should buy','pick '].forEach(w=>ok(all.indexOf(w)<0,'no promotional/advice phrase: '+w.trim()));
-ok(all.indexOf('no edge')>=0,'page says no edge was found');
+ok(all.indexOf('no edge validated')>=0,'page says no edge validated under our rules');
 console.log(bad?'FAILED':'ALL PASS');process.exit(bad?1:0)

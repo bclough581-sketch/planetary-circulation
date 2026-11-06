@@ -51,8 +51,8 @@ ul{margin:6px 0;padding-left:18px;font-size:12.5px;color:var(--dim)}
 <div id="tracks"></div>
 <p class="dim" id="trackNote"></p>
 
-<h2>WHAT WE TESTED AND WHAT DIED</h2>
-<p class="dim">Tap any row. Ranges are the bounds of an interval; a result is only a finding if its range clears the pass bar.</p>
+<h2>SELECTED DOCUMENTED RESULTS</h2>
+<p class="dim">Not a complete list of everything tried. Tap any row. Each row states its own interval level. A null or negative result is still a result, and a fail on a small sample is weak evidence, not proof that nothing exists.</p>
 <div id="grave"></div>
 
 <h2>PARKED</h2>
@@ -83,6 +83,7 @@ function render(d){
     box.appendChild(tb);
     box.appendChild(el('p','dim','Earliest verdict: '+t.verdictDate+'. '+t.verdictRule));
     box.appendChild(el('p','dim','Disclosure: '+t.disclosure));
+    box.appendChild(el('p','dim',t.source));
     $('tracks').appendChild(box);
   });
   $('trackNote').textContent=d.trackNote;
@@ -91,9 +92,10 @@ function render(d){
     sm.appendChild(el('span','nm',g.name));sm.appendChild(el('span','tag',g.verdict));
     it.appendChild(sm);
     var b=el('div','body');
-    var p1=el('p');p1.appendChild(el('b',null,'Type: '));p1.appendChild(document.createTextNode(g.kind));b.appendChild(p1);
+    var p1=el('p');p1.appendChild(el('b',null,g.id+' · '));p1.appendChild(document.createTextNode(g.kind));b.appendChild(p1);
     var p2=el('p');p2.appendChild(el('b',null,'Numbers: '));p2.appendChild(document.createTextNode(g.numbers));b.appendChild(p2);
     var p3=el('p');p3.appendChild(el('b',null,'Read: '));p3.appendChild(document.createTextNode(g.read));b.appendChild(p3);
+    var p4=el('p');p4.appendChild(el('b',null,'Source: '));p4.appendChild(document.createTextNode(g.source+' '+g.check));b.appendChild(p4);
     it.appendChild(b);$('grave').appendChild(it);
   });
   d.parked.forEach(function(t){$('parked').appendChild(el('li',null,t));});

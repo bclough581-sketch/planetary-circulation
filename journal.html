@@ -99,6 +99,11 @@ input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid v
 <section id="v-rev" hidden><div id="review"></div></section>
 
 <section id="v-bak" hidden>
+  <div class="box" id="failBox" hidden>
+    <b>Saved data could not be read.</b>
+    <p class="dim">It is untouched, and saving is paused so it cannot be overwritten. The raw text is in the box below: copy it somewhere safe. Then you may discard it to start fresh.</p>
+    <button class="warn" id="discard">DISCARD UNREADABLE DATA</button>
+  </div>
   <div class="box">
     <h2 style="margin-top:0">EXPORT</h2>
     <p class="dim">CSV opens in any spreadsheet. The backup text restores everything on another device.</p>
@@ -107,7 +112,7 @@ input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid v
     <textarea id="bakText" style="min-height:110px;font-size:12px"></textarea>
     <div class="row" style="margin-top:8px"><button id="showBak">SHOW BACKUP TEXT</button><button id="restore">RESTORE FROM TEXT</button></div>
     <div class="msg" id="bakMsg" role="status" aria-live="polite"></div>
-    <p class="hint">Restore adds cards from the text and keeps the newer copy when both exist. It never deletes yours.</p>
+    <p class="hint">Restore adds cards from the text. If a card exists in both, the one updated more recently replaces the other. Text over 600 characters is cut, and the restore tells you when that happens.</p>
   </div>
   <div class="box">
     <h2 style="margin-top:0">ERASE</h2>
@@ -123,15 +128,19 @@ input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid v
 (function(){
 'use strict';
 var J=window.JOURNAL,$=function(i){return document.getElementById(i)};
-var list=[],editing=null,memOnly=false,wipeArmed=false;
+var list=[],editing=null,memOnly=false,wipeArmed=false,readFailed=false,rawStored='',discardArmed=false;
 
 function load(){
-  try{var t=localStorage.getItem(J.KEY);if(!t)return [];
-    var o=JSON.parse(t);return Array.isArray(o)?o.map(J.normalize):[];}
-  catch(e){memOnly=true;return [];}
+  var t=null;
+  try{t=localStorage.getItem(J.KEY);}catch(e){memOnly=true;return [];}
+  var r=J.readStore(t);
+  if(r.state==='failed'){readFailed=true;rawStored=r.raw;}
+  return r.list;
 }
+// Never overwrite stored data that could not be read; report real success or failure.
 function persist(){
-  try{localStorage.setItem(J.KEY,JSON.stringify(list));return true;}
+  if(readFailed)return false;
+  try{localStorage.setItem(J.KEY,JSON.stringify(list));memOnly=false;return true;}
   catch(e){memOnly=true;return false;}
 }
 function sorted(){list.sort(function(a,b){return a.created<b.created?1:-1;});}
@@ -181,21 +190,22 @@ $('f-status').addEventListener('change',syncClosed);
 function msg(el,text,cls){var m=$(el);m.textContent=text;m.className='msg'+(cls?' '+cls:'');}
 
 $('save').addEventListener('click',function(){
+  if(readFailed){msg('saveMsg','Saved data on this device could not be read, so saving is paused to protect it. Open BACKUP to copy or discard it.','err');return;}
   var raw=readForm();
   if(editing){raw.id=editing.id;raw.created=editing.created;}
   raw.updated=new Date().toISOString();
   var e=J.normalize(raw);
   if(!e.ticker){msg('saveMsg','Add a ticker so the card can be found later.','err');$('f-ticker').focus();return;}
-  var i,found=false;
+  var i,found=false,before=list.slice();
   for(i=0;i<list.length;i++)if(list[i].id===e.id){list[i]=e;found=true;}
   if(!found)list.push(e);
   sorted();
   var ok=persist();
   var g=J.gaps(e);
   var t=(found?'Updated ':'Saved ')+e.ticker+'.'+(g.length?' Still blank: '+g.join(', ')+'.':'');
-  if(!ok)t+=' Storage is unavailable here, so this card will be lost when the page closes. Use BACKUP to copy it out.';
+  if(!ok)t='NOT SAVED. This device refused the write (storage full or blocked). Your form is untouched; copy the text out or free space and try again.';
   msg('saveMsg',t,ok?'ok':'err');
-  editing=e;
+  if(ok)editing=e;else list=before;
 });
 $('clear').addEventListener('click',function(){editing=null;writeForm(null);msg('saveMsg','','');$('f-ticker').focus();});
 
@@ -207,9 +217,9 @@ $('sample').addEventListener('click',function(){
     entryRule:'Limit order only. Skip if it opens above the planned ceiling.',
     size:'Risk a fixed small amount per trade',entryPrice:'10.00',
     exitRule:'Stop at a stated price; exit if the reason stops being true.',
-    exitPrice:'9.20',followed:'no',
-    whyExited:'Moved the stop instead of leaving it; the new level was hit.',
-    lesson:'The stop I changed mid-trade was the rule I wrote down to protect me from changing it.',
+    exitPrice:'9.20',followed:'unknown',
+    whyExited:'Moved the stop up; the new level was hit.',
+    lesson:'My written exit rule did not say whether moving the stop was allowed. Next time, write that down first.',
     gates:{g1:'met',g2:'met',g3:'met',g4:'met',g5:'unchecked'}});
   msg('saveMsg','Sample loaded. Press SAVE to keep it, or NEW BLANK CARD to discard.','');
 });
@@ -245,12 +255,11 @@ function statRow(k,v){var d=document.createElement('div');d.className='stat';
 function renderReview(){
   var s=J.stats(list),box=$('review');box.textContent='';
   var p=document.createElement('div');p.className='box';
-  p.appendChild(line('PROGRESS TO A READABLE RECORD','dim'));
+  p.appendChild(line('CARDS LOGGED','dim'));
   p.appendChild(statRow('Cards',s.total+' of '+s.goal));
   var bar=document.createElement('div');bar.className='bar';var fill=document.createElement('i');
   fill.style.width=Math.min(100,Math.round(100*s.total/s.goal))+'%';bar.appendChild(fill);p.appendChild(bar);
-  p.appendChild(line(s.goalMet?'Enough cards to see a first pattern. It still describes you, not the market.':
-    'Fewer than '+s.goal+' cards is too few to read a pattern. Keep logging; a few cards say little.','hint'));
+  p.appendChild(line('Twenty is a personal milestone, not a statistical test. Log decisions you actually make; do not trade extra to fill the bar. Self-reported habits do not show what causes results.','hint'));
   box.appendChild(p);
 
   var q=document.createElement('div');q.className='box';
@@ -260,6 +269,8 @@ function renderReview(){
   if(s.unknown)q.appendChild(statRow('Marked unknown',String(s.unknown)));
   q.appendChild(statRow('G1–G3 all answered',s.g123Answered+' of '+s.total));
   q.appendChild(statRow('Cards with an unchecked gate',String(s.entriesWithUnchecked)));
+  q.appendChild(statRow('Closed cards missing a price',String(s.missingPrices)));
+  q.appendChild(statRow('Closed cards with no rule answer',String(s.missingFollowed)));
   box.appendChild(q);
 
   var r=document.createElement('div');r.className='box';
@@ -296,21 +307,37 @@ $('exJson').addEventListener('click',function(){
   var t=J.toBackup(list);$('bakText').value=t;
   msg('bakMsg',download('amalgam-journal-backup.json','application/json',t)?'Backup downloaded, and shown below to copy.':'Download blocked here. Copy the text below instead.','ok');
 });
-$('showBak').addEventListener('click',function(){$('bakText').value=J.toBackup(list);msg('bakMsg','Copy this text somewhere safe.','');});
+$('showBak').addEventListener('click',function(){if(readFailed){$('bakText').value=rawStored;msg('bakMsg','This is the unreadable saved text, exactly as stored. Copy it somewhere safe.','');return;}$('bakText').value=J.toBackup(list);msg('bakMsg','Copy this text somewhere safe.','');});
 $('restore').addEventListener('click',function(){
+  if(readFailed){msg('bakMsg','Saved data could not be read. Copy it from the box above, then discard it before restoring.','err');return;}
   var r=J.parseBackup($('bakText').value);
   if(!r.ok){msg('bakMsg',r.error,'err');return;}
-  var before=list.length;list=J.merge(list,r.entries);persist();
-  msg('bakMsg','Restored. Cards: '+before+' before, '+list.length+' now.','ok');
+  var prev=list,before=list.length;
+  list=J.merge(list,r.entries);
+  if(!persist()){list=prev;msg('bakMsg','NOT RESTORED. This device refused the write (storage full or blocked). Your pasted text is still in the box.','err');return;}
+  var extra=(r.clipped?' '+r.clipped+' card(s) had text longer than 600 characters, which was cut.':'')+(r.renamed?' '+r.renamed+' card(s) had missing or unusable ids and got new ones.':'');
+  msg('bakMsg','Restored. Cards: '+before+' before, '+list.length+' now.'+extra,'ok');
 });
 $('wipe').addEventListener('click',function(){
   var b=$('wipe');
+  if(readFailed){msg('bakMsg','Saved data could not be read. Use DISCARD UNREADABLE DATA below if you want to clear it.','err');return;}
   if(!wipeArmed){wipeArmed=true;b.textContent='TAP AGAIN TO ERASE';setTimeout(function(){wipeArmed=false;b.textContent='ERASE ALL CARDS';},4000);return;}
-  wipeArmed=false;b.textContent='ERASE ALL CARDS';list=[];editing=null;persist();writeForm(null);msg('bakMsg','All cards erased from this device.','ok');
+  wipeArmed=false;b.textContent='ERASE ALL CARDS';
+  var prev=list;list=[];
+  if(!persist()){list=prev;msg('bakMsg','NOT ERASED. This device refused the write. Your cards are still here.','err');return;}
+  editing=null;writeForm(null);msg('bakMsg','All cards erased from this device.','ok');
+});
+$('discard').addEventListener('click',function(){
+  var b=$('discard');
+  if(!discardArmed){discardArmed=true;b.textContent='TAP AGAIN: UNREADABLE DATA WILL BE DELETED';setTimeout(function(){discardArmed=false;b.textContent='DISCARD UNREADABLE DATA';},5000);return;}
+  discardArmed=false;b.textContent='DISCARD UNREADABLE DATA';
+  try{localStorage.removeItem(J.KEY);}catch(e){msg('bakMsg','This device refused the change.','err');return;}
+  readFailed=false;rawStored='';$('failBox').hidden=true;msg('bakMsg','Unreadable data discarded. You can save cards again.','ok');
 });
 
 list=load();sorted();writeForm(null);
-if(memOnly)msg('saveMsg','Storage is unavailable in this view. Cards will not survive closing the page; use BACKUP to copy them out.','err');
+if(readFailed){$('failBox').hidden=false;$('bakText').value=rawStored;msg('saveMsg','Saved data on this device could not be read, so saving is paused to protect it. Open BACKUP to copy or discard it.','err');}
+if(memOnly&&!readFailed)msg('saveMsg','Storage is unavailable in this view. Saving will not work here; use another browser or free space.','err');
 })();
 </script>
 </body>

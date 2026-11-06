@@ -15,6 +15,7 @@ function normTicker(t){return String(t==null?'':t).toUpperCase().replace(/[^A-Z0
 function num(x){if(x===''||x==null)return null;var n=parseFloat(x);return isFinite(n)&&n>0?n:null;}
 function pick(v,allowed,dflt){return Object.prototype.hasOwnProperty.call(allowed,v)?v:dflt;}
 function newId(){return Date.now().toString(36)+Math.floor(Math.random()*1679616).toString(36);}
+function safeId(x){var t=String(x==null?'':x);return /^[A-Za-z0-9_\-]{1,40}$/.test(t)&&t!=='__proto__'&&t!=='constructor'&&t!=='prototype'?t:'';}
 
 // Sanitize anything that comes from a form or from a pasted backup.
 function normalize(e){
@@ -24,7 +25,7 @@ function normalize(e){
   var status=e.status==='closed'?'closed':'open';
   var fl=e.followed==='yes'||e.followed==='no'||e.followed==='unknown'?e.followed:'';
   return {
-    id:clip(e.id,40)||newId(),
+    id:safeId(e.id)||newId(),
     created:clip(e.created,40)||new Date().toISOString(),
     updated:clip(e.updated,40)||new Date().toISOString(),
     ticker:normTicker(e.ticker),
@@ -90,7 +91,7 @@ function stats(list){
     pricedN:priced.length,meanPricedPct:mean(priced),
     followedPricedN:byYes.length,meanFollowedPct:mean(byYes),
     brokePricedN:byNo.length,meanBrokePct:mean(byNo),
-    goal:GOAL,goalMet:total>=GOAL,
+    goal:GOAL,goalMet:total>=GOAL,missingPrices:closed-priced.length,missingFollowed:closed-yes-no-unk,
     lessons:lessons.slice(0,8)
   };
 }
@@ -98,7 +99,7 @@ function stats(list){
 // CSV safe for spreadsheets: quote everything, and defuse leading = + - @ so a cell cannot run as a formula.
 function cell(v){
   var s=v==null?'':String(v);
-  if(/^[=+\-@\t\r]/.test(s))s="'"+s;
+  if(/^[\s\uFEFF]*[=+\-@]/.test(s)||/^[\t\r]/.test(s))s="'"+s;
   return '"'+s.replace(/"/g,'""')+'"';
 }
 var COLS=['id','created','updated','ticker','type','status','reason','evidence','entryRule','size','entryPrice','exitRule',
@@ -116,30 +117,47 @@ function toCsv(list){
 
 function toBackup(list){return JSON.stringify({app:'amalgam-journal',version:1,exported:new Date().toISOString(),entries:list},null,1);}
 
+var TEXT_FIELDS=['reason','evidence','entryRule','exitRule','whyExited','lesson'];
 function parseBackup(text){
   var o;
   try{o=JSON.parse(text);}catch(err){return {ok:false,error:'That is not valid backup text.'};}
   if(!o||o.app!=='amalgam-journal'||!Array.isArray(o.entries))return {ok:false,error:'That is not an Amalgam journal backup.'};
+  if(o.version!==1)return {ok:false,error:'This backup is from a different version ('+String(o.version).slice(0,12)+'). Nothing was restored.'};
   if(o.entries.length>2000)return {ok:false,error:'Backup is too large.'};
-  var out=[],i;
-  for(i=0;i<o.entries.length;i++)out.push(normalize(o.entries[i]));
-  return {ok:true,entries:out};
+  var out=[],i,j,clipped=0,renamed=0,raw;
+  for(i=0;i<o.entries.length;i++){
+    raw=o.entries[i]||{};
+    for(j=0;j<TEXT_FIELDS.length;j++)if(String(raw[TEXT_FIELDS[j]]==null?'':raw[TEXT_FIELDS[j]]).length>600){clipped++;break;}
+    if(!safeId(raw.id))renamed++;
+    out.push(normalize(raw));
+  }
+  return {ok:true,entries:out,clipped:clipped,renamed:renamed};
 }
 
-// Merge by id; the more recently updated copy wins.
+// Merge by id; the more recently updated copy replaces the other. Uses a Map so odd ids cannot collide with object internals.
 function merge(base,incoming){
-  var m={},i,e,out=[];
-  for(i=0;i<base.length;i++)m[base[i].id]=base[i];
+  var m=new Map(),i,e;
+  for(i=0;i<base.length;i++)m.set(base[i].id,base[i]);
   for(i=0;i<incoming.length;i++){
     e=incoming[i];
-    if(!m[e.id]||m[e.id].updated<e.updated)m[e.id]=e;
+    if(!m.has(e.id)||m.get(e.id).updated<e.updated)m.set(e.id,e);
   }
-  for(i in m)out.push(m[i]);
+  var out=Array.from(m.values());
   out.sort(function(a,b){return a.created<b.created?1:-1;});
   return out;
 }
 
+// Read the stored text without ever turning a read failure into an empty journal.
+// state: 'empty' (nothing stored), 'ok', or 'failed' (present but unreadable; raw is kept for recovery).
+function readStore(text){
+  if(text==null||text==='')return {state:'empty',list:[],raw:''};
+  var o;
+  try{o=JSON.parse(text);}catch(err){return {state:'failed',list:[],raw:String(text)};}
+  if(!Array.isArray(o))return {state:'failed',list:[],raw:String(text)};
+  return {state:'ok',list:o.map(normalize),raw:''};
+}
+
 var API={KEY:KEY,GOAL:GOAL,GATES:GATES,ANS:ANS,TYPES:TYPES,normalize:normalize,resultPct:resultPct,gaps:gaps,stats:stats,
-         toCsv:toCsv,toBackup:toBackup,parseBackup:parseBackup,merge:merge,newId:newId};
+         toCsv:toCsv,toBackup:toBackup,parseBackup:parseBackup,merge:merge,newId:newId,safeId:safeId,readStore:readStore};
 if(typeof module!=='undefined'&&module.exports)module.exports=API;else root.JOURNAL=API;
 })(typeof window!=='undefined'?window:this);
