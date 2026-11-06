@@ -99,15 +99,49 @@ def proposed_connection(weather_event, economic_event, explanation, counterargum
     return result
 
 
-def snapshot_graph(snapshot):
-    """Convert an existing Amalgam snapshot into a canonical, non-predictive graph.
+# Conservative review windows, not publisher-guaranteed update schedules.
+REVIEW_WINDOWS_HOURS = {
+    "weather": 6, "geopolitics": 24, "maritime": 72, "aviation": 6,
+    "energy": 72, "commodities": 72, "economics": 72,
+    "markets": 24, "corporate": 72,
+}
 
-    Excluded rows remain visible to the caller; no relationships are inferred.
+
+def assess_snapshot_freshness(events, generated_utc):
+    """Assess age at snapshot generation, not at browser-view time.
+
+    This is an internal review heuristic. It does not authenticate sources,
+    prove publication availability, or establish present-day freshness.
     """
+    if not isinstance(generated_utc, str):
+        return [{"event_id": e["id"], "state": "unknown", "reason": "missing snapshot generation time"}
+                for e in events]
+    try:
+        reference = datetime.fromisoformat(generated_utc.replace("Z", "+00:00"))
+        if reference.tzinfo is None or reference.utcoffset() is None:
+            raise ValueError("timezone missing")
+    except ValueError:
+        return [{"event_id": e["id"], "state": "unknown", "reason": "invalid snapshot generation time"}
+                for e in events]
+    results = []
+    for event in events:
+        observed = datetime.fromisoformat(event["observed_at"].replace("Z", "+00:00"))
+        age_hours = (reference - observed).total_seconds() / 3600
+        window = REVIEW_WINDOWS_HOURS[event["domain"]]
+        state = "future_dated" if age_hours < 0 else ("review_needed" if age_hours > window else "within_review_window")
+        results.append({"event_id": event["id"], "state": state,
+                        "age_hours_at_snapshot": round(age_hours, 2),
+                        "review_window_hours": window})
+    return results
+
+
+def snapshot_graph(snapshot):
+    """Convert existing data to a canonical non-live graph with review heuristics."""
     events, excluded = existing_observations(snapshot)
     graph = export_graph(events, [])
     graph["excluded_records"] = excluded
     graph["feed_status"] = "snapshot_only_not_live"
     graph["source_authentication"] = "not_performed"
-    graph["freshness_assessment"] = "not_performed"
+    graph["freshness_assessment"] = "review_heuristic_at_snapshot"
+    graph["freshness_records"] = assess_snapshot_freshness(events, snapshot.get("generated_utc"))
     return graph
