@@ -6,3 +6,5 @@ Local prototype of the evidence-ring explorer and the decision journal, backed u
 - Storage key `amalgam.decision-journal.v1` (differs from `amalgam.journal.v1` on branch journal-stage1; schema reconciliation pending).
 - Delta quarterly data is manually transcribed from issuer releases; publication times not verified; no predictive claim.
 - Alignment of rings means evidence lined up, never a forecast.
+
+Note (per re-review): ring geometry/motion is decorative; selection controls the evidence view. Alignment does not itself prove independent evidence agrees.
