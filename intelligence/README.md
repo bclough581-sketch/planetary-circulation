@@ -172,3 +172,21 @@ are counted separately; shared fuel exposure is not independent confirmation.
 All rows remain ineligible for trading, and evaluation remains blocked.
 Quarter-end dates are not assumed to be decision times: current-quarter financial
 outcomes may be filed in the following quarter. No model or return forecast is fit.
+
+
+## Days-to-weeks research priority
+
+The daily study draft is `intelligence/data/airline-daily-study.json`: DAL and UAL
+versus SPY, 5 trading sessions primary and 10 secondary. Quarterly data remains
+business context and is not evidence of short-horizon stock predictability.
+The spec is explicitly **not preregistered**: data licensing, availability evidence,
+exchange sessions, sample dates and uncertainty methods must be fixed first.
+
+`airline-daily-research` collects daily EIA jet-fuel observations and continuous
+five-reported-observation price changes. Elapsed calendar days are retained;
+weekends and holidays are not presumed missing exchange sessions. No observed
+quote date is treated as a release timestamp. All candidates remain unverified,
+with zero trading eligibility and no outcome returns or model results generated.
+Artifacts include the daily input, draft specification and readable readiness report.
+The next input requirement is documented adjusted DAL/UAL/SPY daily prices with
+appropriate licensing and adjustment semantics, followed by availability evidence.
