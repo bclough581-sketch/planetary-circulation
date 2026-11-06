@@ -53,11 +53,23 @@ function evidenceView(id){
  const byId=new Map(imported.events.map(e=>[e.id,e]));
  const related=imported.relationships.filter(r=>domainLayer[byId.get(r.from_event).domain]===id||domainLayer[byId.get(r.to_event).domain]===id);
  const relHeading=document.createElement("p");relHeading.textContent=related.length+" attributed relationship(s) touching this layer. Relationship labels are supplied by the imported file, not independently verified.";target.append(relHeading);
+ const statusCounts=new Map();
+ for(const r of related)statusCounts.set(r.status,(statusCounts.get(r.status)||0)+1);
+ const counts=document.createElement("p");counts.textContent="Imported relationship statuses: "+(statusCounts.size?[...statusCounts].map(([state,count])=>state+" "+count).join(" · "):"none")+". These are labels, not independently verified findings.";target.append(counts);
+ const pairKey=r=>[r.from_event,r.to_event].sort().join("\\u0000");
+ const byPair=new Map();
+ for(const r of imported.relationships){const key=pairKey(r);if(!byPair.has(key))byPair.set(key,[]);byPair.get(key).push(r)}
+
  for(const r of related.slice(0,30)){
   const from=byId.get(r.from_event),to=byId.get(r.to_event);
   const details=document.createElement("details");
   const summary=document.createElement("summary");summary.textContent=from.title+" → "+to.title+" — "+r.kind+" · "+r.status;
   const explanation=document.createElement("p");explanation.textContent="Imported explanation (unverified): "+r.explanation;
+  const peers=byPair.get(pairKey(r))||[];
+  const conflict=peers.some(p=>p.status==="refuted")&&peers.some(p=>p.status!=="refuted");
+  const conflictNote=document.createElement("p");
+  conflictNote.textContent=conflict?"CONFLICTING IMPORTED ASSERTIONS: this event pair has both refuted and non-refuted relationship records. Inspect each; no resolution inferred.":"No refuted/non-refuted status conflict declared for this event pair; absence of a conflict does not establish correctness.";
+
   const warning=document.createElement("p");warning.textContent=r.status==="refuted"?"REFUTED in imported data; not an actionable transmission.":r.status==="hypothesis"||r.status==="investigating"?"UNCONFIRMED relationship; not an actionable transmission.":"Imported status: "+r.status+"; no independent verification or trading signal.";
   const evidence=document.createElement("div");const label=document.createElement("p");label.textContent="Supporting event records (expand for sources and missing evidence):";evidence.append(label);
   for(const evidenceId of r.evidence_ids){
@@ -68,7 +80,7 @@ function evidenceView(id){
    missing.textContent=ev.missing.length?"Missing evidence: "+ev.missing.join(", "):"No missing items declared; completeness is not independently verified.";
    item.append(title,meta,link,missing);evidence.append(item);
   }
-  details.append(summary,explanation,warning,evidence);target.append(details);
+  details.append(summary,explanation,warning,conflictNote,evidence);target.append(details);
  }
  if(related.length>30){const p=document.createElement("p");p.textContent="Showing first 30 relationships.";target.append(p)}
  if(id==="sector"){const p=document.createElement("p");p.textContent="Sector attribution requires an explicit validated mapping; no sector inferred from other domains.";target.append(p)}
