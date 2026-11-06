@@ -2,7 +2,7 @@ name: airline-quarterly-research
 on:
   push:
     branches: [amalgam-event-foundation]
-    paths: ['intelligence/airline_quarterly.py', 'tests/test_airline_quarterly.py', 'intelligence/airline_quarterly_audit.py', 'tests/test_airline_quarterly_audit.py', '.github/workflows/airline-quarterly-research.yml']
+    paths: ['intelligence/airline_combined_panel.py', 'tests/test_airline_combined_panel.py', 'intelligence/jet_fuel_history.py', 'intelligence/airline_research_panel.py', 'intelligence/data/delta-quarterly-curated.json', 'intelligence/airline_quarterly.py', 'tests/test_airline_quarterly.py', 'intelligence/airline_quarterly_audit.py', 'tests/test_airline_quarterly_audit.py', '.github/workflows/airline-quarterly-research.yml']
   workflow_dispatch: {}
 permissions:
   contents: read
@@ -17,7 +17,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: python -m unittest discover -s tests -p 'test_airline_quarterly*.py' -v
+      - run: python -m unittest discover -s tests -p 'test_airline*.py' -v
       - name: Collect SEC facts using authorized project identification
         env:
           SEC_CONTACT_EMAIL: ${{ secrets.SEC_CONTACT_EMAIL }}
@@ -26,8 +26,33 @@ jobs:
           cp intelligence/data/delta-quarterly-curated.json sec-quarterly-bundle/
           python -m intelligence.airline_quarterly_audit --directory sec-quarterly-bundle
           python -m intelligence.airline_quarterly_audit --directory sec-quarterly-bundle --verify
+      - name: Collect matching fuel history and generate combined panel
+        env:
+          EIA_API_KEY: ${{ secrets.EIA_API_KEY }}
+        run: |
+          python -m intelligence.jet_fuel_history --start 2014-01 --end 2025-12 --output sec-quarterly-bundle/jet-fuel-history.json
+          python -m intelligence.airline_combined_panel --directory sec-quarterly-bundle
+          python -m intelligence.airline_combined_panel --directory sec-quarterly-bundle --verify
       - uses: actions/upload-artifact@v4
         with:
           name: amalgam-airline-quarterly-${{ github.run_id }}
           path: sec-quarterly-bundle/
           retention-days: 30
+
+  reproduce-downloaded:
+    needs: collect
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          name: amalgam-airline-quarterly-${{ github.run_id }}
+          path: downloaded-combined-bundle
+      - run: python -m intelligence.airline_quarterly_audit --directory downloaded-combined-bundle --verify
+      - run: python -m intelligence.airline_combined_panel --directory downloaded-combined-bundle --verify

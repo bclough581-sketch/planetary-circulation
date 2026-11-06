@@ -110,8 +110,8 @@ The report lists availability, sample size, benchmark scope, holdout and market-
 blockers. No regression, predictive performance estimate or stock ranking is produced.
 
 Checksums and reproduction establish internal consistency, not independent source
-or publication-time authenticity. SEC automated collection remains separately
-blocked by HTTP 403; curated issuer evidence is explicitly labeled.
+or publication-time authenticity. SEC collection is available when the authorized contact secret is configured;
+curated issuer evidence is explicitly labeled separately.
 
 
 ## SEC quarterly collector access checkpoint
@@ -125,7 +125,7 @@ help with classification but does not guarantee access from GitHub runner IPs.
 HTTP 403 remains a failure, with no proxy or access-control circumvention.
 Local `--input-dir` processing requires no contact or network access.
 
-Until the owner configures the contact, the SEC workflow stops before making
+If the contact is not configured, the SEC workflow stops before making
 requests. The separate issuer-curated/EIA research pipeline remains usable.
 
 
@@ -151,3 +151,24 @@ not authenticated historical availability. The audit retains mismatches if any;
 it does not rewrite either source. The corpus includes no new fuel-expense facts.
 Network collection requires an owner-authorized SEC contact; local verification
 requires no contact and sends no requests.
+
+
+## Combined multi-airline panel
+
+The quarterly workflow now collects the SEC corpus and EIA fuel history in one
+commit-pinned run and uploads both input sources, audits and combined outputs.
+A separate job downloads the bundle and reproduces both audits:
+
+```bash
+python -m intelligence.airline_quarterly_audit --directory BUNDLE --verify
+python -m intelligence.airline_combined_panel --directory BUNDLE --verify
+```
+
+The panel joins complete fuel quarters to directly reported company outcomes
+and the next calendar quarter's margin. It also records the prior fuel-quarter
+mean and percentage change when all months exist. An absent company quarter is
+never skipped to reach a later outcome. Company pairs and distinct fuel quarters
+are counted separately; shared fuel exposure is not independent confirmation.
+All rows remain ineligible for trading, and evaluation remains blocked.
+Quarter-end dates are not assumed to be decision times: current-quarter financial
+outcomes may be filed in the following quarter. No model or return forecast is fit.
