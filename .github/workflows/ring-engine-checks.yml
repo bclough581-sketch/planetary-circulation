@@ -4,6 +4,8 @@ on:
     branches: [amalgam-event-foundation]
     paths:
       - 'ring-engine-lab.html'
+      - 'intelligence/events.py'
+      - 'tests/test_evidence_export.py'
       - 'tests/test_ring_engine.cjs'
       - 'tests/test_ring_browser.cjs'
       - '.github/workflows/ring-engine-checks.yml'
@@ -19,6 +21,7 @@ jobs:
         with:
           node-version: '22'
       - run: node tests/test_ring_engine.cjs
+      - run: python -m unittest discover -s tests -p test_evidence_export.py
   ring-mobile-browser:
     runs-on: ubuntu-latest
     container:
