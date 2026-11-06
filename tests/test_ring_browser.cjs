@@ -46,9 +46,7 @@ const assert=require("node:assert/strict");
   const linked={events:[
     {id:"geo-1",domain:"geopolitics",title:"Synthetic shipping restriction",observed_at:"2026-11-05T12:00:00Z",source:{name:"Test source",url:"https://example.org/a"},status:"observed",missing:[]},
     {id:"market-1",domain:"markets",title:"Synthetic price movement",observed_at:"2026-11-05T13:00:00Z",source:{name:"Test source",url:"https://example.org/b"},status:"observed",missing:["causal attribution"]}
-  ],relationships:[{id:"rel-1",from_event:"geo-1",to_event:"market-1",kind:"correlates_with",status:"inferred",explanation:"Test hypothesis only",evidence_ids:["geo-1","market-1"]}]};
-  // Use a schema-valid relationship kind and status from the actual validator.
-  linked.relationships[0].kind="related_to";
+  ],relationships:[{id:"rel-1",from_event:"geo-1",to_event:"market-1",kind:"hypothesized_transmission",status:"hypothesis",explanation:"Test hypothesis only",evidence_ids:["geo-1","market-1"]}]};
   await page.locator("#evidenceFile").setInputFiles({name:"linked.json",mimeType:"application/json",buffer:Buffer.from(JSON.stringify(linked))});
   await page.getByText("2 observations, 1 relationships loaded locally.",{exact:false}).waitFor();
   assert.match(await page.locator("#observations").innerText(),/Synthetic shipping restriction → Synthetic price movement/);
