@@ -6,6 +6,8 @@ on:
       - 'ring-engine-lab.html'
       - 'intelligence/events.py'
       - 'intelligence/ingest.py'
+      - 'scripts/export_ring_snapshot.py'
+      - 'data.json'
       - 'tests/test_evidence_export.py'
       - 'tests/generate_evidence_fixture.py'
       - 'tests/test_ring_engine.cjs'
