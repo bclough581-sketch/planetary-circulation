@@ -1,0 +1,20 @@
+name: Ring Engine Checks
+on:
+  push:
+    branches: [amalgam-event-foundation]
+    paths:
+      - 'ring-engine-lab.html'
+      - 'tests/test_ring_engine.cjs'
+      - '.github/workflows/ring-engine-checks.yml'
+  workflow_dispatch:
+jobs:
+  ring-validation:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node tests/test_ring_engine.cjs
