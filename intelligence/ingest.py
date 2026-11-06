@@ -3,7 +3,7 @@
 Adapters only normalize observed source data. They never claim causality.
 """
 from datetime import datetime, timezone
-from .events import observation, relationship, validate_graph
+from .events import observation, relationship, validate_graph, export_graph
 
 SOURCES = {
     "ecb": ("ECB statistics", "https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/"),
@@ -97,3 +97,15 @@ def proposed_connection(weather_event, economic_event, explanation, counterargum
                           missing=["Verified exposure pathway", "Out-of-sample predictive test"])
     validate_graph([weather_event, economic_event], [result])
     return result
+
+
+def snapshot_graph(snapshot):
+    """Convert an existing Amalgam snapshot into a canonical, non-predictive graph.
+
+    Excluded rows remain visible to the caller; no relationships are inferred.
+    """
+    events, excluded = existing_observations(snapshot)
+    graph = export_graph(events, [])
+    graph["excluded_records"] = excluded
+    graph["feed_status"] = "snapshot_only_not_live"
+    return graph
