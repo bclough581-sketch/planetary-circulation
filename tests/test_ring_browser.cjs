@@ -2,6 +2,7 @@
 const {chromium,devices}=require("playwright");
 const path=require("node:path");
 const assert=require("node:assert/strict");
+const fs=require("node:fs");
 (async()=>{
  const browser=await chromium.launch({headless:true});
  try{
@@ -72,6 +73,18 @@ const assert=require("node:assert/strict");
   assert.match(await page.locator("#observations").innerText(),/CONFLICTING IMPORTED ASSERTIONS/);
   await page.locator("#layerButtons").getByRole("button",{name:"Geopolitical"}).click();
   assert.match(await page.locator("#observations").innerText(),/Synthetic shipping restriction → Synthetic price movement/);
+  const fixturePath=path.resolve(__dirname,"generated-evidence-fixture.json");
+  if(fs.existsSync(fixturePath)){
+    const canonical=fs.readFileSync(fixturePath);
+    await page.locator("#evidenceFile").setInputFiles({name:"canonical.json",mimeType:"application/json",buffer:canonical});
+    await page.getByText("2 observations, 1 relationships loaded locally.",{exact:false}).waitFor();
+    await page.locator("#layerButtons").getByRole("button",{name:"Geopolitical"}).click();
+    const exported=page.locator("#observations details").filter({hasText:"Python-exported event → Python-exported market"}).first();
+    await exported.locator("summary").first().click();
+    assert.match(await page.locator("#observations").innerText(),/Python fixture, no causation/);
+    assert.match(await page.locator("#observations").innerText(),/Alternative causes/);
+    assert.match(await page.locator("#observations").innerText(),/Causal identification/);
+  }
   await page.getByRole("button",{name:"Clear evidence"}).click();
   assert.equal(await page.locator("#importStatus").innerText(),"No evidence loaded.");
   await page.locator("#evidenceFile").setInputFiles({name:"invalid.json",mimeType:"application/json",buffer:Buffer.from('{"events":[{"id":"x"}],"relationships":[]}')});
