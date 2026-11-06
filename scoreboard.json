@@ -1,0 +1,83 @@
+{
+  "asof": "2026-11-06",
+  "headline": "No edge found. This page shows every idea we tested, the numbers it produced, and what is still running on paper.",
+  "counters": [
+    ["Ideas pre-registered and counted", "24"],
+    ["Sealed hold-out openings", "4"],
+    ["Hold-out openings that passed", "0"],
+    ["Real money at risk in these tests", "$0"]
+  ],
+  "counterNote": "Counters come from the project's trial ledger and are rounded to what the ledger says today. Each idea is written down, with its pass bar, before any data is looked at.",
+  "tracks": [
+    {
+      "name": "BTC40 trend filter (paper only)",
+      "rule": "Weekly close above the 40-week average: hold Bitcoin. Otherwise cash. Cost 0.25% per switch.",
+      "disclosure": "Chosen after seeing backtests of close neighbours (BTC1 and BTC2 both failed the drawdown bar), so it is a forward test of the closest variant, not a clean result.",
+      "verdictDate": "2027-10-31",
+      "verdictRule": "Pass only if buy-and-hold's forward drawdown is at least 20% AND this rule's drawdown is at most 60% of it with at least 70% of its return and at least 2 switches. Otherwise inconclusive.",
+      "cols": ["Week", "Close", "40-wk avg", "Paper position"],
+      "rows": [["2026-10-26", "78,354", "72,337", "Long (paper)"]]
+    },
+    {
+      "name": "CRY2 Bitcoin / Ether rotation (paper only)",
+      "rule": "Hold whichever of Bitcoin or Ether has the better 8-week return, if either is positive. Otherwise cash.",
+      "disclosure": "Passed its backtest (provisional), but the edge shrinks to about +0.6 points a year at double the costs, below its own +3 bar. Backtests do not include the weekend gap that a real fund would face.",
+      "verdictDate": "2027-10-31",
+      "verdictRule": "Judged on a version filled at the next Monday open, against holding the Bitcoin fund, with at least 10 position changes. Otherwise inconclusive.",
+      "cols": ["Week", "BTC 8-wk", "ETH 8-wk", "Paper position"],
+      "rows": [["2026-10-26", "-2.47%", "-9.51%", "Cash"]]
+    }
+  ],
+  "trackNote": "Rows are added by hand each Monday. Two data sources date weekly bars one day apart; the signal does not change either way.",
+  "graveyard": [
+    {"name": "The five gates together (G1+G2+G3)", "verdict": "FAIL", "kind": "Sealed hold-out, 2018-2021, run once",
+     "numbers": "Hit-rate ratio 1.036 (range 0.979 to 1.085). Money difference -0.028 (range -0.056 to +0.001).",
+     "read": "Did not beat matched random stock-days after costs. This is why the app teaches the reasoning and makes no promise."},
+    {"name": "Buy the RSI dip", "verdict": "FAIL", "kind": "Pre-registered, development data",
+     "numbers": "Raw trades averaged +1.6%, but lift over matched random volatile days was 0.00% (range -1.07% to +1.06%).",
+     "read": "The gain came from volatility, not from the signal."},
+    {"name": "Trade analyst rating changes faster than the market", "verdict": "DEAD", "kind": "Pre-registered, development data",
+     "numbers": "Lift after cost -0.41% (range -0.72% to -0.11%) on 108 events.",
+     "read": "Nothing was left to capture after the first five minutes."},
+    {"name": "Sector rotation: trade the second move", "verdict": "DEAD", "kind": "Pre-registered, development data",
+     "numbers": "Lift after cost -0.26% (range -0.63% to +0.10%) on 154 events.",
+     "read": "Rules out any lift above about +0.10% per trade. The bar was +1.0%."},
+    {"name": "State-based exit table (when to hold or sell)", "verdict": "FAIL", "kind": "Pre-registered, development data",
+     "numbers": "Lift -0.44% (range -1.12% to +0.28%). Shuffled labels did about as well (-0.41%).",
+     "read": "The state carried no information. Plain holding beat the cleverer exits."},
+    {"name": "Buy after a sharp one-day drop", "verdict": "CLOSED", "kind": "Exploratory, development data only",
+     "numbers": "Excess return was negative in every variant; limit-order entry did not rescue it.",
+     "read": "Stocks after big drops did worse than matched controls."},
+    {"name": "Prediction-market longshots", "verdict": "FAIL", "kind": "Pre-registered, development data",
+     "numbers": "Net return -19.3% (range -31.8% to -7.2%) on 889 markets.",
+     "read": "An earlier positive result came from picking the highest-volume markets. A fresh sample erased it."},
+    {"name": "Trend-following sleeve", "verdict": "FAIL", "kind": "Pre-registered, development data",
+     "numbers": "Max drawdown -3.8% vs -25.1% for 60/40, but blended risk-adjusted return beat 60/40 in only 54% of resamples (needed 80%).",
+     "read": "It cut risk, as trend rules do, without adding risk-adjusted return."},
+    {"name": "60% stocks + 40% trend as a crash hedge", "verdict": "FAIL", "kind": "Pre-registered, development sanity check",
+     "numbers": "Drawdown -27.0% vs -25.1% for 60/40.",
+     "read": "In 2008-2018, Treasuries were the better crash hedge."},
+    {"name": "Bitcoin 30-week trend filter (defensive)", "verdict": "FAIL", "kind": "Pre-registered",
+     "numbers": "Drawdown cut was 28% against a required 40%. The recent hold-out period passed.",
+     "read": "One down-cycle in the hold-out is not enough to rescue a miss on the full sample."},
+    {"name": "Bitcoin trend filter, four window lengths", "verdict": "FAIL", "kind": "Pre-registered grid",
+     "numbers": "0 of 4 windows passed. The closest missed the drawdown bar by 0.03 to 0.04.",
+     "read": "The bar was not loosened. The closest variant became BTC40 above, as a forward test."},
+    {"name": "Odd-lot tender offers", "verdict": "CLOSED", "kind": "Pre-registered history check",
+     "numbers": "About 1.6 takeable deals a year against a bar of 6.",
+     "read": "The mechanism is real, but too rare to matter. Most fund tenders deny odd-lot priority."},
+    {"name": "Closed-end fund tender at 98% of NAV (BMEZ, Nov 2026)", "verdict": "NOT AN EDGE", "kind": "Back-of-envelope screen",
+     "numbers": "About +0.9% blended on a full position at an assumed 50% participation, against roughly 3% routine price swings.",
+     "read": "Real mechanism, but small and too rare to test."}
+  ],
+  "parked": [
+    "Dilution and going-concern filter (DIL1): data check passed, power check says underpowered. Parked.",
+    "TAX1 and SPAC common-share redemption: parked. The effort per expected result was too high.",
+    "Bank mutual-to-stock conversions: closed as a system. Eligibility is depositor-based."
+  ],
+  "lessons": [
+    "Picking markets by volume manufactured a pattern that a fresh sample erased.",
+    "A placebo that is not matched to the trade can pass pure noise. Ours is matched, and was tested on synthetic noise first.",
+    "A control definition once added about 0.35% of fake lift under pure noise. A null test caught it before any real data was used."
+  ]
+}
