@@ -24,6 +24,7 @@ const allowedRelations=new Set(["coincident","exposure","lead_lag","hypothesized
 function validTime(t){return typeof t==="string" && /(?:Z|[+-][0-9][0-9]:[0-9][0-9])$/.test(t) && Number.isFinite(Date.parse(t))}
 function validateEvidence(data){
  if(!data||typeof data!=="object"||!Array.isArray(data.events)||!Array.isArray(data.relationships))throw Error("Expected events and relationships arrays");
+ if(data.schema_version!==undefined&&data.schema_version!=="amalgam-evidence-v1")throw Error("Unsupported evidence schema version");
  if(data.events.length>1000||data.relationships.length>2000)throw Error("File exceeds preview limits");
  const ids=new Set(),relations=new Set();
  for(const e of data.events){
