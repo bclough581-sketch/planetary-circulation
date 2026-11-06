@@ -41,4 +41,5 @@ jobs:
       - run: npm install --no-save --no-package-lock playwright@1.56.1
       - run: apt-get update -qq && apt-get install -y -qq python3
       - run: PYTHONPATH=. python3 tests/generate_evidence_fixture.py > tests/generated-evidence-fixture.json
+      - run: PYTHONPATH=. python3 scripts/export_ring_snapshot.py data.json tests/generated-ring-snapshot.json
       - run: node tests/test_ring_browser.cjs
