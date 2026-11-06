@@ -43,6 +43,18 @@ const assert=require("node:assert/strict");
   await page.locator("#evidenceFile").setInputFiles({name:"test.json",mimeType:"application/json",buffer:Buffer.from(JSON.stringify(payload))});
   await page.getByText("1 observations, 0 relationships loaded locally.",{exact:false}).waitFor();
   assert.match(await page.locator("#observations").innerText(),/Illustrative market observation/);
+  const linked={events:[
+    {id:"geo-1",domain:"geopolitics",title:"Synthetic shipping restriction",observed_at:"2026-11-05T12:00:00Z",source:{name:"Test source",url:"https://example.org/a"},status:"observed",missing:[]},
+    {id:"market-1",domain:"markets",title:"Synthetic price movement",observed_at:"2026-11-05T13:00:00Z",source:{name:"Test source",url:"https://example.org/b"},status:"observed",missing:["causal attribution"]}
+  ],relationships:[{id:"rel-1",from_event:"geo-1",to_event:"market-1",kind:"correlates_with",status:"inferred",explanation:"Test hypothesis only",evidence_ids:["geo-1","market-1"]}]};
+  // Use a schema-valid relationship kind and status from the actual validator.
+  linked.relationships[0].kind="related_to";
+  await page.locator("#evidenceFile").setInputFiles({name:"linked.json",mimeType:"application/json",buffer:Buffer.from(JSON.stringify(linked))});
+  await page.getByText("2 observations, 1 relationships loaded locally.",{exact:false}).waitFor();
+  assert.match(await page.locator("#observations").innerText(),/Synthetic shipping restriction → Synthetic price movement/);
+  assert.match(await page.locator("#observations").innerText(),/Test hypothesis only/);
+  await page.locator("#layerButtons").getByRole("button",{name:"Geopolitical"}).click();
+  assert.match(await page.locator("#observations").innerText(),/Synthetic shipping restriction → Synthetic price movement/);
   await page.getByRole("button",{name:"Clear evidence"}).click();
   assert.equal(await page.locator("#importStatus").innerText(),"No evidence loaded.");
   await page.locator("#evidenceFile").setInputFiles({name:"invalid.json",mimeType:"application/json",buffer:Buffer.from('{"events":[{"id":"x"}],"relationships":[]}')});
