@@ -96,7 +96,7 @@ const fs=require("node:fs");
   assert.match(await page.locator("#observations").innerText(),/SNAPSHOT ONLY — NOT LIVE/);
   assert.match(await page.locator("#observations").innerText(),/Source authentication: not performed/);
   assert.match(await page.locator("#observations").innerText(),/Freshness assessment: not performed/);
-  assert.match(await page.locator("#observations").innerText(),/excluded source record\\(s\\)/);
+  assert.match(await page.locator("#observations details > summary").first().innerText(),/excluded source record/);
   await page.getByRole("button",{name:"Clear evidence"}).click();
   assert.equal(await page.locator("#importStatus").innerText(),"No evidence loaded.");
   await page.locator("#evidenceFile").setInputFiles({name:"invalid.json",mimeType:"application/json",buffer:Buffer.from('{"events":[{"id":"x"}],"relationships":[]}')});
