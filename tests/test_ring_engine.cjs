@@ -19,6 +19,8 @@ const base=()=>({events:[{id:"e1",domain:"geopolitics",title:"Example",observed_
 const accept=x=>assert.doesNotThrow(()=>context.validate(x));
 const reject=x=>assert.throws(()=>context.validate(x));
 accept(base());
+const versioned=base();versioned.schema_version="amalgam-evidence-v1";accept(versioned);
+versioned.schema_version="unknown-v2";reject(versioned);
 const pair=base();pair.events.push({...pair.events[0],id:"e2",domain:"markets"});pair.relationships.push({id:"r1",from_event:"e1",to_event:"e2",kind:"hypothesized_transmission",status:"hypothesis",explanation:"Illustrative only",evidence_ids:["e1"]});accept(pair);
 for(const [field,value] of [["counterarguments","invalid"],["missing",false],["predictive_advantage","established"]]){const x=JSON.parse(JSON.stringify(pair));x.relationships[0][field]=value;reject(x)}
 const canonical=JSON.parse(JSON.stringify(pair));Object.assign(canonical.relationships[0],{counterarguments:["Alternative cause"],missing:["Missing attribution"],predictive_advantage:"not_established"});accept(canonical);
