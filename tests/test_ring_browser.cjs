@@ -22,7 +22,7 @@ const assert=require("node:assert/strict");
   await page.mouse.move(x+35,y+20,{steps:5});
   await page.mouse.up();
   assert.equal(await page.locator("#layerTitle").innerText(),"Market","drag must not select ring");
-  assert.match(await page.locator("#assembly").getAttribute("style"),/rotateY\\(/,"drag changes orientation");
+  assert.match(await page.locator("#assembly").getAttribute("style"),/rotateY\(/,"drag changes orientation");
   await page.locator("#layerButtons").getByRole("button",{name:"Geopolitical"}).click();
   assert.equal(await page.locator("#layerTitle").innerText(),"Geopolitical");
   await page.getByRole("button",{name:"Depth view"}).click();
