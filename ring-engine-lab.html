@@ -32,6 +32,7 @@ function validateEvidence(data){
  }
  for(const r of data.relationships){
   if(!r||typeof r.id!=="string"||!r.id.trim()||relations.has(r.id)||r.from_event===r.to_event||!ids.has(r.from_event)||!ids.has(r.to_event)||!allowedRelations.has(r.kind)||!allowedStates.has(r.status)||typeof r.explanation!=="string"||!r.explanation.trim()||!Array.isArray(r.evidence_ids)||!r.evidence_ids.length||!r.evidence_ids.every(id=>ids.has(id)))throw Error("Invalid relationship or missing evidence reference");
+  if((r.counterarguments!==undefined&&(!Array.isArray(r.counterarguments)||!r.counterarguments.every(x=>typeof x==="string")))||(r.missing!==undefined&&(!Array.isArray(r.missing)||!r.missing.every(x=>typeof x==="string")))||(r.predictive_advantage!==undefined&&r.predictive_advantage!=="not_established"))throw Error("Invalid relationship caveats or predictive claim");
   relations.add(r.id);
  }
  return data;
@@ -65,6 +66,12 @@ function evidenceView(id){
   const details=document.createElement("details");
   const summary=document.createElement("summary");summary.textContent=from.title+" → "+to.title+" — "+r.kind+" · "+r.status;
   const explanation=document.createElement("p");explanation.textContent="Imported explanation (unverified): "+r.explanation;
+  const caveats=document.createElement("p");
+  const counter=Array.isArray(r.counterarguments)?r.counterarguments:[];
+  const gaps=Array.isArray(r.missing)?r.missing:[];
+  caveats.textContent="Counterarguments: "+(counter.length?counter.join("; "):"None declared; not independently checked")+". Missing relationship evidence: "+(gaps.length?gaps.join("; "):"None declared; not independently checked")+".";
+  const predictive=document.createElement("p");predictive.textContent="Predictive advantage: not established. Imported status is not a performance estimate.";
+
   const peers=byPair.get(pairKey(r))||[];
   const conflict=peers.some(p=>p.status==="refuted")&&peers.some(p=>p.status!=="refuted");
   const conflictNote=document.createElement("p");
@@ -80,7 +87,7 @@ function evidenceView(id){
    missing.textContent=ev.missing.length?"Missing evidence: "+ev.missing.join(", "):"No missing items declared; completeness is not independently verified.";
    item.append(title,meta,link,missing);evidence.append(item);
   }
-  details.append(summary,explanation,warning,conflictNote,evidence);target.append(details);
+  details.append(summary,explanation,warning,conflictNote,caveats,predictive,evidence);target.append(details);
  }
  if(related.length>30){const p=document.createElement("p");p.textContent="Showing first 30 relationships.";target.append(p)}
  if(id==="sector"){const p=document.createElement("p");p.textContent="Sector attribution requires an explicit validated mapping; no sector inferred from other domains.";target.append(p)}
