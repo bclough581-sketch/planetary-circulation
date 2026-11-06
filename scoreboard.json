@@ -15,8 +15,8 @@
       "disclosure": "Chosen after seeing backtests of close neighbours (BTC1 and BTC2 both failed the drawdown bar), so it is a forward test of the closest variant, not a clean result.",
       "verdictDate": "2027-10-31",
       "verdictRule": "Pass only if buy-and-hold's forward drawdown is at least 20% AND this rule's drawdown is at most 60% of it with at least 70% of its return and at least 2 switches. Otherwise inconclusive.",
-      "cols": ["Week", "Close", "40-wk avg", "Paper position"],
-      "rows": [["2026-10-26", "78,354", "72,337", "Long (paper)"]]
+      "cols": ["Week", "Close", "40-wk avg", "Rule state (paper log)"],
+      "rows": [["2026-10-26", "78,354", "72,337", "Long"]]
     },
     {
       "name": "CRY2 Bitcoin / Ether rotation (paper only)",
@@ -24,11 +24,11 @@
       "disclosure": "Passed its backtest (provisional), but the edge shrinks to about +0.6 points a year at double the costs, below its own +3 bar. Backtests do not include the weekend gap that a real fund would face.",
       "verdictDate": "2027-10-31",
       "verdictRule": "Judged on a version filled at the next Monday open, against holding the Bitcoin fund, with at least 10 position changes. Otherwise inconclusive.",
-      "cols": ["Week", "BTC 8-wk", "ETH 8-wk", "Paper position"],
+      "cols": ["Week", "BTC 8-wk", "ETH 8-wk", "Rule state (paper log)"],
       "rows": [["2026-10-26", "-2.47%", "-9.51%", "Cash"]]
     }
   ],
-  "trackNote": "Rows are added by hand each Monday. Two data sources date weekly bars one day apart; the signal does not change either way.",
+  "trackNote": "The rule state is a log of what the rule said, kept to test the rule. It is not a signal and not a suggestion to trade. Rows are added by hand each Monday. Two data sources date weekly bars one day apart; the signal does not change either way.",
   "graveyard": [
     {"name": "The five gates together (G1+G2+G3)", "verdict": "FAIL", "kind": "Sealed hold-out, 2018-2021, run once",
      "numbers": "Hit-rate ratio 1.036 (range 0.979 to 1.085). Money difference -0.028 (range -0.056 to +0.001).",
@@ -46,8 +46,8 @@
      "numbers": "Lift -0.44% (range -1.12% to +0.28%). Shuffled labels did about as well (-0.41%).",
      "read": "The state carried no information. Plain holding beat the cleverer exits."},
     {"name": "Buy after a sharp one-day drop", "verdict": "CLOSED", "kind": "Exploratory, development data only",
-     "numbers": "Excess return was negative in every variant; limit-order entry did not rescue it.",
-     "read": "Stocks after big drops did worse than matched controls."},
+     "numbers": "Excess return was negative in every variant tested, though the ranges for the milder variants include zero. Limit-order entry did not rescue it.",
+     "read": "No sign that stocks after big drops outperform matched controls, and the stronger-drop variants did clearly worse."},
     {"name": "Prediction-market longshots", "verdict": "FAIL", "kind": "Pre-registered, development data",
      "numbers": "Net return -19.3% (range -31.8% to -7.2%) on 889 markets.",
      "read": "An earlier positive result came from picking the highest-volume markets. A fresh sample erased it."},
