@@ -208,3 +208,27 @@ and date coverage relative to SPY. That relative check does not certify an excha
 calendar. No returns or strategy metrics are calculated, and OHLCV-only data never
 grants readiness for the draft dividend-and-split-adjusted total-return study.
 Local provider data must not be uploaded into this public research repository.
+
+
+## Private daily-price quality audit
+
+The optional `daily_price_quality` utility accepts normalized Alpha Vantage
+snapshots plus a retained `reference-sessions.csv` and `calendar-metadata.json`.
+Its core validation uses only the standard library; generating the reference
+calendar separately requires `exchange_calendars` (the local audit used 4.13.2).
+
+```bash
+python -m intelligence.daily_price_quality --price-dir PRIVATE_PRICES --calendar-dir REFERENCE --output-dir PRIVATE_OUTPUT
+```
+
+It checks exact session-date coverage and adjustment-factor identities without
+calculating strategy or forward returns. Both prior-close back-adjustment and
+ex-date-close cash-dividend-reinvestment conventions are reported, preserving
+convention differences. Simultaneous split/dividend actions are flagged as
+ambiguous rather than guessed. The output is a separate close/adjusted-close
+research CSV with input and reference checksums plus a readable quality report.
+
+Calendar implementation and passing identity checks do not independently
+certify exchange history or vendor adjustments. Public redistribution rights,
+signal availability and a locked study design remain separate requirements.
+Provider snapshots and generated price datasets remain local; do not commit them.
