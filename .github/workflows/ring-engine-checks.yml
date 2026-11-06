@@ -5,6 +5,7 @@ on:
     paths:
       - 'ring-engine-lab.html'
       - 'intelligence/events.py'
+      - 'intelligence/ingest.py'
       - 'tests/test_evidence_export.py'
       - 'tests/generate_evidence_fixture.py'
       - 'tests/test_ring_engine.cjs'
@@ -36,5 +37,6 @@ jobs:
         with:
           node-version: '22'
       - run: npm install --no-save --no-package-lock playwright@1.56.1
-      - run: PYTHONPATH=. python tests/generate_evidence_fixture.py > tests/generated-evidence-fixture.json
+      - run: apt-get update -qq && apt-get install -y -qq python3
+      - run: PYTHONPATH=. python3 tests/generate_evidence_fixture.py > tests/generated-evidence-fixture.json
       - run: node tests/test_ring_browser.cjs
