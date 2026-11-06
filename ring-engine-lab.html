@@ -11,24 +11,65 @@
 <button class="ring" data-id="stock" aria-label="Inspect stock evidence" style="--inset:40%;--thick:10px;--color:#ff806e;--glow:#a53f35;--z:56px;--speed:16s"></button>
 <div class="center">?</div></div></div><div class="controls"><button id="spin" aria-pressed="true">Pause motion</button><button id="settle">Settle view</button><button id="depth">Depth view</button><button id="reset">Reset</button></div><p class="muted">Drag the empty background to tilt the assembly; tap a ring or a layer below. This prototype uses CSS 3D transforms, no external libraries. Motion is decorative until linked to verified analytical states.</p></div>
 <aside><div class="card"><h2 style="margin-top:0">Assessment</h2><p><strong>INSUFFICIENT EVIDENCE — NO TRADE SIGNAL</strong></p><p class="muted">The visualization must not convert absent evidence into a numeric convergence score.</p><dl><dt>Sources</dt><dd>Illustrative only</dd><dt>Freshness</dt><dd>Not established</dd><dt>Predictive validity</dt><dd>Not established</dd><dt>Gate status</dt><dd>Not evaluated</dd></dl></div>
-<div class="card legend"><h2 style="margin-top:0">Inspect a layer</h2><div id="layerButtons"></div></div><div class="card evidence" aria-live="polite"><h2 id="layerTitle">Select a ring</h2><p id="layerDetail">Select a layer to inspect what evidence would be needed.</p><p id="layerCaveat" class="muted"></p></div></aside></div></main><footer>Development-only ring interaction study · No production connection</footer>
+<div class="card"><h2>Evidence import (local only)</h2><p class="muted">Load a JSON object with <code>events</code> and <code>relationships</code> arrays following intelligence/events.py. Files stay in this browser; no upload or storage.</p><input id="evidenceFile" type="file" accept=".json,application/json" aria-label="Select evidence JSON"><p id="importStatus" role="status">No evidence loaded.</p><button id="clearEvidence">Clear evidence</button></div><div class="card legend"><h2 style="margin-top:0">Inspect a layer</h2><div id="layerButtons"></div></div><div class="card evidence" aria-live="polite"><h2 id="layerTitle">Select a ring</h2><p id="layerDetail">Select a layer to inspect what evidence would be needed.</p><p id="layerCaveat" class="muted"></p><div id="observations"></div></div></aside></div></main><footer>Development-only ring interaction study · No production connection</footer>
 <script>
 "use strict";
 const layers={geo:{name:"Geopolitical",detail:"Required: attributed event records, timestamps, corroboration, and an explicit transmission path to the asset.",caveat:"Missing: authenticated event and market linkage."},econ:{name:"Economic",detail:"Required: release-time verified macro observations, revisions, baseline comparisons, and competing explanations.",caveat:"Missing: point-in-time availability proof."},sector:{name:"Sector",detail:"Required: sector exposure, constituent coverage, causal hypothesis, and independent supporting observations.",caveat:"Missing: independently tested sector relationship."},market:{name:"Market",detail:"Required: dated prices, volume, liquidity, benchmarks, and an auditable market regime definition.",caveat:"Missing: validated comparative performance."},stock:{name:"Stock",detail:"Required: issuer-specific evidence, adjusted prices, tradability constraints, and predeclared gate outcomes.",caveat:"Missing: validated forward-looking edge."}};
 const assembly=document.getElementById("assembly"),stage=document.getElementById("stage");
+let imported=null;
+const domainLayer={geopolitics:"geo",weather:"geo",maritime:"geo",aviation:"geo",energy:"econ",commodities:"econ",economics:"econ",markets:"market",corporate:"stock"};
+const allowedDomains=new Set(Object.keys(domainLayer));
+const allowedStates=new Set(["observed","hypothesis","investigating","validated","refuted"]);
+const allowedRelations=new Set(["coincident","exposure","lead_lag","hypothesized_transmission"]);
+function validTime(t){return typeof t==="string" && /(?:Z|[+-]\\d\\d:\\d\\d)$/.test(t) && Number.isFinite(Date.parse(t))}
+function validateEvidence(data){
+ if(!data||typeof data!=="object"||!Array.isArray(data.events)||!Array.isArray(data.relationships))throw Error("Expected events and relationships arrays");
+ if(data.events.length>1000||data.relationships.length>2000)throw Error("File exceeds preview limits");
+ const ids=new Set(),relations=new Set();
+ for(const e of data.events){
+  if(!e||typeof e.id!=="string"||!e.id.trim()||ids.has(e.id)||!allowedDomains.has(e.domain)||typeof e.title!=="string"||!e.title.trim()||!validTime(e.observed_at)||!e.source||typeof e.source.name!=="string"||!e.source.name.trim()||typeof e.source.url!=="string"||!/^https?:\\/\\//.test(e.source.url)||!allowedStates.has(e.status)||!Array.isArray(e.missing)||!e.missing.every(x=>typeof x==="string"))throw Error("Invalid or duplicate event record");
+  ids.add(e.id);
+ }
+ for(const r of data.relationships){
+  if(!r||typeof r.id!=="string"||!r.id.trim()||relations.has(r.id)||r.from_event===r.to_event||!ids.has(r.from_event)||!ids.has(r.to_event)||!allowedRelations.has(r.kind)||!allowedStates.has(r.status)||typeof r.explanation!=="string"||!r.explanation.trim()||!Array.isArray(r.evidence_ids)||!r.evidence_ids.length||!r.evidence_ids.every(id=>ids.has(id)))throw Error("Invalid relationship or missing evidence reference");
+  relations.add(r.id);
+ }
+ return data;
+}
+function evidenceView(id){
+ const target=document.getElementById("observations");target.replaceChildren();
+ if(!imported)return;
+ const events=imported.events.filter(e=>domainLayer[e.domain]===id);
+ const heading=document.createElement("p");heading.textContent=events.length+" source-attributed record(s) in this view. Import does not authenticate sources or establish causation.";target.append(heading);
+ for(const e of events.slice(0,30)){
+  const p=document.createElement("p");p.textContent=e.title+" — "+e.status+" · "+e.observed_at+" · "+e.source.name+(e.missing.length?" · Missing: "+e.missing.join(", "):"");target.append(p);
+ }
+ if(events.length>30){const p=document.createElement("p");p.textContent="Showing first 30 records.";target.append(p)}
+ if(id==="sector"){const p=document.createElement("p");p.textContent="Sector attribution requires an explicit validated mapping; no sector inferred from other domains.";target.append(p)}
+}
+
 const reducedMotion=matchMedia("(prefers-reduced-motion: reduce)");
 let tilt=66,yaw=0,roll=-22,drag=null;
 function orient(){assembly.style.transform="rotateX("+tilt+"deg) rotateY("+yaw+"deg) rotateZ("+roll+"deg)"}
 let mode="spin",running=!reducedMotion.matches;
 function motion(){assembly.classList.toggle("paused",!running);document.getElementById("spin").textContent=running?"Pause motion":"Resume motion";document.getElementById("spin").setAttribute("aria-pressed",String(running))}
 function view(v){mode=v;[tilt,yaw,roll]=v==="depth"?[57,-23,-24]:v==="settle"?[78,0,0]:[66,0,-22];orient()}
-function select(id){const x=layers[id];if(!x)return;document.querySelectorAll(".ring").forEach(e=>e.classList.toggle("selected",e.dataset.id===id));document.getElementById("layerTitle").textContent=x.name;document.getElementById("layerDetail").textContent=x.detail;document.getElementById("layerCaveat").textContent=x.caveat}
+function select(id){const x=layers[id];if(!x)return;document.querySelectorAll(".ring").forEach(e=>e.classList.toggle("selected",e.dataset.id===id));document.getElementById("layerTitle").textContent=x.name;document.getElementById("layerDetail").textContent=x.detail;document.getElementById("layerCaveat").textContent=x.caveat;evidenceView(id)}
 const buttons=document.getElementById("layerButtons");Object.entries(layers).forEach(([id,v])=>{const b=document.createElement("button");b.textContent=v.name;b.onclick=()=>select(id);buttons.append(b)});
 document.querySelectorAll(".ring").forEach(e=>e.onclick=()=>select(e.dataset.id));
 document.getElementById("spin").onclick=()=>{running=!running;motion()};
 document.getElementById("settle").onclick=()=>{view("settle");running=false;motion()};
 document.getElementById("depth").onclick=()=>{view("depth");running=false;motion()};
 document.getElementById("reset").onclick=()=>{view("spin");running=!reducedMotion.matches;motion();select("geo")};
+document.getElementById("evidenceFile").addEventListener("change",async e=>{
+ const file=e.target.files&&e.target.files[0];if(!file)return;
+ try{if(file.size>1024*1024)throw Error("File exceeds 1 MB");
+ const parsed=validateEvidence(JSON.parse(await file.text()));imported=parsed;
+ document.getElementById("importStatus").textContent=parsed.events.length+" observations, "+parsed.relationships.length+" relationships loaded locally. No signal or score calculated.";
+ const active=document.querySelector(".ring.selected");evidenceView(active?active.dataset.id:"geo");
+ }catch(err){imported=null;document.getElementById("importStatus").textContent="Rejected: "+err.message;document.getElementById("observations").replaceChildren()}
+});
+document.getElementById("clearEvidence").onclick=()=>{imported=null;document.getElementById("evidenceFile").value="";document.getElementById("importStatus").textContent="No evidence loaded.";document.getElementById("observations").replaceChildren()};
 stage.addEventListener("pointerdown",e=>{if(e.target.closest("button"))return;drag={x:e.clientX,y:e.clientY};stage.setPointerCapture(e.pointerId)});
 stage.addEventListener("pointermove",e=>{if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag={x:e.clientX,y:e.clientY};yaw=Math.max(-70,Math.min(70,yaw+dx*.35));tilt=Math.max(12,Math.min(88,tilt-dy*.35));assembly.style.transition="none";orient()});
 function endDrag(){drag=null;assembly.style.transition=""}
