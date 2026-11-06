@@ -13,6 +13,7 @@ const assert=require("node:assert/strict");
   assert.equal(await page.locator(".ring").count(),5);
   // A tap selects; a real pointer drag on a ring rotates without selecting.
   await page.locator("#layerButtons").getByRole("button",{name:"Market"}).click();
+  await page.locator("#stage").scrollIntoViewIfNeeded();
   const hit=await page.evaluate(()=>{
     const rect=document.querySelector("#stage").getBoundingClientRect();
     for(let y=rect.top+12;y<rect.bottom-12;y+=3)
