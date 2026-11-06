@@ -137,7 +137,8 @@
       "numbers": "Net return -19.3% (95% range -31.8% to -7.2%) on 889 markets.",
       "read": "An earlier positive result came from picking the highest-volume markets. A fresh sample erased it.",
       "source": "polymarket_dev_v2_result (2026-10-15).",
-      "check": "Figures re-read against the project result record on 2026-11-06 by its original author (Claude); not an independent check."
+      "check": "Figures re-read against the project result record on 2026-11-06 by its original author (Claude); not an independent check.",
+      "hashes": "Output file dev_mirror_v2_output.txt sha256 2DECB0D7…169B79C0 (hashed 2026-11-06; shows the file as it is now, not proof it is unchanged since the run)."
     },
     {
       "id": "TREND1",
@@ -148,7 +149,7 @@
       "read": "It cut risk, as trend rules do, without a demonstrated gain in risk-adjusted return.",
       "source": "trend_v1_dev_result (2026-10-15).",
       "check": "Figures re-read against the project result record on 2026-11-06 by its original author (Claude); not an independent check.",
-      "hashes": "Data file trend_monthly_v1.csv sha256 71587a7a…bff91 (stated in the result record). Hold-out never opened."
+      "hashes": "Output file trend_v1_dev_output.txt sha256 CA90AD11…EAFF92A7 (hashed 2026-11-06). Data file trend_monthly_v1.csv sha256 71587a7a…bff91 (stated in the result record)."
     },
     {
       "id": "DEFENSE1",
@@ -158,7 +159,8 @@
       "numbers": "Max drawdown -27.0% vs -25.1% for 60/40.",
       "read": "In 2008 to 2018, Treasuries were the better crash hedge. A separate test from the charter's hold-out H2.",
       "source": "defense_v1_dev_result (2026-10-15).",
-      "check": "Figures re-read against the project result record on 2026-11-06 by its original author (Claude); not an independent check."
+      "check": "Figures re-read against the project result record on 2026-11-06 by its original author (Claude); not an independent check.",
+      "hashes": "Output file defense_v1_dev_output.txt sha256 21EE9BAC…F369803AC (hashed 2026-11-06; shows the file as it is now, not proof it is unchanged since the run)."
     },
     {
       "id": "BTC1",
