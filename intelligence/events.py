@@ -74,3 +74,26 @@ def validate_graph(events, relationships):
         if not set(r["evidence_ids"]).issubset(known):
             raise ValueError("relationship references unknown evidence")
     return True
+
+
+def export_graph(events, relationships):
+    """Return a JSON-serializable, versioned graph for the Ring Engine.
+
+    This preserves canonical observation/relationship fields and fails closed on
+    broken references. Export does not establish source authenticity or edge.
+    """
+    if not isinstance(events, list) or not isinstance(relationships, list):
+        raise ValueError("events and relationships must be lists")
+    validate_graph(events, relationships)
+    for e in events:
+        if not isinstance(e, dict) or e.get("domain") not in DOMAINS:
+            raise ValueError("invalid event domain")
+        if not isinstance(e.get("source"), dict) or not e["source"].get("name") or not e["source"].get("url"):
+            raise ValueError("missing event source")
+        _time(e.get("observed_at"))
+    for r in relationships:
+        if r.get("kind") not in RELATION_TYPES or r.get("status") not in EVIDENCE_STATES:
+            raise ValueError("invalid relationship status or kind")
+        if r.get("predictive_advantage", "not_established") != "not_established":
+            raise ValueError("predictive advantage not established")
+    return {"schema_version": "amalgam-evidence-v1", "events": events, "relationships": relationships}
