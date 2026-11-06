@@ -1,6 +1,10 @@
 """Canonical Python-to-browser evidence export contract regression."""
 import json
 import unittest
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
 from intelligence.events import observation, relationship, export_graph
 from intelligence.ingest import snapshot_graph
 
@@ -36,6 +40,21 @@ class EvidenceExportTests(unittest.TestCase):
         self.assertEqual(graph["events"][0]["domain"], "economics")
         self.assertEqual(graph["relationships"], [])
         self.assertEqual(len(graph["excluded_records"]), 2)
+
+    def test_snapshot_cli_export(self):
+        root = Path(__file__).resolve().parents[1]
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "export.json"
+            subprocess.run([sys.executable, str(root / "scripts/export_ring_snapshot.py"),
+                            str(root / "data.json"), str(output)], cwd=root,
+                           check=True, capture_output=True, text=True,
+                           env={**__import__("os").environ, "PYTHONPATH": str(root)})
+            graph = json.loads(output.read_text())
+            self.assertEqual(graph["schema_version"], "amalgam-evidence-v1")
+            self.assertEqual(graph["feed_status"], "snapshot_only_not_live")
+            self.assertEqual(graph["relationships"], [])
+            self.assertTrue(graph["events"])
+            self.assertIn("snapshot_generated_utc", graph)
 
     def test_missing_reference_rejected(self):
         a = observation(id="a", domain="markets", title="Synthetic",
