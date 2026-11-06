@@ -27,8 +27,9 @@ function validateEvidence(data){
  if(data.schema_version!==undefined&&data.schema_version!=="amalgam-evidence-v1")throw Error("Unsupported evidence schema version");
  if(data.feed_status!==undefined&&data.feed_status!=="snapshot_only_not_live")throw Error("Unsupported feed status");
  if(data.source_authentication!==undefined&&data.source_authentication!=="not_performed")throw Error("Unsupported source authentication claim");
- if(data.freshness_assessment!==undefined&&data.freshness_assessment!=="not_performed")throw Error("Unsupported freshness assessment claim");
+ if(data.freshness_assessment!==undefined&&!["not_performed","review_heuristic_at_snapshot"].includes(data.freshness_assessment))throw Error("Unsupported freshness assessment claim");
  if(data.excluded_records!==undefined&&(!Array.isArray(data.excluded_records)||data.excluded_records.length>2000||!data.excluded_records.every(x=>x&&typeof x==="object"&&typeof x.id==="string"&&typeof x.reason==="string")))throw Error("Invalid excluded records");
+ if(data.freshness_records!==undefined&&(!Array.isArray(data.freshness_records)||data.freshness_records.length>1000||!data.freshness_records.every(x=>x&&typeof x.event_id==="string"&&["unknown","future_dated","review_needed","within_review_window"].includes(x.state))))throw Error("Invalid freshness records");
  if(data.events.length>1000||data.relationships.length>2000)throw Error("File exceeds preview limits");
  const ids=new Set(),relations=new Set();
  for(const e of data.events){
@@ -46,10 +47,11 @@ function evidenceView(id){
  const target=document.getElementById("observations");target.replaceChildren();
  if(!imported)return;
  const events=imported.events.filter(e=>domainLayer[e.domain]===id);
+ const freshnessById=new Map((imported.freshness_records||[]).map(r=>[r.event_id,r]));
  if(imported.feed_status==="snapshot_only_not_live"){
   const note=document.createElement("p");
   note.textContent="SNAPSHOT ONLY — NOT LIVE. Generated: "+(typeof imported.snapshot_generated_utc==="string"?imported.snapshot_generated_utc:"unknown")+". No freshness guarantee.";
-  const provenance=document.createElement("p");provenance.textContent="Source authentication: not performed. Freshness assessment: not performed.";target.append(provenance);
+  const provenance=document.createElement("p");provenance.textContent="Source authentication: not performed. Freshness: "+(imported.freshness_assessment==="review_heuristic_at_snapshot"?"provisional age review at snapshot generation; NOT current freshness or publisher SLA.":"not assessed.") ;target.append(provenance);
   target.append(note);
  }
  if(Array.isArray(imported.excluded_records)){
@@ -69,6 +71,7 @@ function evidenceView(id){
   const p=document.createElement("p");p.textContent="Event ID: "+e.id+" · Domain: "+e.domain+" · Source: "+e.source.name;
   const link=document.createElement("a");link.href=e.source.url;link.target="_blank";link.rel="noopener noreferrer";link.textContent="Open source (external, not authenticated)";
   const missing=document.createElement("p");missing.textContent=e.missing.length?"Missing evidence: "+e.missing.join(", "):"No missing items declared; completeness is not independently verified.";
+  const age=freshnessById.get(e.id);if(age){const note=document.createElement("p");note.textContent="Snapshot age review: "+age.state+(typeof age.age_hours_at_snapshot==="number"?" · "+age.age_hours_at_snapshot+" hours at generation / "+age.review_window_hours+"-hour review window":"");details.append(note)}
   details.append(summary,p,link,missing);target.append(details);
  }
  if(events.length>30){const p=document.createElement("p");p.textContent="Showing first 30 records.";target.append(p)}
