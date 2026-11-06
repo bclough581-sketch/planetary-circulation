@@ -86,6 +86,15 @@ const fs=require("node:fs");
     assert.match(await page.locator("#observations").innerText(),/Alternative causes/);
     assert.match(await page.locator("#observations").innerText(),/Causal identification/);
   }
+  const snapshotPath=path.resolve(__dirname,"generated-ring-snapshot.json");
+  assert.ok(fs.existsSync(snapshotPath),"Real snapshot export fixture is required");
+  const snapshot=JSON.parse(fs.readFileSync(snapshotPath,"utf8"));
+  assert.equal(snapshot.feed_status,"snapshot_only_not_live");
+  assert.ok(snapshot.events.length>0,"Real snapshot must contain observations");
+  await page.locator("#evidenceFile").setInputFiles({name:"snapshot.json",mimeType:"application/json",buffer:Buffer.from(JSON.stringify(snapshot))});
+  await page.getByText(snapshot.events.length+" observations, 0 relationships loaded locally.",{exact:false}).waitFor();
+  assert.match(await page.locator("#observations").innerText(),/SNAPSHOT ONLY — NOT LIVE/);
+  assert.match(await page.locator("#observations").innerText(),/excluded source record\\(s\\)/);
   await page.getByRole("button",{name:"Clear evidence"}).click();
   assert.equal(await page.locator("#importStatus").innerText(),"No evidence loaded.");
   await page.locator("#evidenceFile").setInputFiles({name:"invalid.json",mimeType:"application/json",buffer:Buffer.from('{"events":[{"id":"x"}],"relationships":[]}')});
