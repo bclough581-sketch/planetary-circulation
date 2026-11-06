@@ -26,6 +26,8 @@ function validateEvidence(data){
  if(!data||typeof data!=="object"||!Array.isArray(data.events)||!Array.isArray(data.relationships))throw Error("Expected events and relationships arrays");
  if(data.schema_version!==undefined&&data.schema_version!=="amalgam-evidence-v1")throw Error("Unsupported evidence schema version");
  if(data.feed_status!==undefined&&data.feed_status!=="snapshot_only_not_live")throw Error("Unsupported feed status");
+ if(data.source_authentication!==undefined&&data.source_authentication!=="not_performed")throw Error("Unsupported source authentication claim");
+ if(data.freshness_assessment!==undefined&&data.freshness_assessment!=="not_performed")throw Error("Unsupported freshness assessment claim");
  if(data.excluded_records!==undefined&&(!Array.isArray(data.excluded_records)||data.excluded_records.length>2000||!data.excluded_records.every(x=>x&&typeof x==="object"&&typeof x.id==="string"&&typeof x.reason==="string")))throw Error("Invalid excluded records");
  if(data.events.length>1000||data.relationships.length>2000)throw Error("File exceeds preview limits");
  const ids=new Set(),relations=new Set();
@@ -47,6 +49,7 @@ function evidenceView(id){
  if(imported.feed_status==="snapshot_only_not_live"){
   const note=document.createElement("p");
   note.textContent="SNAPSHOT ONLY — NOT LIVE. Generated: "+(typeof imported.snapshot_generated_utc==="string"?imported.snapshot_generated_utc:"unknown")+". No freshness guarantee.";
+  const provenance=document.createElement("p");provenance.textContent="Source authentication: not performed. Freshness assessment: not performed.";target.append(provenance);
   target.append(note);
  }
  if(Array.isArray(imported.excluded_records)){
