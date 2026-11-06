@@ -13,13 +13,19 @@ const assert=require("node:assert/strict");
   assert.equal(await page.locator(".ring").count(),5);
   // A tap selects; a real pointer drag on a ring rotates without selecting.
   await page.locator("#layerButtons").getByRole("button",{name:"Market"}).click();
-  const ring=page.locator('.ring[data-id="geo"]');
-  const box=await ring.boundingBox();
-  assert.ok(box&&box.width>0,"geopolitical ring has a visible hitbox");
-  const x=box.x+box.width/2, y=box.y+8;
-  await page.mouse.move(x,y);
+  const hit=await page.evaluate(()=>{
+    const rect=document.querySelector("#stage").getBoundingClientRect();
+    for(let y=rect.top+12;y<rect.bottom-12;y+=3)
+      for(let x=rect.left+12;x<rect.right-12;x+=3){
+        const el=document.elementFromPoint(x,y);
+        if(el&&el.classList.contains("ring"))return {x,y,id:el.dataset.id};
+      }
+    return null;
+  });
+  assert.ok(hit,"at least one ring surface is hit-testable");
+  await page.mouse.move(hit.x,hit.y);
   await page.mouse.down();
-  await page.mouse.move(x+35,y+20,{steps:5});
+  await page.mouse.move(hit.x+35,hit.y+20,{steps:5});
   await page.mouse.up();
   assert.equal(await page.locator("#layerTitle").innerText(),"Market","drag must not select ring");
   assert.match(await page.locator("#assembly").getAttribute("style"),/rotateY\(/,"drag changes orientation");
