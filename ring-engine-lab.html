@@ -42,7 +42,12 @@ function evidenceView(id){
  const events=imported.events.filter(e=>domainLayer[e.domain]===id);
  const heading=document.createElement("p");heading.textContent=events.length+" source-attributed record(s) in this view. Import does not authenticate sources or establish causation.";target.append(heading);
  for(const e of events.slice(0,30)){
-  const p=document.createElement("p");p.textContent=e.title+" — "+e.status+" · "+e.observed_at+" · "+e.source.name+(e.missing.length?" · Missing: "+e.missing.join(", "):"");target.append(p);
+  const details=document.createElement("details");
+  const summary=document.createElement("summary");summary.textContent=e.title+" — "+e.status+" · "+e.observed_at;
+  const p=document.createElement("p");p.textContent="Event ID: "+e.id+" · Domain: "+e.domain+" · Source: "+e.source.name;
+  const link=document.createElement("a");link.href=e.source.url;link.target="_blank";link.rel="noopener noreferrer";link.textContent="Open source (external, not authenticated)";
+  const missing=document.createElement("p");missing.textContent=e.missing.length?"Missing evidence: "+e.missing.join(", "):"No missing items declared; completeness is not independently verified.";
+  details.append(summary,p,link,missing);target.append(details);
  }
  if(events.length>30){const p=document.createElement("p");p.textContent="Showing first 30 records.";target.append(p)}
  const byId=new Map(imported.events.map(e=>[e.id,e]));
@@ -50,9 +55,20 @@ function evidenceView(id){
  const relHeading=document.createElement("p");relHeading.textContent=related.length+" attributed relationship(s) touching this layer. Relationship labels are supplied by the imported file, not independently verified.";target.append(relHeading);
  for(const r of related.slice(0,30)){
   const from=byId.get(r.from_event),to=byId.get(r.to_event);
-  const p=document.createElement("p");
-  p.textContent=from.title+" → "+to.title+" — "+r.kind+" · "+r.status+" · "+r.explanation+" · Evidence IDs: "+r.evidence_ids.join(", ");
-  target.append(p);
+  const details=document.createElement("details");
+  const summary=document.createElement("summary");summary.textContent=from.title+" → "+to.title+" — "+r.kind+" · "+r.status;
+  const explanation=document.createElement("p");explanation.textContent="Imported explanation (unverified): "+r.explanation;
+  const warning=document.createElement("p");warning.textContent=r.status==="refuted"?"REFUTED in imported data; not an actionable transmission.":r.status==="hypothesis"||r.status==="investigating"?"UNCONFIRMED relationship; not an actionable transmission.":"Imported status: "+r.status+"; no independent verification or trading signal.";
+  const evidence=document.createElement("div");const label=document.createElement("p");label.textContent="Supporting event records (expand for sources and missing evidence):";evidence.append(label);
+  for(const evidenceId of r.evidence_ids){
+   const ev=byId.get(evidenceId),item=document.createElement("details"),title=document.createElement("summary"),meta=document.createElement("p"),link=document.createElement("a"),missing=document.createElement("p");
+   title.textContent=ev.title+" — "+ev.status+" ("+ev.id+")";
+   meta.textContent=ev.domain+" · "+ev.observed_at+" · "+ev.source.name;
+   link.href=ev.source.url;link.target="_blank";link.rel="noopener noreferrer";link.textContent="Open source (external, not authenticated)";
+   missing.textContent=ev.missing.length?"Missing evidence: "+ev.missing.join(", "):"No missing items declared; completeness is not independently verified.";
+   item.append(title,meta,link,missing);evidence.append(item);
+  }
+  details.append(summary,explanation,warning,evidence);target.append(details);
  }
  if(related.length>30){const p=document.createElement("p");p.textContent="Showing first 30 relationships.";target.append(p)}
  if(id==="sector"){const p=document.createElement("p");p.textContent="Sector attribution requires an explicit validated mapping; no sector inferred from other domains.";target.append(p)}
