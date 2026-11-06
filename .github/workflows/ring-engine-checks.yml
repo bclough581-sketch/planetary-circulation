@@ -5,6 +5,7 @@ on:
     paths:
       - 'ring-engine-lab.html'
       - 'tests/test_ring_engine.cjs'
+      - 'tests/test_ring_browser.cjs'
       - '.github/workflows/ring-engine-checks.yml'
   workflow_dispatch:
 jobs:
@@ -18,3 +19,16 @@ jobs:
         with:
           node-version: '22'
       - run: node tests/test_ring_engine.cjs
+  ring-mobile-browser:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save --no-package-lock playwright@1.56.1
+      - run: npx playwright install --with-deps chromium
+      - run: node tests/test_ring_browser.cjs
