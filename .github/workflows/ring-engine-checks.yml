@@ -1,9 +1,41 @@
 name: Ring Engine Checks
 on:
+  pull_request:
+    branches: [amalgam-event-foundation, main]
+    paths:
+      - 'ring-engine-lab.html'
+      - 'ring-evidence.js'
+      - 'amalgam-theme.css'
+      - 'galaxy-ring.svg'
+      - 'decision-journal.html'
+      - 'journal-core.js'
+      - 'tests/browser_preview.cjs'
+      - 'tests/test_journal_*.cjs'
+      - 'tests/test_evidence_handoff.cjs'
+      - 'tests/test_ring_*.cjs'
+      - 'scripts/build_ring_evidence.py'
+      - 'intelligence/events.py'
+      - 'intelligence/ingest.py'
+      - 'intelligence/data/delta-quarterly-curated.json'
+      - 'data.json'
+      - 'tests/test_ring_*.py'
+      - '.github/workflows/ring-engine-checks.yml'
   push:
     branches: [amalgam-event-foundation]
     paths:
       - 'ring-engine-lab.html'
+      - 'ring-evidence.js'
+      - 'amalgam-theme.css'
+      - 'galaxy-ring.svg'
+      - 'decision-journal.html'
+      - 'journal-core.js'
+      - 'tests/browser_preview.cjs'
+      - 'tests/test_journal_*.cjs'
+      - 'tests/test_evidence_handoff.cjs'
+      - 'tests/test_ring_*.cjs'
+      - 'scripts/build_ring_evidence.py'
+      - 'intelligence/data/delta-quarterly-curated.json'
+      - 'tests/test_ring_starter.py'
       - 'intelligence/events.py'
       - 'intelligence/ingest.py'
       - 'scripts/export_ring_snapshot.py'
@@ -25,6 +57,8 @@ jobs:
         with:
           node-version: '22'
       - run: node tests/test_ring_engine.cjs
+      - run: node tests/test_journal_core.cjs
+      - run: python -m unittest discover -s tests -p test_ring_starter.py
       - run: python -m unittest discover -s tests -p test_evidence_export.py
   ring-mobile-browser:
     runs-on: ubuntu-latest
@@ -43,3 +77,8 @@ jobs:
       - run: PYTHONPATH=. python3 tests/generate_evidence_fixture.py > tests/generated-evidence-fixture.json
       - run: PYTHONPATH=. python3 scripts/export_ring_snapshot.py data.json tests/generated-ring-snapshot.json
       - run: node tests/test_ring_browser.cjs
+      - run: node tests/test_journal_browser.cjs
+      - run: node tests/test_evidence_handoff.cjs
+      - run: node tests/test_ring_comparisons.cjs
+      - run: node tests/test_ring_galaxy.cjs
+      - run: node tests/test_ring_theme.cjs
