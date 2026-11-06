@@ -58,7 +58,7 @@ const assert=require("node:assert/strict");
   await evidenceItems.nth(1).locator("summary").click();
   assert.match(await page.locator("#observations").innerText(),/causal attribution/);
   assert.equal(await evidenceItems.nth(1).locator("a").getAttribute("href"),"https://example.org/b");
-  assert.match(await page.locator("#observations").innerText(),/No refuted\\/non-refuted status conflict declared/);
+  assert.match(await page.locator("#observations").innerText(),/No refuted\/non-refuted status conflict declared/);
   linked.relationships.push({id:"rel-2",from_event:"geo-1",to_event:"market-1",kind:"hypothesized_transmission",status:"refuted",explanation:"Synthetic counterevidence",evidence_ids:["geo-1"]});
   await page.locator("#evidenceFile").setInputFiles({name:"conflict.json",mimeType:"application/json",buffer:Buffer.from(JSON.stringify(linked))});
   await page.getByText("2 observations, 2 relationships loaded locally.",{exact:false}).waitFor();
