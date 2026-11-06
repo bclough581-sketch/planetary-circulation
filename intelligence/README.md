@@ -190,3 +190,21 @@ with zero trading eligibility and no outcome returns or model results generated.
 Artifacts include the daily input, draft specification and readable readiness report.
 The next input requirement is documented adjusted DAL/UAL/SPY daily prices with
 appropriate licensing and adjustment semantics, followed by availability evidence.
+
+
+## Local Petunia price readiness audit
+
+```bash
+python -m intelligence.petunia_price_audit --database /path/to/ohlcv.sqlite --output-dir /isolated/audit
+```
+
+This utility opens the named store with SQLite `mode=ro` and `query_only`, reads
+only DAL/UAL/SPY daily candles and structural flag dates/kinds, and creates an
+isolated CSV snapshot plus JSON/text readiness reports. It refuses holdout-named
+files and output locations inside the database's source folder. No project
+trading modules, credentials, account records or protected holdout prices are read.
+It checks OHLC bounds, finite positive prices, nonnegative volume, duplicate dates
+and date coverage relative to SPY. That relative check does not certify an exchange
+calendar. No returns or strategy metrics are calculated, and OHLCV-only data never
+grants readiness for the draft dividend-and-split-adjusted total-return study.
+Local provider data must not be uploaded into this public research repository.
