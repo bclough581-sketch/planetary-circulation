@@ -31,7 +31,7 @@ th{color:var(--dim);font-weight:400}
 .item summary::-webkit-details-marker{display:none}
 .item .nm{font-size:13.5px}
 .tag{font-family:var(--display);font-size:10px;letter-spacing:.1em;border:1px solid var(--line);border-radius:4px;padding:3px 6px;white-space:nowrap}
-.FAIL,.DEAD{border-left-color:var(--r)}.CLOSED{border-left-color:var(--y)}.NOT-AN-EDGE{border-left-color:var(--y)}
+.FAIL,.DEAD{border-left-color:var(--r)}.CLOSED{border-left-color:var(--y)}.ESTIMATE{border-left-color:var(--y)}
 .item .body{padding:0 11px 11px;font-size:12.5px;color:var(--dim)}
 .item .body p{margin:6px 0}
 .item .body b{color:var(--ink);font-weight:400}
@@ -52,7 +52,7 @@ ul{margin:6px 0;padding-left:18px;font-size:12.5px;color:var(--dim)}
 <p class="dim" id="trackNote"></p>
 
 <h2>SELECTED DOCUMENTED RESULTS</h2>
-<p class="dim">Not a complete list of everything tried. Tap any row. Each row states its own interval level. A null or negative result is still a result, and a fail on a small sample is weak evidence, not proof that nothing exists.</p>
+<p class="dim">Not a complete list of everything tried. Tap any row. Interval levels are shown where the source recorded them; a row that gives only a range is flagged in its source line. A null or negative result is still a result, and a fail on a small sample is weak evidence, not proof that nothing exists.</p>
 <div id="grave"></div>
 
 <h2>PARKED</h2>
@@ -95,7 +95,7 @@ function render(d){
     var p1=el('p');p1.appendChild(el('b',null,g.id+' · '));p1.appendChild(document.createTextNode(g.kind));b.appendChild(p1);
     var p2=el('p');p2.appendChild(el('b',null,'Numbers: '));p2.appendChild(document.createTextNode(g.numbers));b.appendChild(p2);
     var p3=el('p');p3.appendChild(el('b',null,'Read: '));p3.appendChild(document.createTextNode(g.read));b.appendChild(p3);
-    var p4=el('p');p4.appendChild(el('b',null,'Source: '));p4.appendChild(document.createTextNode(g.source+' '+g.check));b.appendChild(p4);
+    var p4=el('p');p4.appendChild(el('b',null,'Source: '));p4.appendChild(document.createTextNode(g.source+' '+g.check));b.appendChild(p4);if(g.hashes){var p5=el('p','dim');p5.appendChild(document.createTextNode('Hashes: '+g.hashes));b.appendChild(p5);}
     it.appendChild(b);$('grave').appendChild(it);
   });
   d.parked.forEach(function(t){$('parked').appendChild(el('li',null,t));});
