@@ -9,7 +9,7 @@
 <button class="ring" data-id="sector" aria-label="Inspect sector evidence" style="--inset:20%;--thick:12px;--color:#49d7a6;--glow:#218967;--z:28px;--speed:24s"></button>
 <button class="ring" data-id="market" aria-label="Inspect market evidence" style="--inset:30%;--thick:12px;--color:#ffc65e;--glow:#9d711d;--z:42px;--speed:19s"></button>
 <button class="ring" data-id="stock" aria-label="Inspect stock evidence" style="--inset:40%;--thick:10px;--color:#ff806e;--glow:#a53f35;--z:56px;--speed:16s"></button>
-<div class="center">?</div></div></div><div class="controls"><button id="spin" aria-pressed="true">Pause motion</button><button id="settle">Settle view</button><button id="depth">Depth view</button><button id="reset">Reset</button></div><p class="muted">Drag the empty background to tilt the assembly; tap a ring or a layer below. This prototype uses CSS 3D transforms, no external libraries. Motion is decorative until linked to verified analytical states.</p></div>
+<div class="center">?</div></div></div><div class="controls"><button id="spin" aria-pressed="true">Pause motion</button><button id="settle">Settle view</button><button id="depth">Depth view</button><button id="reset">Reset</button></div><p class="muted">Drag anywhere on the assembly to tilt it; tap a ring or a layer below. This prototype uses CSS 3D transforms, no external libraries. Motion is decorative until linked to verified analytical states.</p></div>
 <aside><div class="card"><h2 style="margin-top:0">Assessment</h2><p><strong>INSUFFICIENT EVIDENCE — NO TRADE SIGNAL</strong></p><p class="muted">The visualization must not convert absent evidence into a numeric convergence score.</p><dl><dt>Sources</dt><dd>Illustrative only</dd><dt>Freshness</dt><dd>Not established</dd><dt>Predictive validity</dt><dd>Not established</dd><dt>Gate status</dt><dd>Not evaluated</dd></dl></div>
 <div class="card"><h2>Evidence import (local only)</h2><p class="muted">Load a JSON object with <code>events</code> and <code>relationships</code> arrays following intelligence/events.py. Files stay in this browser; no upload or storage.</p><input id="evidenceFile" type="file" accept=".json,application/json" aria-label="Select evidence JSON"><p id="importStatus" role="status">No evidence loaded.</p><button id="clearEvidence">Clear evidence</button></div><div class="card legend"><h2 style="margin-top:0">Inspect a layer</h2><div id="layerButtons"></div></div><div class="card evidence" aria-live="polite"><h2 id="layerTitle">Select a ring</h2><p id="layerDetail">Select a layer to inspect what evidence would be needed.</p><p id="layerCaveat" class="muted"></p><div id="observations"></div></div></aside></div></main><footer>Development-only ring interaction study · No production connection</footer>
 <script>
@@ -70,10 +70,30 @@ document.getElementById("evidenceFile").addEventListener("change",async e=>{
  }catch(err){imported=null;document.getElementById("importStatus").textContent="Rejected: "+err.message;document.getElementById("observations").replaceChildren()}
 });
 document.getElementById("clearEvidence").onclick=()=>{imported=null;document.getElementById("evidenceFile").value="";document.getElementById("importStatus").textContent="No evidence loaded.";document.getElementById("observations").replaceChildren()};
-stage.addEventListener("pointerdown",e=>{if(e.target.closest("button"))return;drag={x:e.clientX,y:e.clientY};stage.setPointerCapture(e.pointerId)});
-stage.addEventListener("pointermove",e=>{if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag={x:e.clientX,y:e.clientY};yaw=Math.max(-70,Math.min(70,yaw+dx*.35));tilt=Math.max(12,Math.min(88,tilt-dy*.35));assembly.style.transition="none";orient()});
-function endDrag(){drag=null;assembly.style.transition=""}
+// Pointer capture allows dragging directly on ring surfaces, not only empty background.
+stage.addEventListener("pointerdown",e=>{
+ if(e.button!==0||drag)return;
+ drag={id:e.pointerId,x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY,moved:false};
+ stage.setPointerCapture(e.pointerId);
+});
+stage.addEventListener("pointermove",e=>{
+ if(!drag||e.pointerId!==drag.id)return;
+ const dx=e.clientX-drag.x,dy=e.clientY-drag.y;
+ if(!drag.moved&&Math.hypot(e.clientX-drag.startX,e.clientY-drag.startY)<7)return;
+ drag.moved=true;drag.x=e.clientX;drag.y=e.clientY;
+ yaw=Math.max(-70,Math.min(70,yaw+dx*.35));
+ tilt=Math.max(12,Math.min(88,tilt-dy*.35));
+ assembly.style.transition="none";orient();
+});
+let suppressClick=false;
+stage.addEventListener("click",e=>{if(!suppressClick)return;e.preventDefault();e.stopPropagation();suppressClick=false},true);
+function endDrag(e){
+ if(!drag||e.pointerId!==drag.id)return;
+ suppressClick=drag.moved;
+ drag=null;assembly.style.transition="";
+}
 stage.addEventListener("pointerup",endDrag);stage.addEventListener("pointercancel",endDrag);
+stage.addEventListener("lostpointercapture",()=>{drag=null;assembly.style.transition=""});
 reducedMotion.addEventListener("change",e=>{if(e.matches){running=false;motion()}});
 motion();select("geo");
 </script></body></html>
