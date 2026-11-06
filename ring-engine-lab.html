@@ -21,13 +21,13 @@ const domainLayer={geopolitics:"geo",weather:"geo",maritime:"geo",aviation:"geo"
 const allowedDomains=new Set(Object.keys(domainLayer));
 const allowedStates=new Set(["observed","hypothesis","investigating","validated","refuted"]);
 const allowedRelations=new Set(["coincident","exposure","lead_lag","hypothesized_transmission"]);
-function validTime(t){return typeof t==="string" && /(?:Z|[+-]\\d\\d:\\d\\d)$/.test(t) && Number.isFinite(Date.parse(t))}
+function validTime(t){return typeof t==="string" && /(?:Z|[+-][0-9][0-9]:[0-9][0-9])$/.test(t) && Number.isFinite(Date.parse(t))}
 function validateEvidence(data){
  if(!data||typeof data!=="object"||!Array.isArray(data.events)||!Array.isArray(data.relationships))throw Error("Expected events and relationships arrays");
  if(data.events.length>1000||data.relationships.length>2000)throw Error("File exceeds preview limits");
  const ids=new Set(),relations=new Set();
  for(const e of data.events){
-  if(!e||typeof e.id!=="string"||!e.id.trim()||ids.has(e.id)||!allowedDomains.has(e.domain)||typeof e.title!=="string"||!e.title.trim()||!validTime(e.observed_at)||!e.source||typeof e.source.name!=="string"||!e.source.name.trim()||typeof e.source.url!=="string"||!/^https?:\\/\\//.test(e.source.url)||!allowedStates.has(e.status)||!Array.isArray(e.missing)||!e.missing.every(x=>typeof x==="string"))throw Error("Invalid or duplicate event record");
+  if(!e||typeof e.id!=="string"||!e.id.trim()||ids.has(e.id)||!allowedDomains.has(e.domain)||typeof e.title!=="string"||!e.title.trim()||!validTime(e.observed_at)||!e.source||typeof e.source.name!=="string"||!e.source.name.trim()||typeof e.source.url!=="string"||!/^https?:[/][/]/.test(e.source.url)||!allowedStates.has(e.status)||!Array.isArray(e.missing)||!e.missing.every(x=>typeof x==="string"))throw Error("Invalid or duplicate event record");
   ids.add(e.id);
  }
  for(const r of data.relationships){
