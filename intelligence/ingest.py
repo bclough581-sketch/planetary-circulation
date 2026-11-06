@@ -108,4 +108,6 @@ def snapshot_graph(snapshot):
     graph = export_graph(events, [])
     graph["excluded_records"] = excluded
     graph["feed_status"] = "snapshot_only_not_live"
+    graph["source_authentication"] = "not_performed"
+    graph["freshness_assessment"] = "not_performed"
     return graph
