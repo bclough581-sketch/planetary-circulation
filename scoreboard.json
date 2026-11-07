@@ -205,7 +205,8 @@
   ],
   "parked": [
     "Dilution and going-concern filter (DIL1): the data check passed, but the one-shot null-power check of 2026-11-06 returned PARK (gate MDE 11.70% against the 2.5% bar; adjusted null spread 16.20% against 3.46% allowed). That is a planning screen, not proof the filter does nothing. Parked; reopening needs a new preregistration. Result file SHA-256 0BB6ECCD4C9EDD162B481E98ABA00085321510BD35F242E9DB3BE59F9EF1FDEB.",
-    "TAX1 and SPAC common-share redemption: parked. The effort per expected result was too high.",
+    "Iowa tax-sale certificates (TAX1): on hold; no research verdict. The Stage 0 desk audit needs county redemption records that may require treasurer calls, and it has not been run.",
+    "SPAC common-share redemption: parked. The effort per expected result was too high.",
     "Bank mutual-to-stock conversions: closed as a system. Eligibility is depositor-based."
   ],
   "lessons": [
