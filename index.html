@@ -3,7 +3,7 @@
 <title>AMALGAM</title><meta name="theme-color" content="#07101c">
 <link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png">
 <meta http-equiv="refresh" content="0;url=ring-engine-lab.html">
-<script>location.replace("ring-engine-lab.html"+location.search+location.hash)</script>
+<script>if('serviceWorker' in navigator&&location.protocol.startsWith('http')){navigator.serviceWorker.register('sw.js').catch(()=>{});}location.replace("ring-engine-lab.html"+location.search+location.hash)</script>
 <style>:root{color-scheme:dark}body{margin:0;background:#07101c;color:#eaf3fa;font:16px system-ui;padding:24px}a{color:#71d8c9}</style></head>
 <body><p>Opening the <a href="ring-engine-lab.html">Evidence Explorer</a>…</p>
 <p><a href="decision-journal.html">My decisions</a> · <a href="scoreboard.html">Scoreboard</a> · <a href="map.html">Live money map</a> · <a href="privacy.html">Privacy</a></p></body></html>

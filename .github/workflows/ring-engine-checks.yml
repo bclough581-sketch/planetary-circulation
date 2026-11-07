@@ -4,6 +4,14 @@ on:
     branches: [amalgam-event-foundation, main]
     paths:
       - 'ring-engine-lab.html'
+      - 'index.html'
+      - 'map.html'
+      - 'sw.js'
+      - 'scoreboard.html'
+      - 'scoreboard.json'
+      - 'tests/test_scoreboard.js'
+      - 'tests/test_nav_smoke.cjs'
+      - 'tests/test_offline_entry.cjs'
       - 'ring-evidence.js'
       - 'amalgam-theme.css'
       - 'galaxy-ring.svg'
@@ -24,6 +32,14 @@ on:
     branches: [amalgam-event-foundation]
     paths:
       - 'ring-engine-lab.html'
+      - 'index.html'
+      - 'map.html'
+      - 'sw.js'
+      - 'scoreboard.html'
+      - 'scoreboard.json'
+      - 'tests/test_scoreboard.js'
+      - 'tests/test_nav_smoke.cjs'
+      - 'tests/test_offline_entry.cjs'
       - 'ring-evidence.js'
       - 'amalgam-theme.css'
       - 'galaxy-ring.svg'
@@ -82,6 +98,7 @@ jobs:
       - run: node tests/test_journal_browser.cjs
       - run: node tests/test_journal_regression_browser.cjs
       - run: node tests/test_nav_smoke.cjs
+      - run: node tests/test_offline_entry.cjs
       - run: node tests/test_evidence_handoff.cjs
       - run: node tests/test_ring_comparisons.cjs
       - run: node tests/test_ring_galaxy.cjs

@@ -10,8 +10,8 @@ const preview=await startPreview();
 try{
   const ctx=await browser.newContext(),page=await ctx.newPage(),errors=[],external=[];
   page.on('pageerror',e=>errors.push(e.message));
-  page.on('request',r=>{const u=r.url();if(u.startsWith(preview.url)||u.startsWith('data:'))return;if(/map\.html$/.test(page.url())&&u.startsWith('https://fonts.googleapis.com/'))return;external.push(u);}); // the live map's existing font request is the only allowed outbound call
-  const path=()=>new URL(page.url()).pathname;
+  page.on('request',r=>{const u=r.url();if(u.startsWith(preview.url)||u.startsWith('data:'))return;if(/map\.html$/.test(page.url())&&/^https:\/\/fonts\.(googleapis|gstatic)\.com\//.test(u))return;external.push(u);}); // the live map's existing font request is the only allowed outbound call
+  await ctx.route(u=>!u.href.startsWith(preview.url)&&u.protocol!=='data:',r=>r.fulfill({status:200,contentType:'text/css',body:''})); // external font CSS stubbed: deterministic, nothing leaves the machine
   // 1. Root lands on the approved ring Explorer
   await page.goto(preview.url);await page.waitForURL(/ring-engine-lab\.html/);
   assert.match(await page.textContent('header'),/EVIDENCE EXPLORER/);

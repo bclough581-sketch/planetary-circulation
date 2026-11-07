@@ -275,4 +275,5 @@ stage.addEventListener("pointerup",endDrag);stage.addEventListener("pointercance
 stage.addEventListener("lostpointercapture",()=>{drag=null;assembly.style.transition=""});
 reducedMotion.addEventListener("change",e=>{if(e.matches){running=false;motion()}});
 motion();restoreStarter();
+if('serviceWorker' in navigator&&location.protocol.startsWith('http')){navigator.serviceWorker.register('sw.js').catch(()=>{});}
 </script></body></html>
