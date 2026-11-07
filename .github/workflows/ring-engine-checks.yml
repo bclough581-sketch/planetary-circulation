@@ -81,6 +81,7 @@ jobs:
       - run: node tests/test_ring_browser.cjs
       - run: node tests/test_journal_browser.cjs
       - run: node tests/test_journal_regression_browser.cjs
+      - run: node tests/test_nav_smoke.cjs
       - run: node tests/test_evidence_handoff.cjs
       - run: node tests/test_ring_comparisons.cjs
       - run: node tests/test_ring_galaxy.cjs

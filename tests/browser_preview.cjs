@@ -9,7 +9,8 @@ async function startPreview(root = path.resolve(__dirname, '..')) {
   const server = http.createServer(async (req, res) => {
     try {
       if (req.method !== 'GET') { res.writeHead(405); res.end(); return; }
-      const pathname = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
+      let pathname = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
+      if (pathname.endsWith('/')) pathname += 'index.html';
       const file = path.resolve(root, '.' + pathname);
       const relative = path.relative(root, file);
       if (relative.startsWith('..') || path.isAbsolute(relative)) { res.writeHead(403); res.end(); return; }
