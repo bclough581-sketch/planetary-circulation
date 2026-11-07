@@ -59,6 +59,7 @@ jobs:
       - run: node tests/test_ring_engine.cjs
       - run: node tests/test_journal_core.cjs
       - run: node tests/test_journal_regression.cjs
+      - run: node tests/test_scoreboard.js
       - run: python -m unittest discover -s tests -p test_ring_starter.py
       - run: python -m unittest discover -s tests -p test_evidence_export.py
   ring-mobile-browser:
