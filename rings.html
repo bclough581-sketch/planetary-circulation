@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Amalgam™ Rings (preview)</title>
+<meta name="description" content="Four rings of measured world readings under one red thread. Turn the rings to line them up. Information only; not investment advice.">
+<meta name="theme-color" content="#03060e">
+<meta name="robots" content="noindex">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#03060e;--panel:#07101c;--line:#1d3550;--steel:#5aa8f0;--hot:#ff7a45;--ink:#ecf7ff;--dim:#a8d6ff;--gold:#d9b45a;--thread:#ff2a3d;
+ --display:'Orbitron',system-ui,sans-serif;--mono:'Share Tech Mono',ui-monospace,Menlo,Consolas,monospace;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--mono)}
+body{padding:18px 16px 48px;max-width:760px;margin:0 auto}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin-bottom:8px}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(17px,4.4vw,26px);letter-spacing:.14em;margin:0;color:#cfe6ff;text-shadow:0 0 16px rgba(90,168,240,.45)}
+.sub{color:var(--gold);font-size:12px;letter-spacing:.1em}
+.status{margin-left:auto;font-size:12px;color:var(--dim);display:flex;align-items:center;gap:8px}
+.dot{width:8px;height:8px;border-radius:50%;background:#5a2a30;display:inline-block;flex:none}
+.dot.ok{background:#6ab8ff;box-shadow:0 0 10px #3d8bd9}.dot.warn{background:#ffb347;box-shadow:0 0 10px #ff9a2a}
+.disc{border:1px solid var(--line);background:#08121f;color:var(--dim);font-size:12px;line-height:1.55;padding:8px 12px;border-radius:6px;margin:0 0 10px}
+.disc b{color:var(--ink);font-weight:400}
+.banner{display:none;border:1px solid #7a4a10;background:#1f1206;color:#ffcf99;font-size:12px;padding:8px 12px;border-radius:6px;margin:0 0 10px}
+.stage{position:relative;border:1px solid var(--line);background:radial-gradient(ellipse at 50% 50%,#0b1830 0%,#050a14 64%,#020308 100%);border-radius:8px;padding:10px;margin:8px 0 10px}
+#dial{display:block;width:100%;max-width:520px;height:auto;margin:0 auto;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
+#dial.drag{cursor:grabbing}
+#dial text{font-family:var(--mono);pointer-events:none}
+.thread{filter:drop-shadow(0 0 3px rgba(255,42,61,.8))}
+.hint{color:var(--dim);font-size:12px;text-align:center;margin:6px 0 0}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
+.chips button,.stp button{font-family:var(--display);font-size:11px;letter-spacing:.1em;color:var(--dim);background:var(--panel);border:1px solid var(--line);border-radius:5px;padding:9px 12px;min-height:40px;cursor:pointer}
+.chips button[aria-pressed="true"]{color:#fff1e8;background:#0f2036;border-color:var(--steel);box-shadow:0 0 12px rgba(90,168,240,.3) inset}
+.stp{display:grid;grid-template-columns:1fr auto auto;gap:6px 8px;align-items:center;margin:0 0 12px;font-size:12px;color:var(--dim)}
+.stp b{color:var(--ink);font-weight:400;letter-spacing:.08em}
+.stp span.cad{color:var(--gold)}
+.stp button{padding:8px 14px;min-width:46px}
+h2{font-family:var(--display);font-weight:500;font-size:12px;letter-spacing:.16em;color:var(--dim);margin:18px 2px 8px}
+#sum{margin:0 0 8px;font-size:14px;line-height:1.5}
+#sum b{color:#fff1e8;font-weight:400}
+.rows{display:grid;gap:8px}
+.rc{border:1px solid var(--line);border-radius:6px;background:var(--panel);padding:9px 12px;line-height:1.5;font-size:13px}
+.rc .rk{color:var(--gold);font-size:11px;letter-spacing:.1em}
+.rc .rn{color:var(--ink);font-size:15px}
+.rc .rs{color:var(--dim);font-size:12px}
+.rc .tag{color:var(--hot)}
+.rc.stale .rn,.rc.stale .rt{color:#7d8da0}
+.note{color:var(--dim);font-size:12px;line-height:1.6;margin:10px 2px}
+.srcs{border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--dim);font-size:12px;line-height:1.6;padding:8px 12px;margin:10px 0}
+.srcs summary{cursor:pointer;font-family:var(--display);font-size:11px;letter-spacing:.12em}
+a{color:var(--steel)}
+@media (prefers-reduced-motion:reduce){#dial{cursor:default}}
+</style>
+</head>
+<body>
+<header>
+  <h1>AMALGAM™ · RINGS</h1><span class="sub">PREVIEW · NOT LIVE</span>
+  <span class="status" role="status"><i class="dot" id="dot"></i><span id="stxt">loading…</span></span>
+</header>
+<details class="disc"><summary><b>Information only.</b> Not investment advice. <span>Tap for more</span></summary>Four rings of measured readings, lined up under one red thread. Where rings line up is a description of today's data. It is not a signal, a forecast, or a recommendation to buy or sell anything, and it is not personalized to anyone. Data is delayed and can be wrong or stale; every reading carries its own as-of date.</details>
+<div class="banner" id="banner" role="alert"></div>
+
+<div class="stage">
+  <svg id="dial" viewBox="0 0 420 420" role="img" aria-label="Luopan-style dial of four concentric rings: season, market range, chokepoints and daily move. A red thread runs straight up through the centre. Drag a ring to turn it. The readings under the thread are listed in the table below."></svg>
+  <p class="hint">Drag a ring to turn it. Bring sectors under the red thread.</p>
+</div>
+
+<div class="chips" role="group" aria-label="Display options">
+  <button type="button" id="rgW" aria-pressed="true">WEST · GREEN UP</button>
+  <button type="button" id="rgE" aria-pressed="false">EAST ASIA · RED UP</button>
+  <button type="button" id="snap" aria-pressed="true">SNAP: ON</button>
+</div>
+
+<div class="stp" id="stp" aria-label="Turn a ring one step"></div>
+
+<h2>UNDER THE THREAD</h2>
+<p id="sum" aria-live="polite"></p>
+<div id="rows" class="rows"></div>
+<p class="note" id="almanac"></p>
+
+<details class="srcs"><summary>TERMS AND ATTRIBUTION</summary>
+<p>Source: ECB statistics (euro reference rates). U.S. Treasury (10-year par yield). U.S. Energy Information Administration (WTI and Brent spot). International Monetary Fund, PortWatch (chokepoint transits). Ranges, percentiles, ratios and the season curve are our calculations, not the sources'. Season is a calendar curve, not measured data. Each reading greys out when it is older than its freshness limit (FX and rates 5 days, chokepoints 21) and is left out of the count.</p>
+<p>Ring order runs west to east by longitude, starting at the top and moving clockwise (months run January to December).</p>
+<p>Color: the WEST and EAST ASIA buttons only swap which color means up and which means down on the market rings. Markets in mainland China, Japan, Korea and Taiwan commonly show red for up.</p>
+</details>
+<p class="note" id="legal"><b>Disclaimer.</b> Amalgam™ is an information display built from public data sources. It is not investment, financial, legal, or tax advice, and it does not recommend buying or selling any security, currency, or commodity. Data may be delayed, incomplete, or stale, and visualizations are illustrative, not predictive. Past patterns do not indicate future results. You are solely responsible for your own decisions.</p>
+
+<script src="rings.js"></script>
+<script>
+(function () {
+  'use strict';
+  var R = window.Rings, NS = 'http://www.w3.org/2000/svg', CX = 210, CY = 210;
+  var BANDS = [{ r0: 62, r1: 94 }, { r0: 96, r1: 128 }, { r0: 130, r1: 162 }, { r0: 164, r1: 196 }];
+  var GOLD = '#d9b45a', THREAD = '#ff2a3d', HOT = '#ff7a45', STEEL = '#5aa8f0';
+  var dial = document.getElementById('dial');
+  var rings = [], rot = [0, 0, 0, 0], snap = true, region = 'west', drag = null, needleEl = null, spreadNow = 0;
+  var reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  try { var saved = localStorage.getItem('amalgam.rings.region'); if (saved === 'east' || saved === 'west') region = saved; } catch (e) {}
+
+  function el(tag, attrs, parent) {
+    var n = document.createElementNS(NS, tag);
+    for (var k in attrs) n.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(n);
+    return n;
+  }
+  function pt(r, deg) { var a = deg * Math.PI / 180; return [CX + r * Math.sin(a), CY - r * Math.cos(a)]; }
+  function f(n) { return n.toFixed(2); }
+  function annulus(r0, r1, a0, a1) {
+    var p0 = pt(r1, a0), p1 = pt(r1, a1), p2 = pt(r0, a1), p3 = pt(r0, a0), big = (a1 - a0) > 180 ? 1 : 0;
+    return 'M' + f(p0[0]) + ' ' + f(p0[1]) + 'A' + r1 + ' ' + r1 + ' 0 ' + big + ' 1 ' + f(p1[0]) + ' ' + f(p1[1]) +
+      'L' + f(p2[0]) + ' ' + f(p2[1]) + 'A' + r0 + ' ' + r0 + ' 0 ' + big + ' 0 ' + f(p3[0]) + ' ' + f(p3[1]) + 'Z';
+  }
+  function fill(ringKey, s) {
+    if (s.stale) return { c: '#3b4d60', o: 0.25 };
+    var o = 0.1 + 0.75 * s.t;
+    if (ringKey === 'season') return { c: GOLD, o: 0.08 + 0.55 * s.t };
+    if (ringKey === 'choke') return { c: HOT, o: o };
+    var dc = R.dirColors(region);
+    return { c: s.dir > 0 ? dc.up : s.dir < 0 ? dc.down : STEEL, o: o };
+  }
+
+  function under() {
+    return rings.map(function (ring, i) {
+      var n = ring.sectors.length, at = R.sectorAt(rot[i], n);
+      return { ring: ring, at: at, s: ring.sectors[at.idx], n: n };
+    });
+  }
+
+  function render() {
+    while (dial.firstChild) dial.removeChild(dial.firstChild);
+    var defs = el('defs', {}, dial);
+    var g = el('radialGradient', { id: 'glass', cx: '50%', cy: '40%', r: '70%' }, defs);
+    el('stop', { offset: '0', 'stop-color': '#1b3558', 'stop-opacity': '.9' }, g);
+    el('stop', { offset: '1', 'stop-color': '#07101c', 'stop-opacity': '1' }, g);
+
+    el('circle', { cx: CX, cy: CY, r: 206, fill: '#050a14', stroke: GOLD, 'stroke-width': .8, 'stroke-opacity': .8 }, dial);
+    for (var t = 0; t < 72; t++) {
+      var long_ = t % 3 === 0, p0 = pt(198, t * 5), p1 = pt(long_ ? 206 : 202, t * 5);
+      el('line', { x1: f(p0[0]), y1: f(p0[1]), x2: f(p1[0]), y2: f(p1[1]), stroke: GOLD, 'stroke-width': long_ ? .9 : .5, 'stroke-opacity': long_ ? .9 : .55 }, dial);
+    }
+
+    var u = under();
+    rings.forEach(function (ring, i) {
+      var n = ring.sectors.length, w = 360 / n, b = BANDS[i], mid = (b.r0 + b.r1) / 2;
+      var gR = el('g', { 'data-ring': ring.key }, dial);
+      ring.sectors.forEach(function (s, k) {
+        var a0 = k * w + rot[i], fl = fill(ring.key, s), active = (u[i].at.idx === k);
+        el('path', { d: annulus(b.r0, b.r1, a0, a0 + w), fill: '#0a1626', stroke: GOLD, 'stroke-width': .6, 'stroke-opacity': .55 }, gR);
+        el('path', { d: annulus(b.r0, b.r1, a0, a0 + w), fill: fl.c, 'fill-opacity': f(fl.o), stroke: active ? GOLD : 'none', 'stroke-width': active ? 1.8 : 0 }, gR);
+        var lp = pt(mid, a0 + w / 2), strong = s.elevated && !s.stale;
+        var tx = el('text', { x: f(lp[0]), y: f(lp[1] + 3), 'text-anchor': 'middle', 'font-size': ring.key === 'season' ? 11 : 9.5,
+          fill: s.current ? GOLD : (s.stale ? '#7d8da0' : (strong ? '#fff1e8' : '#cfe6ff')), 'fill-opacity': strong || s.current ? 1 : .8,
+          'font-weight': strong || s.current ? 700 : 400 }, gR);
+        tx.textContent = s.label;
+      });
+    });
+
+    var dome = el('g', {}, dial);
+    el('circle', { cx: CX, cy: CY, r: 56, fill: '#050a14', stroke: GOLD, 'stroke-width': .8 }, dome);
+    el('circle', { cx: CX, cy: CY, r: 50, fill: 'url(#glass)', stroke: THREAD, 'stroke-width': 2, 'stroke-opacity': .85 }, dome);
+
+    var th = el('g', { 'class': 'thread' }, dial);
+    el('line', { x1: CX, y1: CY - 207, x2: CX, y2: CY + 207, stroke: THREAD, 'stroke-width': 1.4 }, th);
+    el('line', { x1: CX - 207, y1: CY, x2: CX + 207, y2: CY, stroke: THREAD, 'stroke-width': 1.4, 'stroke-opacity': .85 }, th);
+    el('path', { d: 'M' + CX + ' ' + (CY - 207) + 'l-5 -9h10z', fill: THREAD }, th);
+
+    needleEl = el('g', { transform: 'rotate(0 ' + CX + ' ' + CY + ')' }, dial);
+    el('line', { x1: CX, y1: CY, x2: CX, y2: CY - 40, stroke: THREAD, 'stroke-width': 3, 'stroke-linecap': 'round' }, needleEl);
+    el('line', { x1: CX, y1: CY, x2: CX, y2: CY + 28, stroke: '#9fd2ff', 'stroke-width': 2.2, 'stroke-linecap': 'round' }, needleEl);
+    el('circle', { cx: CX, cy: CY, r: 3.5, fill: GOLD }, dial);
+
+    readout(u);
+  }
+
+  function readout(u) {
+    var rows = document.getElementById('rows');
+    rows.innerHTML = '';
+    u.forEach(function (x) {
+      var s = x.s, d = document.createElement('div'), off, st;
+      if (x.at.frac !== 0 && !R.isCentered(x.at.frac)) {
+        var nb = x.ring.sectors[(x.at.idx + (x.at.frac > 0 ? 1 : x.n - 1)) % x.n];
+        off = 'off ' + Math.round(Math.abs(x.at.frac) * 100) + '% toward ' + nb.label;
+      } else { off = 'centered'; }
+      d.className = 'rc' + (s.stale ? ' stale' : '');
+      d.innerHTML = '<div class="rk"></div><div class="rn"></div><div class="rt"></div><div class="rs"><span class="st"></span><span class="of"></span></div>';
+      d.querySelector('.rk').textContent = x.ring.name + ' · ' + x.ring.cadence;
+      d.querySelector('.rn').textContent = s.name;
+      d.querySelector('.rt').textContent = s.text;
+      if (s.stale) d.querySelector('.st').textContent = (s.missing ? 'NO DATA' : 'STALE, as of ' + s.asof + ', left out of the count') + ' · ';
+      else if (s.elevated) { var t = d.querySelector('.st'); t.innerHTML = '<span class="tag">IN TAIL</span>'; t.appendChild(document.createTextNode((s.asof ? ' · as of ' + s.asof : '') + ' · ')); }
+      else d.querySelector('.st').textContent = 'not in tail' + (s.asof ? ' · as of ' + s.asof : '') + ' · ';
+      d.querySelector('.of').textContent = off;
+      rows.appendChild(d);
+    });
+    var sm = R.summarize(u.map(function (x) { return x.s; }));
+    spreadNow = sm.spread;
+    var word = sm.spread < 0.25 ? 'low' : sm.spread < 0.55 ? 'medium' : 'high';
+    document.getElementById('sum').innerHTML = '<b>' + sm.elevated + ' of ' + sm.live + '</b> readings under the thread are in their tail. Spread between the readings: <b>' + word + '</b>. The needle steadies when the readings are similar.';
+    document.getElementById('almanac').textContent = 'No history lookup yet. "This has happened X of the time" needs 8 or more past cases for a given alignment, and that is not built. This view describes today\'s data only, and lining rings up says nothing about what happens next.';
+  }
+
+  function buildSteppers() {
+    var box = document.getElementById('stp');
+    box.innerHTML = '';
+    rings.forEach(function (ring, i) {
+      var lab = document.createElement('div');
+      lab.innerHTML = '<b></b> <span class="cad"></span>';
+      lab.querySelector('b').textContent = (i + 1) + ' ' + ring.name;
+      lab.querySelector('.cad').textContent = ring.cadence;
+      var back = document.createElement('button'), fwd = document.createElement('button');
+      back.type = fwd.type = 'button';
+      back.textContent = '◀'; fwd.textContent = '▶';
+      back.setAttribute('aria-label', 'Turn ' + ring.name.toLowerCase() + ' ring counterclockwise one step');
+      fwd.setAttribute('aria-label', 'Turn ' + ring.name.toLowerCase() + ' ring clockwise one step');
+      back.onclick = function () { rot[i] = R.stepRot(rot[i], ring.sectors.length, -1); render(); };
+      fwd.onclick = function () { rot[i] = R.stepRot(rot[i], ring.sectors.length, 1); render(); };
+      box.appendChild(lab); box.appendChild(back); box.appendChild(fwd);
+    });
+  }
+
+  function toDial(ev) {
+    var r = dial.getBoundingClientRect(), k = 420 / r.width;
+    return { x: (ev.clientX - r.left) * k - CX, y: (ev.clientY - r.top) * k - CY };
+  }
+  dial.addEventListener('pointerdown', function (ev) {
+    var p = toDial(ev), i = R.ringAtRadius(Math.hypot(p.x, p.y), BANDS);
+    if (i < 0) return;
+    drag = { i: i, a0: R.bearing(p.x, p.y), rot0: rot[i] };
+    dial.classList.add('drag');
+    try { dial.setPointerCapture(ev.pointerId); } catch (e) {}
+    ev.preventDefault();
+  });
+  dial.addEventListener('pointermove', function (ev) {
+    if (!drag) return;
+    var p = toDial(ev), d = R.bearing(p.x, p.y) - drag.a0;
+    if (d > 180) d -= 360; if (d < -180) d += 360;
+    rot[drag.i] = R.mod(drag.rot0 + d, 360);
+    render();
+  });
+  function end() {
+    if (!drag) return;
+    if (snap) rot[drag.i] = R.snapRot(rot[drag.i], rings[drag.i].sectors.length);
+    drag = null; dial.classList.remove('drag'); render();
+  }
+  dial.addEventListener('pointerup', end);
+  dial.addEventListener('pointercancel', end);
+
+  function setRegion(r) {
+    region = r;
+    document.getElementById('rgW').setAttribute('aria-pressed', String(r === 'west'));
+    document.getElementById('rgE').setAttribute('aria-pressed', String(r === 'east'));
+    try { localStorage.setItem('amalgam.rings.region', r); } catch (e) {}
+    if (rings.length) render();
+  }
+  document.getElementById('rgW').onclick = function () { setRegion('west'); };
+  document.getElementById('rgE').onclick = function () { setRegion('east'); };
+  document.getElementById('snap').onclick = function () {
+    snap = !snap; this.setAttribute('aria-pressed', String(snap)); this.textContent = 'SNAP: ' + (snap ? 'ON' : 'OFF');
+    if (snap) { rot = rot.map(function (r, i) { return R.snapRot(r, rings[i].sectors.length); }); render(); }
+  };
+
+  var t0 = performance.now();
+  function tick(now) {
+    if (needleEl) needleEl.setAttribute('transform', 'rotate(' + R.needleAngle(spreadNow, (now - t0) / 1000, reduced).toFixed(2) + ' ' + CX + ' ' + CY + ')');
+    if (!reduced) requestAnimationFrame(tick);
+  }
+
+  function start(data) {
+    var now = Date.now(), month = new Date(now).getMonth();
+    rings = R.buildRings(data, now, month);
+    // Season starts centred on the current month. The others start a little off-centre on purpose: aligning them is the work.
+    rot = [R.snapRot(0, 12), 0, 20, 10];
+    rot[0] = R.mod(-(month + 0.5) * 30, 360);
+    var h = R.dataHealth(data, now), b = document.getElementById('banner');
+    document.getElementById('dot').className = 'dot ' + (h.jobStale ? 'warn' : 'ok');
+    document.getElementById('stxt').textContent = 'data ' + String(data.generated_utc || 'unknown').replace('T', ' ').replace('Z', ' UTC');
+    if (h.jobStale) { b.style.display = 'block'; b.textContent = 'The daily data job has not run in over 48 hours. Readings may be out of date.'; }
+    buildSteppers(); setRegion(region); render();
+    if (reduced) tick(0); else requestAnimationFrame(tick);
+  }
+  function fail(msg) {
+    var b = document.getElementById('banner'); b.style.display = 'block'; b.textContent = msg;
+    document.getElementById('stxt').textContent = 'no data';
+  }
+
+  if (window.__AMALGAM_DATA) start(window.__AMALGAM_DATA);
+  else fetch('data.json', { cache: 'no-cache' }).then(function (r) { if (!r.ok) throw new Error('http ' + r.status); return r.json(); })
+    .then(start).catch(function () { fail('Could not load data.json. Open this page from the site, not from a file.'); });
+})();
+</script>
+</body>
+</html>
