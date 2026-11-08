@@ -1,5 +1,5 @@
 {
- "generated_utc": "2026-11-07T01:48:59Z",
+ "generated_utc": "2026-11-08T01:18:45Z",
  "hubs": {
   "GRU": {
    "price": 6.1449,
@@ -6369,11 +6369,11 @@
    "name": "Strait of Hormuz",
    "lat": 26.5,
    "lon": 56.3,
-   "latest": 2,
-   "avg7": 3.3,
+   "latest": 1,
+   "avg7": 4.4,
    "base": 85.5,
-   "ratio": 0.038,
-   "asof": "2026-10-25",
+   "ratio": 0.052,
+   "asof": "2026-11-01",
    "baseline_note": "mean of 2025"
   },
   {
@@ -6381,11 +6381,11 @@
    "name": "Bab el-Mandeb",
    "lat": 12.6,
    "lon": 43.3,
-   "latest": 36,
-   "avg7": 28.9,
+   "latest": 30,
+   "avg7": 27.3,
    "base": 33.5,
-   "ratio": 0.862,
-   "asof": "2026-10-25",
+   "ratio": 0.815,
+   "asof": "2026-11-01",
    "baseline_note": "mean of 2025"
   },
   {
@@ -6394,10 +6394,10 @@
    "lat": 30.0,
    "lon": 32.5,
    "latest": 46,
-   "avg7": 41.3,
+   "avg7": 43,
    "base": 38.5,
-   "ratio": 1.071,
-   "asof": "2026-10-25",
+   "ratio": 1.115,
+   "asof": "2026-11-01",
    "baseline_note": "mean of 2025"
   },
   {
@@ -6405,11 +6405,11 @@
    "name": "Strait of Malacca",
    "lat": 2.5,
    "lon": 101.5,
-   "latest": 212,
-   "avg7": 228,
+   "latest": 194,
+   "avg7": 202.7,
    "base": 234.5,
-   "ratio": 0.972,
-   "asof": "2026-10-25",
+   "ratio": 0.864,
+   "asof": "2026-11-01",
    "baseline_note": "mean of 2025"
   },
   {
@@ -6417,11 +6417,11 @@
    "name": "Panama Canal",
    "lat": 9.1,
    "lon": -79.7,
-   "latest": 28,
-   "avg7": 28.7,
+   "latest": 27,
+   "avg7": 27.3,
    "base": 31.1,
-   "ratio": 0.923,
-   "asof": "2026-10-25",
+   "ratio": 0.877,
+   "asof": "2026-11-01",
    "baseline_note": "mean of 2025"
   },
   {
@@ -6429,39 +6429,39 @@
    "name": "Cape of Good Hope",
    "lat": -34.4,
    "lon": 18.5,
-   "latest": 100,
-   "avg7": 87.1,
+   "latest": 90,
+   "avg7": 92,
    "base": 89.5,
-   "ratio": 0.974,
-   "asof": "2026-10-25",
+   "ratio": 1.028,
+   "asof": "2026-11-01",
    "baseline_note": "mean of 2025"
   }
  ],
  "status": {
   "ecb": {
    "ok": true,
-   "ran_utc": "2026-11-07T01:48:59Z",
-   "last_ok_utc": "2026-11-07T01:48:59Z"
+   "ran_utc": "2026-11-08T01:18:45Z",
+   "last_ok_utc": "2026-11-08T01:18:45Z"
   },
   "ust": {
    "ok": true,
-   "ran_utc": "2026-11-07T01:48:59Z",
-   "last_ok_utc": "2026-11-07T01:48:59Z"
+   "ran_utc": "2026-11-08T01:18:45Z",
+   "last_ok_utc": "2026-11-08T01:18:45Z"
   },
   "eia": {
    "ok": true,
-   "ran_utc": "2026-11-07T01:48:59Z",
-   "last_ok_utc": "2026-11-07T01:48:59Z"
+   "ran_utc": "2026-11-08T01:18:45Z",
+   "last_ok_utc": "2026-11-08T01:18:45Z"
   },
   "portwatch": {
-   "ok": false,
-   "error": "PortWatch all variants failed: v0 a0 portid,portname: {\"code\": 429, \"message\": \"Unable to perform query. Too many requests.\", \"details\": [\"API calls quota exceeded (6171 request units)! maximum allowe",
-   "last_ok_utc": "2026-11-03T03:26:51Z"
+   "ok": true,
+   "ran_utc": "2026-11-08T01:18:45Z",
+   "last_ok_utc": "2026-11-08T01:18:45Z"
   },
   "tic": {
    "ok": true,
-   "ran_utc": "2026-11-07T01:48:59Z",
-   "last_ok_utc": "2026-11-07T01:48:59Z"
+   "ran_utc": "2026-11-08T01:18:45Z",
+   "last_ok_utc": "2026-11-08T01:18:45Z"
   }
  }
 }
