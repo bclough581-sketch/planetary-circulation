@@ -1,0 +1,18 @@
+{
+ "note": "Analyst-maintained standing state, NOT a live feed. Edit by hand. level: 0 quiet, 1 pressure, 2 active disruption, 3 open war or closure. Nodes are shared tags used to test overlap with other events.",
+ "updated": "2026-11-08",
+ "conflicts": [
+  {"id":"iran-hormuz","label":"U.S.-Iran / Strait of Hormuz","region":"Middle East","level":3,"nodes":["HRM","oil","lng","fert"],"drains":["naval","shipping","insurance"]},
+  {"id":"russia-ukraine","label":"Russia-Ukraine / NATO flank","region":"Europe","level":3,"nodes":["grain","fert","gas-eu"],"drains":["naval","relief"]},
+  {"id":"china-taiwan","label":"China-Taiwan pressure","region":"Western Pacific","level":1,"nodes":["MAL","chips"],"drains":["naval"]}
+ ],
+ "events": [
+  {"id":"hurricane-gulf","label":"Gulf of Mexico hurricane","kind":"natural","nodes":["oil","lng","refining-gulf","fert"],"needs":["relief","insurance"]},
+  {"id":"hurricane-atlantic","label":"Atlantic hurricane (landfall, no Gulf energy)","kind":"natural","nodes":["agri-se"],"needs":["relief","insurance"]},
+  {"id":"typhoon-pacific","label":"Western Pacific typhoon","kind":"natural","nodes":["MAL","chips"],"needs":["shipping","relief"]},
+  {"id":"ship-hit","label":"Cargo ship struck","kind":"shock","nodes":["shipping"],"needs":["insurance","naval"]},
+  {"id":"cargo-plane-down","label":"Cargo plane down","kind":"shock","nodes":["air-cargo"],"needs":[]},
+  {"id":"oil-find","label":"New oil discovery","kind":"shock","nodes":["oil"],"needs":[]},
+  {"id":"drought-midwest","label":"Midwest drought","kind":"natural","nodes":["grain","fert"],"needs":[]}
+ ]
+}

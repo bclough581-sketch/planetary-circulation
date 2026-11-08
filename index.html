@@ -284,6 +284,35 @@ a.card{text-decoration:none;color:inherit;display:block}
 <b>RSI (the PULSE layer).</b> The 14-day relative strength index (Wilder) of each market's own daily readings. It describes recent speed and direction of movement. It is not a signal and does not say what happens next.<br>
 <b>Correlation (the SYNC layer).</b> Pearson correlation of daily changes over the latest 60 shared days, shown only where it is 0.5 or stronger in either direction. The euro-quoted currencies all share the euro as their base, so some of their sync comes from that shared base. Correlation is not causation and changes over time.
 </p></details>
+<style id="cfstyle">
+#confl{margin:18px 0}#confl .lead{color:var(--dim);font-size:13px;line-height:1.5;margin:6px 0 12px}
+#confl select{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:5px;padding:9px 10px;font:inherit;width:100%;max-width:420px}
+#cfrows{margin-top:12px;display:grid;gap:8px}
+.cfr{border:1px solid var(--line);border-radius:6px;padding:10px 12px;background:var(--panel);font-size:13px;line-height:1.45}
+.cfr b{color:var(--ink);font-weight:400}.cfr .lv{color:#7f9cb8;font-size:11px}
+.cfb{display:inline-block;border-radius:4px;padding:2px 7px;margin-right:6px;font-size:11px;letter-spacing:.05em;border:1px solid}
+.cfb.sn{color:#ff9a6a;border-color:#ff7a45}.cfb.dg{color:#ffd58a;border-color:#c9a04a}.cfb.co{color:#7f9cb8;border-color:#3b4d60}
+.cfr .alm{color:#7f9cb8;margin-top:4px;font-size:12px}
+</style>
+<section id="confl" aria-label="Confluence"><h2>CONFLUENCE: WHAT ELSE IS BURNING</h2>
+<div class="lead">Wars and blockades are always running underneath. Pick an event and see how each active conflict relates to it. <b>Overlap in time is not a link.</b> A pair only counts as linked if both touch the same chokepoint or commodity, or if one drains something the other needs. Everything else is shown as coincidence. Information only; not a forecast.</div>
+<select id="cfsel" aria-label="Pick an event"></select><div id="cfrows" aria-live="polite"></div>
+<div class="note2" id="cfnote"></div></section>
+<script src="confluence.js"></script>
+<script>(function(){var sel=document.getElementById('cfsel'),rows=document.getElementById('cfrows'),note=document.getElementById('cfnote');if(!sel||!window.Confluence)return;
+var D=null,H=[],LB={'shared-node':['sn','SHARED NODE'],'degraded':['dg','WEAKENS RESPONSE'],'coincidence':['co','COINCIDENCE']},LV=['quiet','pressure','active disruption','open war or closure'];
+function esc(t){return String(t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function render(){var ev=D.events.filter(function(e){return e.id===sel.value})[0];if(!ev){rows.innerHTML='';return;}
+ var o=Confluence.overlaps(ev,D.conflicts),h='';
+ o.forEach(function(r){var b=LB[r.type],a=Confluence.almanac(H,ev.id,r.conflict.id);
+  h+='<div class="cfr"><span class="cfb '+b[0]+'">'+b[1]+'</span><b>'+esc(r.conflict.label)+'</b> <span class="lv">'+esc(r.conflict.region)+' · level '+r.conflict.level+': '+LV[r.conflict.level]+'</span>'
+   +(r.via.length?'<div>via '+r.via.map(esc).join(', ')+'</div>':'<div>no shared node and no drained capacity</div>')
+   +'<div class="alm">'+esc(a.line)+'</div></div>';});
+ rows.innerHTML=h||'<div class="cfr">No active conflicts on file.</div>';}
+Promise.all([fetch('conflicts.json').then(function(r){return r.json()}),fetch('confluence_history.json').then(function(r){return r.json()}).catch(function(){return {cases:[]}})]).then(function(a){D=a[0];H=a[1].cases||[];
+ sel.innerHTML=D.events.map(function(e){return '<option value="'+esc(e.id)+'">'+esc(e.label)+'</option>'}).join('');
+ note.textContent='Conflict list is analyst-maintained, last updated '+D.updated+'. It is a standing state, not a live feed.';
+ sel.addEventListener('change',render);render();}).catch(function(){note.textContent='Conflict data could not load.';});})();</script>
 <h2>SOURCES AND LICENSES</h2>
 <div class="pills"><a href="https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html" target="_blank" rel="noopener">ECB</a><a href="https://home.treasury.gov/resource-center/data-chart-center/interest-rates" target="_blank" rel="noopener">U.S. Treasury</a><a href="https://www.eia.gov/dnav/pet/pet_pri_spt_s1_d.htm" target="_blank" rel="noopener">EIA</a><a href="https://portwatch.imf.org" target="_blank" rel="noopener">IMF PortWatch</a><a href="https://ticdata.treasury.gov/resource-center/data-chart-center/tic/Documents/mfh.txt" target="_blank" rel="noopener">Treasury TIC</a></div>
 <details class="srcs"><summary>TERMS AND ATTRIBUTION</summary><div class="src" id="sources"></div></details>
