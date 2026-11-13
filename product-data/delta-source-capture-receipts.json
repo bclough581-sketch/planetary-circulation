@@ -1,0 +1,33 @@
+{
+  "schema": "amalgam.delta-source-capture-receipts.v1",
+  "provenance": "Locally recorded source-capture receipts. Raw HTML retained outside Git; hashes prove byte integrity, not independently authenticated retrieval time or historical first availability.",
+  "captures": [
+    {
+      "period": "2026Q1",
+      "url": "https://ir.delta.com/news/news-details/2026/Delta-Air-Lines-Announces-March-Quarter-2026-Financial-Results/default.aspx",
+      "request_start_utc": "2026-11-13T02:43:23.633108+00:00",
+      "retrieved_utc": "2026-11-13T02:43:24.105301+00:00",
+      "sha256": "895e51432906aae13590d894e00334e9e53ea03da3f78ed22d1b002e53426e0a",
+      "bytes": 272012,
+      "file": "2026Q1-20261113T024324105301Z.html"
+    },
+    {
+      "period": "2026Q2",
+      "url": "https://ir.delta.com/news/news-details/2026/Delta-Air-Lines-Announces-June-Quarter-2026-Financial-Results/default.aspx",
+      "request_start_utc": "2026-11-13T02:43:24.120090+00:00",
+      "retrieved_utc": "2026-11-13T02:43:24.400518+00:00",
+      "sha256": "61884a91f0e59a7ea87a0e578f4d2d42970fe43bfcccda6217c9f7591614ed80",
+      "bytes": 382813,
+      "file": "2026Q2-20261113T024324400518Z.html"
+    },
+    {
+      "period": "2026Q3",
+      "url": "https://ir.delta.com/news/news-details/2026/Delta-Air-Lines-Announces-September-Quarter-2026-Financial-Results/default.aspx",
+      "request_start_utc": "2026-11-13T02:43:24.402058+00:00",
+      "retrieved_utc": "2026-11-13T02:43:24.703228+00:00",
+      "sha256": "b100857c9565dda5edc46aea3dbb99d02e7fd0e6e09c762d90fed364beae38d7",
+      "bytes": 538543,
+      "file": "2026Q3-20261113T024324703228Z.html"
+    }
+  ]
+}

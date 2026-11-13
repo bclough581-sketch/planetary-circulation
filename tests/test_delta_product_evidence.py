@@ -7,6 +7,17 @@ from scripts.build_delta_product_evidence import ROOT, render
 
 
 class DeltaProductEvidenceTests(unittest.TestCase):
+    def test_capture_receipts_match_product_metadata(self):
+        manifest = json.loads((ROOT/"product-data/delta-source-capture-receipts.json").read_text())
+        product = json.loads((ROOT/"product-data/delta-company-evidence.json").read_text())
+        self.assertEqual({r["period"] for r in manifest["captures"]}, {"2026Q1", "2026Q2", "2026Q3"})
+        for record in manifest["captures"]:
+            source = product["sources"][record["period"]]
+            self.assertEqual((record["sha256"], record["retrieved_utc"], record["url"]),
+                             (source["raw_sha256"], source["retrieved_utc"], source["url"]))
+            self.assertGreater(record["bytes"], 0)
+            self.assertEqual(Path(record["file"]).name, record["file"])
+
     def test_research_boundary_content_unchanged(self):
         # Normalize only line endings so the same fixture hashes work in clean
         # Linux and Windows checkouts. Git diff separately verifies no edits.

@@ -8,6 +8,7 @@
 (function (root) {
   'use strict';
   var DAY = 864e5;
+  var GAAP_REVENUE_NOTE = "GAAP revenue includes refinery sales; fuel share uses GAAP revenue, not Delta's headline adjusted revenue.";
   var CACHE_KEY = 'amalgam.context.last.v1';
   // Same limits as the live map (map.html HUBDEF age): calendar days.
   var SOURCES = {
@@ -173,6 +174,7 @@
     var l = qe.latest, lines = ['COMPANY EVIDENCE (quarterly) · status: ' + qe.status.toUpperCase() + ' · ' + qe.reason,
       'Latest '+l.period+' (ended '+l.periodEnd+'); published '+qe.sources[l.source].published_date+'; retrieved '+qe.sources[l.source].retrieved_utc+'; '+qe.sources[l.source].url+'. Publication date is not verified first availability.'];
     if (qe.yoyChange) lines.push('vs ' + qe.yoy.period + ': revenue ' + sgn(qe.yoyChange.revenuePct, 1, '%') + ', fuel expense ' + sgn(qe.yoyChange.fuelPct, 1, '%') + ', operating margin ' + sgn(qe.yoyChange.marginPp, 1, ' pp') + ', fuel share of revenue ' + l.fuelShare.toFixed(1) + '% (' + sgn(qe.yoyChange.fuelSharePp, 1, ' pp') + ').');
+    lines.push(GAAP_REVENUE_NOTE);
     return lines.join('\n');
   }
   function contextText(rows, load) {
@@ -182,7 +184,7 @@
     })).join('\n');
   }
 
-  var api = { SERIES: SERIES, SOURCES: SOURCES, CACHE_KEY: CACHE_KEY, parseDay: parseDay, ageDays: ageDays, seriesStatus: seriesStatus,
+  var api = { SERIES: SERIES, SOURCES: SOURCES, CACHE_KEY: CACHE_KEY, GAAP_REVENUE_NOTE: GAAP_REVENUE_NOTE, parseDay: parseDay, ageDays: ageDays, seriesStatus: seriesStatus,
     contextRows: contextRows, quarterEvidence: quarterEvidence, periodEnd: periodEnd, loadContext: loadContext, fromBundle: fromBundle, quarterText: quarterText, contextText: contextText, baselineFromHist: baselineFromHist };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.AmalgamDeltaContext = api;
 })(typeof window !== 'undefined' ? window : this);

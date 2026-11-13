@@ -42,6 +42,7 @@ try{
  assert.match(q,/2026Q3 \(ended 2026-09-30\)/);assert.match(q,/2025Q3/);assert.match(q,/2026Q2/);
  assert.match(q,/published 2026-10-09|publication date: 2026-10-09/);assert.match(q,/Retrieved:/);assert.match(q,/not independently verified/);
  assert.match(q,/aircraft fuel and related taxes/);
+ assert.match(q,/GAAP revenue includes refinery sales/);assert.match(q,/fuel share uses GAAP revenue/);
  assert.ok(await page.locator('#wfQSources a').count()>=1);
  assert.match(await page.locator('#wfQChip').innerText(),/Fresh/);
  let r=await rows(page);assert.equal(r.length,5);
@@ -97,6 +98,7 @@ try{
    const ev=await page.locator('#evidence').inputValue();
    assert.ok(ev.length<4000,'length '+ev.length);
    assert.match(ev,/COMPANY EVIDENCE \(quarterly\)/);assert.match(ev,/MARKET CONTEXT \(refreshed/);assert.match(ev,/PRESERVED HISTORICAL COMPARISON \(does not refresh\)/);
+   assert.match(ev,/GAAP revenue includes refinery sales/);
    assert.match(ev,/measured \d{4}-\d{2}-\d{2}, retrieved /);assert.match(ev,/FRESH|STALE/);assert.match(ev,/eia\.gov/);
    assert.equal(await page.evaluate(()=>localStorage.getItem('amalgam.decision-journal.v1')),original,'hand-off saves nothing');
   }
