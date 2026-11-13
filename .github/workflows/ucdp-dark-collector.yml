@@ -1,0 +1,52 @@
+name: UCDP Dark Collector
+on:
+  schedule:
+    - cron: '23 6 * * *'
+  workflow_dispatch: {}
+  push:
+    branches: [feat/ucdp-dark-collector]
+    paths:
+      - '.github/workflows/ucdp-dark-collector.yml'
+      - 'scripts/collect_ucdp_dark.py'
+      - 'scripts/restore_ucdp_state.py'
+      - 'tests/test_ucdp_dark.py'
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: ucdp-dark-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  collect-dark:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install cryptography==46.0.3
+      - name: Synthetic safety tests
+        run: python -m unittest discover -s tests -p test_ucdp_dark.py
+      - name: Restore newest available encrypted artifact by ID
+        run: python scripts/restore_ucdp_state.py
+      - name: Collect bounded context without public display
+        id: collect
+        env:
+          UCDP_API_KEY: ${{ secrets.UCDP_API_KEY }}
+        run: python scripts/collect_ucdp_dark.py
+      - name: Retain encrypted snapshot only
+        if: always() && steps.collect.outcome != 'skipped'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ucdp-dark-sealed
+          path: dark-state/ucdp-summary.sealed
+          if-no-files-found: error
+          retention-days: 90
+      - name: Remove ephemeral plaintext
+        if: always()
+        run: rm -f product-data/ucdp-conflict-summary.json
