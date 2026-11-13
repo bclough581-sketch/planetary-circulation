@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import secrets
+import subprocess
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -217,6 +218,11 @@ def main():
     if not token:
         print('UCDP status=missing_key requests=0')
         return 1
+    tracked = subprocess.run(['git', 'ls-files', '-z'], check=True, capture_output=True).stdout
+    for name in tracked.decode().split('\0'):
+        if name and token.encode() in Path(name).read_bytes():
+            print('UCDP status=secret_repository_blocked requests=0')
+            return 1
     try:
         previous = validate(json.loads(unseal(sealed.read_bytes(), token))) if sealed.exists() else initial()
     except Exception:
