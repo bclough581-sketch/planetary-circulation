@@ -61,6 +61,34 @@ bounds. The live integration also encountered crossed estimates outside clarity-
 That source-quality issue is flagged, not repaired, imputed or silently excluded.
 Noninteger/negative/missing fatalities still fail the entire slice closed.
 
-Real workflow verification: pending final successful collection; encrypted state
-upload/restore already verified on the failed integration runs. No derived values
-were published. Synthetic suite now includes the documented clarity-2 exception.
+## Verified checkpoint
+
+Real authenticated workflow passed on implementation head
+3785e54a0a4ed89d13df7db3b443b7648283c710:
+https://github.com/bclough581-sketch/planetary-circulation/actions/runs/43454786504
+
+Safe log: `status=collected_historical_context requests=5 display_allowed=false`.
+The complete initial seven-day slice was accepted only after all event counts and
+page totals reconciled. Encrypted artifact ID 14053492796, digest
+`sha256:b59f0413f43225daf1e930962c676d2d7925d57595a86aefb30eb776d0de42d8`.
+Restore from preceding encrypted state also passed. Plaintext cleanup passed.
+No event/fatality values or raw response bodies were published.
+
+Fourteen UCDP synthetic checks passed in the dedicated workflow. Local full Python
+suite: 239 passed. Python/browser PR validation passed on the implementation head:
+https://github.com/bclough581-sketch/planetary-circulation/actions/runs/43454798109
+The general Python job skips the encryption-specific test when its optional
+dependency is absent; the dedicated UCDP job installs it and runs that test.
+
+Earlier failed integration runs remain audit history: completeness, page numbering
+and source-estimate semantics were corrected without promoting partial responses.
+No auth/rate retry loops were used. This checkpoint update changes documentation
+only and does not trigger another collection.
+
+Draft PR for cross-review:
+https://github.com/bclough581-sketch/planetary-circulation/pull/4
+No automatic message was sent to Claude. Display, merge, deployment, research use
+and trial accounting remain held. The daily schedule is not active until a
+separately authorized default-branch merge. Artifact expiry and key rotation are
+operational limits; the December 2025 window is a bounded historical bootstrap,
+not a live conflict feed.
