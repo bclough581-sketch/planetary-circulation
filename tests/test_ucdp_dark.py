@@ -17,6 +17,18 @@ def page(rows=None):
 
 
 class DarkCollectorTests(unittest.TestCase):
+    def test_state_key_setup_diagnostics_never_reveal_secrets_or_collect(self):
+        token = c.secrets.token_urlsafe(32)
+        for state_key, code in [('', 'missing_state_key'), ('short', 'state_key_too_short'),
+                                (token, 'state_key_must_be_independent')]:
+            output = io.StringIO()
+            with patch.dict(c.os.environ, {'UCDP_API_KEY': token, 'UCDP_STATE_KEY': state_key}, clear=True), \
+                    patch('sys.stdout', output), patch.object(c, 'safe_collect') as collect:
+                self.assertEqual(c.main(), 1)
+                collect.assert_not_called()
+            self.assertIn('status=' + code + ' requests=0', output.getvalue())
+            self.assertNotIn(token, output.getvalue())
+
     @unittest.skipUnless(importlib.util.find_spec('cryptography'), 'dedicated UCDP workflow installs crypto dependency')
     def test_independent_state_key_rotation_and_explicit_legacy_migration(self):
         old_token, new_token, state_key = [c.secrets.token_urlsafe(32) for _ in range(3)]

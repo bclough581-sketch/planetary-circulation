@@ -44,7 +44,7 @@ jobs:
         env:
           UCDP_API_KEY: ${{ secrets.UCDP_API_KEY }}
           UCDP_STATE_KEY: ${{ secrets.UCDP_STATE_KEY }}
-          UCDP_MIGRATE_LEGACY: ${{ ((github.event_name == 'push' && github.event.head_commit.message == 'One-time UCDP state-key migration after secret setup') || (github.event_name == 'workflow_dispatch' && inputs.migrate_legacy)) && 'true' || 'false' }}
+          UCDP_MIGRATE_LEGACY: ${{ github.event_name == 'workflow_dispatch' && inputs.migrate_legacy && 'true' || 'false' }}
         run: python scripts/collect_ucdp_dark.py
       - name: Retain encrypted snapshot only
         if: always() && steps.collect.outcome != 'skipped'

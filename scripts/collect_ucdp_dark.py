@@ -222,8 +222,14 @@ def main():
     if not token:
         print('UCDP status=missing_key requests=0')
         return 1
-    if len(state_key) < 32 or state_key == token:
-        print('UCDP status=missing_or_invalid_state_key requests=0')
+    if not state_key:
+        print('UCDP status=missing_state_key requests=0')
+        return 1
+    if len(state_key) < 32:
+        print('UCDP status=state_key_too_short requests=0')
+        return 1
+    if state_key == token:
+        print('UCDP status=state_key_must_be_independent requests=0')
         return 1
     tracked = subprocess.run(['git', 'ls-files', '-z'], check=True, capture_output=True).stdout
     for name in tracked.decode().split('\0'):
