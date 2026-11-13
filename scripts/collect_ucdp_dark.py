@@ -216,23 +216,32 @@ def unseal(data, token):
 
 def main():
     token = os.environ.get('UCDP_API_KEY', '')
+    state_key = os.environ.get('UCDP_STATE_KEY', '')
     sealed = Path('dark-state/ucdp-summary.sealed')
+    migration_requested = os.environ.get('UCDP_MIGRATE_LEGACY') == 'true'
     if not token:
         print('UCDP status=missing_key requests=0')
         return 1
+    if len(state_key) < 32 or state_key == token:
+        print('UCDP status=missing_or_invalid_state_key requests=0')
+        return 1
     tracked = subprocess.run(['git', 'ls-files', '-z'], check=True, capture_output=True).stdout
     for name in tracked.decode().split('\0'):
-        if name and token.encode() in Path(name).read_bytes():
+        if name and any(key.encode() in Path(name).read_bytes() for key in (token, state_key)):
             print('UCDP status=secret_repository_blocked requests=0')
             return 1
     try:
-        previous = validate(json.loads(unseal(sealed.read_bytes(), token))) if sealed.exists() else initial()
+        if migration_requested and not sealed.exists():
+            raise CollectionError('migration_requires_existing_state')
+        previous, migrated = load_state(sealed.read_bytes(), state_key, token,
+                                      migration_requested) if sealed.exists() else (initial(), False)
     except Exception:
         print('UCDP status=state_restore_failed requests=0')
         return 1
-    result = safe_collect(previous, token)
+    # Explicit migration rewraps existing state only, with zero UCDP requests.
+    result = previous if migration_requested else safe_collect(previous, token)
     raw = json.dumps(result, sort_keys=True).encode()
-    if token.encode() in raw:
+    if any(key.encode() in raw for key in (token, state_key)):
         print('UCDP status=secret_output_blocked')
         return 1
     # Plaintext exists only on ephemeral runner; neither committed nor uploaded.
@@ -240,9 +249,21 @@ def main():
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_bytes(raw)
     sealed.parent.mkdir(parents=True, exist_ok=True)
-    sealed.write_bytes(seal(raw, token))
+    sealed.write_bytes(seal(raw, state_key))
+    if migration_requested:
+        print('UCDP status=' + ('state_key_migrated' if migrated else 'state_key_already_current') + ' requests=0 display_allowed=false')
+        return 0
     print('UCDP status=' + result['status'] + ' requests=' + str(result['request_count']) + ' display_allowed=false')
     return 0 if result['status'] in {'collected_historical_context', 'pinned_coverage_complete'} else 1
+
+
+def load_state(raw, state_key, api_token, migrate=False):
+    try:
+        return validate(json.loads(unseal(raw, state_key))), False
+    except Exception:
+        if not migrate:
+            raise CollectionError('state_key_migration_required') from None
+    return validate(json.loads(unseal(raw, api_token))), True
 
 
 if __name__ == '__main__':

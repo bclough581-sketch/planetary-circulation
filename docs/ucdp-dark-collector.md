@@ -29,13 +29,44 @@ not an account-wide reservation. Manual/push runs also consume quota.
 Public-repository darkness requires more than hiding a UI: derived values must
 not be committed or uploaded in plaintext. The sole plaintext summary is ignored
 by Git, used only on the ephemeral runner, and removed in an always step. Only an
-AES-256-GCM sealed snapshot is uploaded; its key is derived from the existing API
-secret using PBKDF2-SHA256 (600,000 iterations) with a random salt and nonce.
-The token is used as an HTTP header only for UCDP requests and never serialized.
-The encrypted artifact is restored from the latest completed run of this workflow
-on the same branch. Missing/expired artifacts or changed keys fail closed instead
-of silently resetting state. Retention is 90 days, not permanent archival storage.
-Key rotation requires an explicit state migration. No raw events are retained.
+AES-256-GCM sealed snapshot is uploaded; its key is derived from a separate
+`UCDP_STATE_KEY` secret using PBKDF2-SHA256 (600,000 iterations), random salt and
+nonce. The state key must be a separately generated random value of at least 32
+characters, different from the API token. The API token is used as an HTTP header
+for UCDP requests and never serialized. Token rotation no longer changes the state
+encryption key. No raw events are retained.
+
+The restore helper enumerates the artifacts API (including pagination), verifies
+workflow/branch provenance, selects the newest non-expired `ucdp-dark-sealed`
+artifact, and downloads its ZIP by artifact ID. A newer failed/cancelled run with
+no artifact cannot strand an older usable artifact. If a known chain has no usable
+artifact, restore fails closed; it never silently bootstraps over lost state.
+Retention is 90 days, not permanent archival storage. State remains branch-scoped;
+merging to a different branch starts a separate bootstrap unless an explicit state
+transfer is reviewed. State-key rotation still needs explicit re-encryption.
+
+## One-time legacy-key migration (pending)
+
+1. In repository Actions secrets add `UCDP_STATE_KEY`, a new independently random
+   value (at least 32 characters). Do not paste either secret into chat or Git.
+2. Keep the current `UCDP_API_KEY` unchanged until migration finishes: it is needed
+   only to decrypt the existing legacy artifact.
+3. Dispatch `UCDP Dark Collector` on `feat/ucdp-dark-collector` with the boolean
+   input `migrate_legacy=true`. Where CLI dispatch is available:
+   `gh workflow run ucdp-dark-collector.yml --ref feat/ucdp-dark-collector -f migrate_legacy=true`
+4. Verify the safe log `status=state_key_migrated requests=0 display_allowed=false`
+   and a new sealed artifact upload. Migration decrypts legacy state only under
+   that explicit flag, validates it and rewraps under the separate state key. It
+   preserves all source metadata and retrieval timestamps and makes no UCDP call.
+   Repeating migration against already migrated state is also collection-free.
+5. Dispatch normally (`migrate_legacy=false`) to verify independent-key restore.
+   API-token rotation is safe after migration; do not rotate/delete the state key.
+
+Without the new state secret, collection stops before requesting UCDP. An absent
+or wrong state key never automatically falls back to the API token. Connector
+tools cannot create repository Actions secrets; Brent must add the secret using
+GitHub's secret-entry UI. Migration and live independent-key verification remain
+pending that setup; the earlier live result below validates the legacy version.
 
 Scheduled GitHub Actions workflows run from the default branch: schedule activation
 therefore remains pending Brent's merge decision. The branch push trigger permits
@@ -61,7 +92,7 @@ bounds. The live integration also encountered crossed estimates outside clarity-
 That source-quality issue is flagged, not repaired, imputed or silently excluded.
 Noninteger/negative/missing fatalities still fail the entire slice closed.
 
-## Verified checkpoint
+## Legacy verified checkpoint (before Claude's two requested fixes)
 
 Real authenticated workflow passed on implementation head
 3785e54a0a4ed89d13df7db3b443b7648283c710:
@@ -92,3 +123,13 @@ and trial accounting remain held. The daily schedule is not active until a
 separately authorized default-branch merge. Artifact expiry and key rotation are
 operational limits; the December 2025 window is a bounded historical bootstrap,
 not a live conflict feed.
+
+## Cross-review fixes
+
+Claude approved PR #3 @9550a75 and blocked PR #4 @f7b9d81 for restore-chain and
+API-token/state-key coupling. Both code fixes are implemented. Added synthetic
+tests cover a newer run with no artifact, expired/wrong-branch artifacts, missing
+state versus first bootstrap, explicit legacy migration, wrong state key, and
+API-token rotation with independent-key restoration. Local UCDP suite: 18 passed.
+No independent-key live success is claimed until the new secret is installed and
+the explicit migration is verified. No merge, deployment or counter changes.

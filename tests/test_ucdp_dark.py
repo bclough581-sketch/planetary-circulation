@@ -3,8 +3,12 @@ import json
 import importlib.util
 from pathlib import Path
 import unittest
+import tempfile
+import io
+import zipfile
 from unittest.mock import patch
 from scripts import collect_ucdp_dark as c
+from scripts import restore_ucdp_state as restore
 
 
 def page(rows=None):
@@ -13,6 +17,64 @@ def page(rows=None):
 
 
 class DarkCollectorTests(unittest.TestCase):
+    @unittest.skipUnless(importlib.util.find_spec('cryptography'), 'dedicated UCDP workflow installs crypto dependency')
+    def test_independent_state_key_rotation_and_explicit_legacy_migration(self):
+        old_token, new_token, state_key = [c.secrets.token_urlsafe(32) for _ in range(3)]
+        state = c.initial()
+        old = c.seal(json.dumps(state).encode(), old_token)
+        with self.assertRaises(Exception):
+            c.load_state(old, state_key, old_token)
+        restored, migrated = c.load_state(old, state_key, old_token, migrate=True)
+        self.assertEqual(restored, state)
+        self.assertTrue(migrated)
+        current = c.seal(json.dumps(restored).encode(), state_key)
+        self.assertEqual(c.load_state(current, state_key, new_token), (state, False))
+        with self.assertRaises(Exception):
+            c.load_state(current, c.secrets.token_urlsafe(32), new_token)
+
+    def test_restore_skips_run_without_artifact_and_downloads_by_id(self):
+        branch = 'synthetic-branch'
+        def artifact(i, expired=False, other_branch=False):
+            return dict(id=i, name=restore.NAME, expired=expired,
+                        expires_at='2099-01-01T00:00:00Z', created_at=f'2026-01-{i:02}T00:00:00Z',
+                        workflow_run=dict(id=i, head_branch='other' if other_branch else branch))
+        artifacts = [artifact(1), artifact(2, expired=True), artifact(3, other_branch=True)]
+        calls = []
+        def api(path):
+            calls.append(path)
+            if '/actions/artifacts?' in path:
+                return dict(artifacts=artifacts)
+            if '/actions/runs/' in path:
+                return dict(path='.github/workflows/ucdp-dark-collector.yml', head_branch=branch)
+            self.fail('Latest run (which has no artifact) must not control restoration')
+        archive = io.BytesIO()
+        with zipfile.ZipFile(archive, 'w') as z:
+            z.writestr('ucdp-summary.sealed', b'synthetic-ciphertext-not-source-data' * 2)
+        def download(path):
+            self.assertTrue(path.endswith('/artifacts/1/zip'))
+            return archive.getvalue()
+        with tempfile.TemporaryDirectory() as tmp:
+            dest = Path(tmp) / 'ucdp-summary.sealed'
+            self.assertEqual(restore.restore('owner/repo', branch, api, download, dest), 1)
+            self.assertTrue(dest.exists())
+
+    def test_restore_no_artifact_first_run_or_known_chain(self):
+        def api(prior):
+            return lambda path: dict(artifacts=[]) if '/actions/artifacts?' in path else dict(workflow_runs=prior)
+        with tempfile.TemporaryDirectory() as tmp:
+            dest = Path(tmp) / 'ucdp-summary.sealed'
+            self.assertIsNone(restore.restore('owner/repo', 'branch', api([]), lambda p: self.fail('download called'), dest))
+            with self.assertRaises(ValueError):
+                restore.restore('owner/repo', 'branch', api([{'id': 42}]), lambda p: self.fail('download called'), dest)
+            self.assertFalse(dest.exists())
+
+    def test_restore_expired_only_and_wrong_branch_not_selected(self):
+        a = dict(id=1, name=restore.NAME, expired=True, expires_at='2099-01-01T00:00:00Z',
+                 created_at='2026-01-01T00:00:00Z', workflow_run=dict(head_branch='branch'))
+        self.assertIsNone(restore.select_artifact([a], 'branch'))
+        a['expired'] = False
+        self.assertIsNone(restore.select_artifact([a], 'different'))
+
     def test_success_schema_and_incremental(self):
         calls = []
         def get(url, key):
