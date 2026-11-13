@@ -17,6 +17,34 @@ def page(rows=None):
 
 
 class DarkCollectorTests(unittest.TestCase):
+    def test_current_citation_includes_release_funding_and_license(self):
+        for required in ('Davies', 'Pettersson', 'Öberg', '2026', '10.1093/jopres/xjag046',
+                         'DEMSCORE', '2021-00162', 'Swedish Research Council', 'CC BY 4.0'):
+            self.assertIn(required, c.initial()['citation'])
+
+    def test_legacy_citation_restores_without_reset_and_updates_on_success(self):
+        previous = c.safe_collect(c.initial(), 'synthetic-secret-only', lambda *a: page())
+        previous['citation'] = c.LEGACY_CITATION
+        c.validate(previous)
+        result = c.safe_collect(previous, 'synthetic-secret-only', lambda *a: page([]))
+        self.assertEqual(result['citation'], c.CITATION)
+        self.assertEqual(result['regions'], previous['regions'])
+        self.assertEqual(result['window']['end'], '2025-12-14')
+        def fail(*args):
+            raise c.CollectionError('auth_error')
+        failed = c.safe_collect(previous, 'synthetic-secret-only', fail)
+        for key in ('citation', 'regions', 'window', 'retrieved_utc'):
+            self.assertEqual(failed[key], previous[key])
+
+    def test_citation_upgrade_at_coverage_end_does_not_refresh_clock(self):
+        previous = c.initial()
+        previous.update(citation=c.LEGACY_CITATION, retrieved_utc=c.utcnow())
+        previous['window']['end'] = c.END.isoformat()
+        result = c.safe_collect(previous, 'synthetic-secret-only', lambda *a: self.fail('network called'))
+        self.assertEqual(result['citation'], c.CITATION)
+        self.assertEqual(result['retrieved_utc'], previous['retrieved_utc'])
+        self.assertEqual(result['request_count'], 0)
+
     @unittest.skipUnless(importlib.util.find_spec('cryptography'), 'dedicated UCDP workflow installs crypto dependency')
     def test_wrong_token_preserves_sealed_bytes_and_makes_zero_requests(self):
         original_token, wrong_token = [c.secrets.token_urlsafe(32) for _ in range(2)]
