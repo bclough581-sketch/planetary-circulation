@@ -133,3 +133,22 @@ state versus first bootstrap, explicit legacy migration, wrong state key, and
 API-token rotation with independent-key restoration. Local UCDP suite: 18 passed.
 No independent-key live success is claimed until the new secret is installed and
 the explicit migration is verified. No merge, deployment or counter changes.
+
+### Secret-setup verification
+
+Brent reported adding the key. A temporary branch-only, exact-commit-message
+migration trigger was used because the connector has no workflow-dispatch method.
+Migration attempt 43458987916 restored encrypted artifact 14055500707 but stopped
+before decryption/collection: `missing_or_invalid_state_key requests=0`.
+The normal workflow controls were then restored; no push-triggered migration
+fallback remains in the final tree.
+
+Safe setup diagnostics now distinguish missing, short and API-token-equal state
+keys without logging values. Run 43459167446 @75215819 confirmed:
+`restore=artifact_selected artifact_id=14054553833`, followed by
+`status=missing_state_key requests=0`.
+Thus GitHub supplied no `UCDP_STATE_KEY` to the job. Check that the secret is a
+repository Actions secret in bclough581-sketch/planetary-circulation, with that
+exact name (not an Actions variable or an environment-only secret).
+Existing sealed snapshots remain retained. Migration is still pending.
+Latest local checks: 19 UCDP tests and 244 full Python tests passed.
