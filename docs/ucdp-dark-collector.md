@@ -53,8 +53,11 @@ Run synthetic checks with:
 The first real workflow checks rejected incomplete pagination at requested page
 size 1,000; page size 100 progressed to event validation. The official GED codebook
 section 5.5 explicitly permits crossed low/best/high estimates in clarity-2 events.
-These are preserved unchanged and counted per region, not sorted or relabeled as
-confidence bounds. Unexpected crossed estimates in other event classes fail closed.
+All source estimates are preserved unchanged and crossed estimates counted per
+region, regardless of clarity class; they are not sorted or relabeled as confidence
+bounds. The live integration also encountered crossed estimates outside clarity-2.
+That source-quality issue is flagged, not repaired, imputed or silently excluded.
+Noninteger/negative/missing fatalities still fail the entire slice closed.
 
 Real workflow verification: pending final successful collection; encrypted state
 upload/restore already verified on the failed integration runs. No derived values

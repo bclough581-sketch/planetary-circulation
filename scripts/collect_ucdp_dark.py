@@ -155,8 +155,6 @@ def collect(previous, token, get=fetch, now=None):
                     raise CollectionError('filter_not_respected')
                 if r.get('region') not in REGIONS or not all(integer(r.get(k)) for k in ('low', 'best', 'high')):
                     raise CollectionError('invalid_event_counts')
-                if not r['low'] <= r['best'] <= r['high'] and r.get('event_clarity') != 2:
-                    raise CollectionError('unexpected_fatality_order')
                 rows.append(r)
             if page >= pages:
                 break
@@ -173,7 +171,7 @@ def collect(previous, token, get=fetch, now=None):
         result['regions'] = sorted(aggregates.values(), key=lambda r: r['region'])
         result['window']['end'] = end.isoformat()
         result.update(retrieved_utc=now, stale=True, status='collected_historical_context')
-        result['fatality_semantics'] = 'Source low/best/high are summed unchanged, not confidence bounds. GED codebook section 5.5 permits crossed estimates for event_clarity=2; counted per region.'
+        result['fatality_semantics'] = 'Source low/best/high are summed unchanged, not confidence bounds. Crossed estimates are counted per region; no values are sorted, imputed or discarded. GED codebook section 5.5 discusses crossed estimates.'
         # Historical coverage stays stale for contemporary context even on a successful pull.
     except CollectionError:
         raise

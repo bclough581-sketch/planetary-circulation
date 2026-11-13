@@ -86,11 +86,18 @@ class DarkCollectorTests(unittest.TestCase):
                 c.validate(s)
 
     def test_filters_and_fatality_bounds(self):
-        for change in (dict(date_end='2026-01-01'), dict(low=-1), dict(best=4), dict(region='unexpected')):
+        for change in (dict(date_end='2026-01-01'), dict(low=-1), dict(best='4'), dict(region='unexpected')):
             p = page()
             p['Result'][0].update(change)
             s = c.safe_collect(c.initial(), 'synthetic-secret-only', lambda *a: p)
             self.assertIsNone(s['retrieved_utc'])
+
+    def test_crossed_source_estimates_flagged_without_imputation(self):
+        p = page()
+        p['Result'][0].update(event_clarity=1, low=2, best=4, high=3)
+        s = c.safe_collect(c.initial(), 'synthetic-secret-only', lambda *a: p)
+        self.assertEqual(s['regions'][0]['fatalities'], dict(low=2, best=4, high=3))
+        self.assertEqual(s['regions'][0]['fatality_order_exceptions'], 1)
 
     @unittest.skipUnless(importlib.util.find_spec('cryptography'), 'dedicated UCDP workflow installs crypto dependency')
     def test_sealed_state_no_plaintext_and_wrong_key_rejected(self):
