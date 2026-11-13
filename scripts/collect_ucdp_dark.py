@@ -179,7 +179,7 @@ def collect(previous, token, get=fetch, now=None):
         result['regions'] = sorted(aggregates.values(), key=lambda r: r['region'])
         result['window']['end'] = end.isoformat()
         result.update(retrieved_utc=now, stale=True, status='collected_historical_context', citation=CITATION)
-        result['fatality_semantics'] = 'Source low/best/high are summed unchanged, not confidence bounds. Crossed estimates are counted per region; no values are sorted, imputed or discarded. GED codebook section 5.5 discusses crossed estimates.'
+        result['fatality_semantics'] = 'Source low/best/high are summed unchanged, not confidence bounds. Crossed estimates are counted per region; no values are sorted, imputed or discarded. GED codebook sections 2 and 5.7 describe fatality estimates; section 5.5 (Clarity) notes that clarity-2 events can have high below best or low.'
         # Historical coverage stays stale for contemporary context even on a successful pull.
     except CollectionError:
         raise
