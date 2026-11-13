@@ -1,5 +1,6 @@
 import copy
 import json
+import importlib.util
 from pathlib import Path
 import unittest
 from unittest.mock import patch
@@ -53,11 +54,11 @@ class DarkCollectorTests(unittest.TestCase):
             self.assertEqual(s['request_count'], 1)
 
     def test_partial_second_page_never_commits(self):
-        rows = [dict(id=i, region='Africa', date_end='2025-12-02', low=1, best=1, high=1) for i in range(1000)]
+        rows = [dict(id=i, region='Africa', date_end='2025-12-02', low=1, best=1, high=1) for i in range(c.PAGE_SIZE)]
         def get(url, token):
             if 'page=2' in url:
                 raise c.CollectionError('rate_error')
-            return dict(TotalCount=1001, TotalPages=2, Result=rows)
+            return dict(TotalCount=c.PAGE_SIZE + 1, TotalPages=2, Result=rows)
         s = c.safe_collect(c.initial(), 'synthetic-secret-only', get)
         self.assertEqual(s['request_count'], 2)
         self.assertEqual(s['regions'], [])
@@ -83,6 +84,7 @@ class DarkCollectorTests(unittest.TestCase):
             s = c.safe_collect(c.initial(), 'synthetic-secret-only', lambda *a: p)
             self.assertIsNone(s['retrieved_utc'])
 
+    @unittest.skipUnless(importlib.util.find_spec('cryptography'), 'dedicated UCDP workflow installs crypto dependency')
     def test_sealed_state_no_plaintext_and_wrong_key_rejected(self):
         # Runtime-generated key: no real token or token-shaped fixture in Git.
         key = c.secrets.token_urlsafe(32)

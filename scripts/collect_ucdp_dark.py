@@ -16,7 +16,7 @@ ENDPOINT = 'https://ucdpapi.pcr.uu.se/api/gedevents/' + VERSION
 START = dt.date(2025, 12, 1)
 END = dt.date(2025, 12, 31)
 MAX_REQUESTS = 20
-PAGE_SIZE = 1000
+PAGE_SIZE = 100
 CITATION = ('Sundberg, Ralph, and Erik Melander (2013). Introducing the UCDP '
             'Georeferenced Event Dataset. Journal of Peace Research 50(4): 523-532. '
             'UCDP GED version 26.1; Högbladh, Stina (2026), UCDP GED Codebook version 26.1.')
