@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Older journal · Amalgam</title>
+<style>
+:root{color-scheme:dark;font:16px system-ui;background:#07101c;color:#eaf3fa}body{max-width:760px;margin:auto;padding:20px;line-height:1.5}a{color:#82d9d1}p{color:#b8cbdc}button,a.button{display:inline-block;padding:12px;margin:6px 6px 6px 0;border:1px solid #506b82;border-radius:8px;background:#17334c;color:#eaf3fa;font:inherit;text-decoration:none;cursor:pointer}textarea{box-sizing:border-box;width:100%;min-height:240px;background:#091827;color:#eaf3fa;padding:12px;font:14px monospace;border:1px solid #506b82}button:focus-visible,a:focus-visible,textarea:focus-visible{outline:3px solid #71d8c9;outline-offset:3px}[hidden]{display:none!important}
+</style></head><body>
+<header><a href="decision-journal.html">Open My decisions</a></header>
+<h1>Your older journal is still here</h1>
+<p>This address now provides read-only recovery. It never edits, deletes or uploads your stored notes. Close other older journal tabs: they can still change their separate copy until closed.</p>
+<p>Use My decisions to copy supported older cards. Original notes remain here. Exports contain your private notes; keep them somewhere safe.</p>
+<p id="recoveryStatus" role="status" aria-live="polite"></p>
+<button id="exportOld" type="button" disabled>Export original older data</button>
+<button id="selectOld" type="button" disabled>Select original text</button>
+<button id="showPrevious" type="button">Show previous recovery copy</button>
+<button id="showCurrent" type="button">Show current older journal</button>
+<label for="oldRaw">Original stored text (unchanged)</label>
+<textarea id="oldRaw" readonly aria-label="Original stored text"></textarea>
+<p><a class="button" href="decision-journal.html">Open My decisions</a></p>
+<script>
+'use strict';
+// The optional .previous key comes from the unpublished ChatGPT integrity
+// prototype; journal-stage1 itself never wrote it. See README for provenance.
+const OLD_KEY='amalgam.journal.v1';let selected=OLD_KEY;
+const $=id=>document.getElementById(id);
+function show(changed=false){
+ try{
+  const raw=localStorage.getItem(selected);$('oldRaw').value=raw===null?'':raw;
+  $('exportOld').disabled=raw===null;$('selectOld').disabled=raw===null;
+  $('recoveryStatus').textContent=raw===null?'No data was found for this copy in this browser at this site address.':
+   (changed?'Older data changed in another tab. The latest text is shown. ':'')+(selected===OLD_KEY?'Current older journal':'Previous recovery copy')+' loaded without changes. Export or copy the text below.';
+ }catch(e){$('exportOld').disabled=true;$('selectOld').disabled=true;$('oldRaw').value='';$('recoveryStatus').textContent='Browser storage could not be read. Nothing was changed.';}
+}
+$('exportOld').onclick=()=>{
+ show();if($('exportOld').disabled)return;
+ try{
+  const url=URL.createObjectURL(new Blob([$('oldRaw').value],{type:'text/plain;charset=utf-8'}));
+  const a=document.createElement('a');a.href=url;a.download=selected===OLD_KEY?'amalgam-older-journal-original.txt':'amalgam-older-journal-previous.txt';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
+  $('recoveryStatus').textContent='Export prepared. If downloading is blocked, select and copy the original text below.';
+ }catch(e){$('recoveryStatus').textContent='Download unavailable. Select and copy the original text below.';}
+};
+$('selectOld').onclick=()=>{$('oldRaw').focus();$('oldRaw').select();};
+$('showPrevious').onclick=()=>{selected=OLD_KEY+'.previous';show();};
+$('showCurrent').onclick=()=>{selected=OLD_KEY;show();};
+window.addEventListener('storage',e=>{if(e.key===null||e.key===selected)show(true);});
+window.addEventListener('focus',()=>show());show();
+</script></body></html>

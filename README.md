@@ -61,10 +61,10 @@ amendment and UTF-8 backup limits are checked before a write. CSV exports quote
 fields and neutralize leading spreadsheet formulas. Export text remains
 selectable if a browser blocks the download.
 
-Saves and deletions use Web Locks when supported and compare the stored version
-before writing. A stale tab must reload after the user copies unsaved notes;
-without Web Locks, changed-storage checks still apply but concurrent writes
-are not guaranteed atomic. Failed saves preserve form contents. Invalid storage
+Saves and deletions require Web Locks and compare the stored version before
+writing. A stale tab must reload after the user copies unsaved notes. Browsers
+without Web Locks fail closed with a message; use a current browser over HTTPS
+or localhost. Failed saves preserve form contents. Invalid storage
 is left untouched with a raw recovery download; normal exports cannot silently
 replace it with an empty journal. Missing validation code disables writes.
 
@@ -81,6 +81,65 @@ suites start their own ephemeral loopback server via `tests/browser_preview.cjs`
 and use synthetic records only. For local runs with system Chrome, set
 `PLAYWRIGHT_CHANNEL=chrome`; CI uses its bundled Chromium. No test reads a real
 browser profile or any user's journal.
+
+### Older journal recovery
+
+The build baseline for the migration fixes is `integration-draft-1` commit
+`8e4ffcf6d9c96ac2fa08823a72cb468bfb2fc14e`, not the earlier local patch against
+`journal-stage1` commit `09303170e4341b19a6ec107f557693f0231a994b`.
+
+When `amalgam.journal.v1` exists, My decisions shows an older-journal notice
+and an explicit copy button. `journal-legacy.js` accepts the original v1 array,
+the v1 backup envelope and the reviewed v2 local envelope. It maps complete
+supported cards without clipping; unsupported or oversized data remains
+untouched with a recovery link. Legacy dates and plan labels are unverified:
+copies are retrospective and retain the original labels/dates in their evidence.
+Reported prices are carried as text, without calculating performance.
+
+Format provenance: `journal-stage1` at `0930317` writes the legacy array under
+`amalgam.journal.v1` and exports `{app, version: 1, exported, entries}`. It does
+**not** write a version-2 envelope or an `amalgam.journal.v1.previous` key.
+Those two formats were introduced by ChatGPT's earlier, unpublished local
+integrity prototype, delivered as `journal-integrity-fixes.patch` against that
+stage-1 baseline. Its `commitStore()` writes
+`{app, version: 2, journalId, revision, entries}` and saves the prior raw text
+under the `.previous` key before replacement. That prototype was not pushed,
+merged or deployed by ChatGPT; no actual user records in that format have been
+verified. This integration build accepts that envelope and can export that
+optional recovery key as compatibility support only. It creates neither.
+
+Content-derived copy IDs make repeat copies idempotent, preserve duplicate old
+IDs and treat later old-card edits as distinct retrospective versions. Copying
+again preserves amendments already added in My decisions. Original conflicts
+are rejected, never resolved using timestamps. The full copy must validate and
+fit the 500-card / 5 MB export limits before any write. No legacy key is written
+or deleted, including when deleting the new journal's records.
+An edited old card therefore adds a second version rather than updating the
+first copy. This preserves the earlier original and its amendments; the copy
+notice explicitly states this behavior. These versions are diary records, not
+independent decisions or statistical observations.
+
+Already-open old pages cannot be retroactively stopped by a new build. Close
+them before copying. Changes to the old key trigger a visible notice, and a
+changed source snapshot during conversion refuses the copy. Later writes to
+that key remain recoverable and can be copied again. This is not a cross-key
+atomic migration or a promise that older tabs cannot write.
+
+`journal.html` remains a read-only recovery address with exact raw-text export
+and a previous-copy selector. It and the migration module are precached for
+offline recovery after a successful shell update. Normal JSON restore still
+rejects legacy formats: conversion is explicit, not an implicit reinterpretation.
+
+Run all journal and integration checks with Playwright installed:
+
+```bash
+node tests/run_journal_checks.cjs
+```
+
+All browser suites in this runner start and stop their own loopback servers.
+For system Chrome, set `PLAYWRIGHT_CHANNEL=chrome`. The retired
+`journal-stage1` Python `e2e/check_journal_ui.py` needs its own local server;
+it is not the browser runner for this integration branch.
 Optional local imports replace the starter view; Clear removes them and Restore
 reopens the retained evidence. Neither action uploads or stores a local file.
 

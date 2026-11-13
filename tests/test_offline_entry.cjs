@@ -13,7 +13,7 @@ try{
   await page.goto(preview.url);await page.waitForURL(/ring-engine-lab\.html/);
   await page.evaluate(()=>navigator.serviceWorker.ready);
   const cached=await page.evaluate(async()=>{const ks=await caches.keys();const c=await caches.open(ks[0]);return (await c.keys()).map(r=>new URL(r.url).pathname);});
-  for(const f of ['/','/index.html','/ring-engine-lab.html','/amalgam-theme.css','/ring-evidence.js','/galaxy-ring.svg','/intelligence/data/delta-quarterly-curated.json','/decision-journal.html','/journal-core.js','/scoreboard.html','/scoreboard.json','/map.html'])assert.ok(cached.includes(f),'cached: '+f);
+  for(const f of ['/','/index.html','/ring-engine-lab.html','/amalgam-theme.css','/ring-evidence.js','/galaxy-ring.svg','/intelligence/data/delta-quarterly-curated.json','/decision-journal.html','/journal-core.js','/journal-legacy.js','/journal.html','/scoreboard.html','/scoreboard.json','/map.html'])assert.ok(cached.includes(f),'cached: '+f);
   await page.reload();await page.waitForSelector('#openCase');
   assert.ok(await page.evaluate(()=>!!navigator.serviceWorker.controller),'page controlled by the service worker');
   await preview.close();closed=true; // server unavailable from here on
@@ -23,6 +23,8 @@ try{
   assert.ok(await root.locator('#openCase').count(),'Explorer content renders offline');
   await root.click('header a[href="scoreboard.html"]');await root.waitForURL(/scoreboard\.html/);await root.waitForSelector('#grave details');
   await root.click('a.back[href="decision-journal.html"]');await root.waitForURL(/decision-journal\.html/);
+  const recovery=await ctx.newPage();await recovery.goto(preview.url+'journal.html');
+  assert.match(await recovery.locator('h1').innerText(),/older journal is still here/);await recovery.close();
   await root.click('header a[href="ring-engine-lab.html"]');await root.waitForURL(/ring-engine-lab\.html/);
   assert.deepEqual(errors,[]);
   console.log('PASS offline entry: root reopens to the Explorer with the server stopped; Explorer, journal and scoreboard load from the cache; shell files precached.');

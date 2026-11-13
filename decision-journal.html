@@ -7,6 +7,13 @@
 <main><div class="eyebrow">LOCAL PROTOTYPE · NO ACCOUNT CONNECTION</div><h1>Keep the reason.<br>Record what changed.</h1><p>A record of your decisions and your own rules. Completing a checklist does not establish a trading edge.</p>
 <p class="notice">Saved only in this browser for this site address. Browser clearing, private browsing or changing the address can make records unavailable. Export a backup. Dates and history are editable outside this app; they are not verified proof of a pre-trade plan.</p>
 <div id="status" role="status" aria-live="polite"></div>
+<section id="legacyPanel" class="card" hidden aria-labelledby="legacyTitle">
+<h2 id="legacyTitle">Older journal on this device</h2>
+<p id="legacyNotice" class="notice" role="status" aria-live="polite"></p>
+<p class="muted">Close older journal tabs before copying. Unchanged cards are skipped on repeat copies. An edited older card is added as a separate retrospective version; it does not update or replace the earlier copy. Original data stays untouched. Original notes and dates are not verified pre-trade evidence.</p>
+<button id="copyLegacy" type="button">Copy older cards into My decisions</button>
+<a class="button" href="journal.html">Export or recover the older journal</a>
+</section>
 <div class="layout"><section class="card"><h2>New decision</h2><p class="muted">Use Unknown for details you cannot establish. Never enter account numbers, credentials or API keys.</p>
 <form id="decisionForm">
 <p id="draftNotice" class="notice" hidden>Unsaved draft from the rings. Historical evidence has been copied below; add your own reason. This is not a recommendation or a new trade.</p>
@@ -25,8 +32,9 @@
 <label for="lesson">What would this record have helped me notice?</label><textarea id="lesson" name="lesson" maxlength="4000"></textarea></details>
 <button class="primary" type="submit">Save original card</button><p class="muted">After saving, add dated amendments rather than overwriting the original.</p></form></section>
 <section><div class="card"><h2>My records <span id="count" class="muted"></span></h2><div id="records"><p>No cards yet. A decision against trading counts as a decision.</p></div></div>
-<div class="card"><h2>Backup and privacy</h2><p class="muted">JSON keeps the original cards and amendments for restore. CSV is for reading elsewhere. Exported files contain your private notes.</p><div class="tools"><button id="backup">Export backup (JSON)</button><button id="csv">Export CSV</button></div><div id="exportPanel" hidden><label for="exportText">Export text — copy this if your browser blocks the download</label><textarea id="exportText" readonly rows="8" aria-label="Export text"></textarea><button id="selectExport" type="button">Select export text</button></div><label for="restore">Restore JSON backup (adds missing cards)</label><input id="restore" type="file" accept=".json,application/json"><p class="muted">Matching records are skipped; conflicting versions are rejected. Nothing is silently overwritten.</p><button id="deleteAll" class="danger">Delete all local records</button></div></section></div></main>
+<div class="card"><h2>Backup and privacy</h2><p class="muted">JSON keeps the original cards and amendments for restore. CSV is for reading elsewhere. Exported files contain your private notes.</p><div class="tools"><button id="backup">Export backup (JSON)</button><button id="csv">Export CSV</button></div><div id="exportPanel" hidden><label for="exportText">Export text — copy this if your browser blocks the download</label><textarea id="exportText" readonly rows="8" aria-label="Export text"></textarea><button id="selectExport" type="button">Select export text</button></div><label for="restore">Restore JSON backup (adds missing cards)</label><input id="restore" type="file" accept=".json,application/json"><p class="muted">Matching records are skipped; conflicting versions are rejected. Nothing is silently overwritten.</p><button id="deleteAll" class="danger">Delete My decisions cards</button></div></section></div></main>
 <script src="journal-core.js"></script>
+<script src="journal-legacy.js"></script>
 <script>
 'use strict';
 const glowPreference=matchMedia('(prefers-reduced-motion: reduce)');
@@ -44,13 +52,14 @@ let cards=[], writable=true, lastRaw=null;
 const $=id=>document.getElementById(id),status=message=>$('status').textContent=message;
 async function withStorageLock(action){
  if(navigator.locks&&navigator.locks.request)return navigator.locks.request(KEY,action);
- return action(); // Changed-storage check still applies in browsers without Web Locks.
+ throw Error('Safe saving is unavailable in this browser. Copy your notes and use a current browser over HTTPS or localhost.');
 }
-async function persist(next){
+async function persist(next,legacyRaw){
  if(!writable){status('Existing storage could not be read. Export recovery data or delete local records before saving.');return false;}
  const expectedRaw=lastRaw;
  try{return await withStorageLock(()=>{
   if(localStorage.getItem(KEY)!==expectedRaw)throw Error('Records changed in another tab. Copy your unsaved notes and reload before saving.');
+  if(legacyRaw!==undefined&&localStorage.getItem('amalgam.journal.v1')!==legacyRaw)throw Error('The older journal changed while copying. Close older tabs and copy again.');
   next=validate({schema:SCHEMA,cards:next});backupText(next);
   const raw=JSON.stringify({schema:SCHEMA,cards:next});localStorage.setItem(KEY,raw);lastRaw=raw;cards=next;render();return true;
  });}catch(e){status('Not saved: '+e.message+' Your current form is still here.');return false;}
@@ -108,7 +117,7 @@ $('restore').onchange=async e=>{const file=e.target.files[0];if(!file)return;try
  if(await persist(merged.cards))status('Backup restored: '+merged.added+' cards added. Matching cards skipped.');
 }catch(error){status('Restore rejected: '+error.message);}finally{e.target.value='';}};
 $('deleteAll').onclick=async()=>{
- if(!confirm('Delete all decision cards saved for this site in this browser? Exported files will remain.'))return;
+ if(!confirm('Delete all decision cards saved for this site in this browser? The older journal and exported files will remain.'))return;
  const expectedRaw=lastRaw;
  try{await withStorageLock(()=>{
   if(localStorage.getItem(KEY)!==expectedRaw)throw Error('Records changed in another tab. Reload and review them before deleting.');
@@ -116,6 +125,36 @@ $('deleteAll').onclick=async()=>{
  });}catch(e){status('Could not delete: '+e.message);}
 };
 try{lastRaw=localStorage.getItem(KEY);if(lastRaw!==null)cards=validate(JSON.parse(lastRaw));render();}catch(e){writable=false;status('Existing storage could not be read. It has not been overwritten. Use the recovery download below before deleting.');const b=el('button','Download raw storage for recovery');b.onclick=()=>{try{download('amalgam-recovery.txt',localStorage.getItem(KEY)||'','text/plain');}catch(error){status('Recovery unavailable: '+error.message);}};$('records').replaceChildren(b);}
+let legacyCopying=false;
+function showLegacy(changed=false){
+ try{
+  const raw=localStorage.getItem('amalgam.journal.v1');$('legacyPanel').hidden=raw===null;
+  if(raw===null)return;
+  if(!window.AmalgamLegacyJournal){$('legacyNotice').textContent='Older records were found, but copying is unavailable. Use the recovery link to export them.';$('copyLegacy').disabled=true;return;}
+  try{
+   const count=window.AmalgamLegacyJournal.read(raw).length;
+   $('legacyNotice').textContent=(changed?'The older journal changed in another tab. ':'')+count+' older card(s) found. They are stored separately from My decisions. Original data is still available even after copying.';
+   $('copyLegacy').disabled=!writable||legacyCopying;
+  }catch(e){$('legacyNotice').textContent=e.message;$('copyLegacy').disabled=true;}
+ }catch(e){$('legacyPanel').hidden=false;$('legacyNotice').textContent='Older journal storage could not be checked. Use the recovery link.';$('copyLegacy').disabled=true;}
+}
+$('copyLegacy').onclick=async()=>{
+ if(legacyCopying)return;legacyCopying=true;
+ const button=$('copyLegacy');button.disabled=true;
+ try{
+  if(!writable)throw Error('Current records need recovery before copying.');
+  const raw=localStorage.getItem('amalgam.journal.v1');
+  if(raw===null)throw Error('No older journal was found.');
+  const incoming=await window.AmalgamLegacyJournal.convert(raw),merged=window.AmalgamLegacyJournal.mergeCopies(cards,incoming);
+  if(await persist(merged.cards,raw)){
+   const changed=localStorage.getItem('amalgam.journal.v1')!==raw;
+   status('Copied '+merged.added+' older card(s). Unchanged copies skipped. Edited older cards are separate versions, not updates to earlier copies. Original data was kept.'+(changed?' The older journal changed during the copy; close older tabs and copy again.':' Close older tabs; any later changes there need another copy.'));
+  }
+ }catch(e){status('Older cards were not copied: '+e.message);}
+ finally{legacyCopying=false;showLegacy();}
+};
+window.addEventListener('storage',e=>{if(e.key===null||e.key==='amalgam.journal.v1')showLegacy(true);});
+window.addEventListener('focus',()=>showLegacy());showLegacy();
 if(location.hash==='#evidence-draft'){
  try{
   const raw=sessionStorage.getItem('amalgam.evidence-draft.v1');if(!raw||raw.length>15000)throw Error('No valid evidence draft is available in this tab.');
