@@ -2,12 +2,7 @@ name: UCDP Dark Collector
 on:
   schedule:
     - cron: '23 6 * * *'
-  workflow_dispatch:
-    inputs:
-      migrate_legacy:
-        description: 'One-time rewrap of legacy API-token-sealed state; no collection'
-        type: boolean
-        default: false
+  workflow_dispatch: {}
   push:
     branches: [feat/ucdp-dark-collector]
     paths:
@@ -43,8 +38,6 @@ jobs:
         id: collect
         env:
           UCDP_API_KEY: ${{ secrets.UCDP_API_KEY }}
-          UCDP_STATE_KEY: ${{ secrets.UCDP_STATE_KEY }}
-          UCDP_MIGRATE_LEGACY: ${{ github.event_name == 'workflow_dispatch' && inputs.migrate_legacy && 'true' || 'false' }}
         run: python scripts/collect_ucdp_dark.py
       - name: Retain encrypted snapshot only
         if: always() && steps.collect.outcome != 'skipped'

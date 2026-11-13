@@ -17,32 +17,27 @@ def page(rows=None):
 
 
 class DarkCollectorTests(unittest.TestCase):
-    def test_state_key_setup_diagnostics_never_reveal_secrets_or_collect(self):
-        token = c.secrets.token_urlsafe(32)
-        for state_key, code in [('', 'missing_state_key'), ('short', 'state_key_too_short'),
-                                (token, 'state_key_must_be_independent')]:
+    @unittest.skipUnless(importlib.util.find_spec('cryptography'), 'dedicated UCDP workflow installs crypto dependency')
+    def test_wrong_token_preserves_sealed_bytes_and_makes_zero_requests(self):
+        original_token, wrong_token = [c.secrets.token_urlsafe(32) for _ in range(2)]
+        state = c.safe_collect(c.initial(), original_token, lambda *a: page())
+        sealed_bytes = c.seal(json.dumps(state).encode(), original_token)
+        with tempfile.TemporaryDirectory() as tmp:
+            sealed = Path(tmp) / 'dark-state/ucdp-summary.sealed'
+            sealed.parent.mkdir()
+            sealed.write_bytes(sealed_bytes)
             output = io.StringIO()
-            with patch.dict(c.os.environ, {'UCDP_API_KEY': token, 'UCDP_STATE_KEY': state_key}, clear=True), \
+            with patch.dict(c.os.environ, {'UCDP_API_KEY': wrong_token}, clear=True), \
+                    patch.object(c, 'Path', side_effect=lambda name: Path(tmp) / name), \
+                    patch.object(c.subprocess, 'run', return_value=type('Result', (), {'stdout': b''})()), \
                     patch('sys.stdout', output), patch.object(c, 'safe_collect') as collect:
                 self.assertEqual(c.main(), 1)
                 collect.assert_not_called()
-            self.assertIn('status=' + code + ' requests=0', output.getvalue())
-            self.assertNotIn(token, output.getvalue())
-
-    @unittest.skipUnless(importlib.util.find_spec('cryptography'), 'dedicated UCDP workflow installs crypto dependency')
-    def test_independent_state_key_rotation_and_explicit_legacy_migration(self):
-        old_token, new_token, state_key = [c.secrets.token_urlsafe(32) for _ in range(3)]
-        state = c.initial()
-        old = c.seal(json.dumps(state).encode(), old_token)
-        with self.assertRaises(Exception):
-            c.load_state(old, state_key, old_token)
-        restored, migrated = c.load_state(old, state_key, old_token, migrate=True)
-        self.assertEqual(restored, state)
-        self.assertTrue(migrated)
-        current = c.seal(json.dumps(restored).encode(), state_key)
-        self.assertEqual(c.load_state(current, state_key, new_token), (state, False))
-        with self.assertRaises(Exception):
-            c.load_state(current, c.secrets.token_urlsafe(32), new_token)
+            self.assertEqual(sealed.read_bytes(), sealed_bytes)
+            self.assertFalse((Path(tmp) / 'product-data/ucdp-conflict-summary.json').exists())
+            self.assertIn('status=state_key_changed requests=0', output.getvalue())
+            self.assertNotIn(original_token, output.getvalue())
+            self.assertNotIn(wrong_token, output.getvalue())
 
     def test_restore_skips_run_without_artifact_and_downloads_by_id(self):
         branch = 'synthetic-branch'
