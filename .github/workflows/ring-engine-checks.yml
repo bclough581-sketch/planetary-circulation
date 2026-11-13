@@ -1,7 +1,7 @@
 name: Ring Engine Checks
 on:
   pull_request:
-    branches: [amalgam-event-foundation, main]
+    branches: [amalgam-event-foundation, integration-draft-1, main]
     paths:
       - 'ring-engine-lab.html'
       - 'index.html'
@@ -17,6 +17,8 @@ on:
       - 'galaxy-ring.svg'
       - 'decision-journal.html'
       - 'journal-core.js'
+      - 'journal-legacy.js'
+      - 'journal.html'
       - 'tests/browser_preview.cjs'
       - 'tests/test_journal_*.cjs'
       - 'tests/test_evidence_handoff.cjs'
@@ -45,6 +47,8 @@ on:
       - 'galaxy-ring.svg'
       - 'decision-journal.html'
       - 'journal-core.js'
+      - 'journal-legacy.js'
+      - 'journal.html'
       - 'tests/browser_preview.cjs'
       - 'tests/test_journal_*.cjs'
       - 'tests/test_evidence_handoff.cjs'
@@ -75,6 +79,7 @@ jobs:
       - run: node tests/test_ring_engine.cjs
       - run: node tests/test_journal_core.cjs
       - run: node tests/test_journal_regression.cjs
+      - run: node tests/test_journal_migration.cjs
       - run: node tests/test_scoreboard.js
       - run: python -m unittest discover -s tests -p test_ring_starter.py
       - run: python -m unittest discover -s tests -p test_evidence_export.py
@@ -97,6 +102,7 @@ jobs:
       - run: node tests/test_ring_browser.cjs
       - run: node tests/test_journal_browser.cjs
       - run: node tests/test_journal_regression_browser.cjs
+      - run: node tests/test_journal_migration_browser.cjs
       - run: node tests/test_nav_smoke.cjs
       - run: node tests/test_offline_entry.cjs
       - run: node tests/test_evidence_handoff.cjs
