@@ -1,10 +1,10 @@
 {
-  "asof": "2026-11-06",
+  "asof": "2026-11-12",
   "headline": "No edge validated under our rules yet. Below: selected documented results and two forward paper tracks.",
   "counters": [
     [
       "Premises counted in our ledger",
-      "24"
+      "26"
     ],
     [
       "Sealed hold-out openings spent",
@@ -19,7 +19,7 @@
       "$0"
     ]
   ],
-  "counterNote": "Counts follow the reconciled research ledger and were checked against it on 2026-11-06. $0 refers to these research tests and paper tracks only. Historical studies differ in how much was written down in advance and what had already been seen; each record carries its own disclosures. Several hold-out tests were underpowered, so a fail there is weak evidence, not proof that nothing exists.",
+  "counterNote": "Counts through 24 premises were checked against the reconciled research ledger on 2026-11-06. Premises 25 and 26 (SQZ1, INS2) were added on 2026-11-12 from their result files; the ledger check for those two is pending. $0 refers to these research tests and paper tracks only. Historical studies differ in how much was written down in advance and what had already been seen; each record carries its own disclosures. Several hold-out tests were underpowered, so a fail there is weak evidence, not proof that nothing exists.",
   "tracks": [
     {
       "name": "BTC40 trend filter (paper only)",
@@ -209,6 +209,26 @@
       "read": "A descriptive feasibility estimate, not measured performance and not a research verdict. Real mechanism, but small and too rare to test.",
       "source": "BMEZ tender offer filing (SEC, Oct 2026); public commentary.",
       "check": "Estimate only; not a measured result."
+    },
+    {
+      "id": "SQZ1",
+      "name": "Heavily shorted stocks outperform over the next 10 sessions",
+      "verdict": "DEAD",
+      "kind": "Pre-registered, development data, run once",
+      "numbers": "Net lift after a 0.40% cost was -0.54% (99.985% range -1.32% to +0.29%) over 113 periods. Before cost the lift was -0.14%.",
+      "read": "Heavily shorted names did not do better than matched stocks; the whole range sits below the bar the rule required.",
+      "source": "sqz1_result_DEAD_2026-11-12; locked prereg sha256 8482d8ad.",
+      "check": "Read from the result file on 2026-11-12; independent check against the local run output pending."
+    },
+    {
+      "id": "INS2",
+      "name": "Clusters of insider selling flag names that lag over the next 40 sessions",
+      "verdict": "DEAD",
+      "kind": "Pre-registered, development data, run once",
+      "numbers": "Mean lift versus matched controls was +0.11% (99.993% range -1.52% to +1.50%) over 3,640 events in 50 months. Median lift was -0.77%.",
+      "read": "The average flagged name did not lag its control by the bar the rule required; the range is too wide to rule out a smaller gap in either direction.",
+      "source": "ins2_result_DEAD_2026-11-12; locked prereg sha256 97d66259.",
+      "check": "Read from the result file on 2026-11-12; independent check against the local run output pending."
     }
   ],
   "parked": [
