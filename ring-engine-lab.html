@@ -14,6 +14,7 @@ header,main{max-width:1180px}.layout{grid-template-columns:minmax(0,1.45fr) minm
 .chip.fresh{color:#7ee2a8}.chip.stale{color:#ffd166}.chip.unavailable{color:#ff8a8a}.chip.preserved{color:#9fb8d0}
 .wf table{width:100%;table-layout:auto;border-collapse:collapse;font-size:.86rem}.wf th,.wf td{text-align:left;padding:5px 6px;border-bottom:1px solid #1d3248;vertical-align:top}
 .wf .tw{overflow-x:auto}.wf td,.wf th{overflow-wrap:anywhere;white-space:normal;text-align:left;padding:6px}.wf caption{text-align:left;white-space:normal;caption-side:top}.wf a{color:#8fd3ff;overflow-wrap:anywhere}.wf .note{font-size:.82rem;color:#a9bdd0;margin:.3rem 0}
+#wfQuarter table,#wfContext table{min-width:600px}#wfQuarter td:first-child,#wfQuarter th:first-child{min-width:110px;overflow-wrap:normal}#wfQuarter .tw,#wfContext .tw{max-width:100%}
 .wf button{max-width:100%;white-space:normal}.wf .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 @media(max-width:700px){.wf table{font-size:.8rem}}
 </style><link rel="stylesheet" href="amalgam-theme.css"></head><body><header><strong>◉ AMALGAM</strong> <span class="muted">/ EVIDENCE EXPLORER</span> <span style="float:right"><a href="decision-journal.html">My decisions →</a> · <a href="scoreboard.html">Scoreboard</a> · <a href="map.html">Live map</a></span></header><main>
@@ -54,6 +55,7 @@ header,main{max-width:1180px}.layout{grid-template-columns:minmax(0,1.45fr) minm
 <aside><div class="card"><div class="topline"><h2 style="margin-top:0">Evidence coverage</h2><span class="pill">9 domains</span></div><p class="compact-status" id="sourceSummary">Opening retained snapshot</p><div class="coverage" id="domainCoverage"></div><details class="advanced"><summary>Prediction status and source limits</summary><p><strong>INSUFFICIENT EVIDENCE — NO TRADE SIGNAL</strong></p><p>Coverage is not convergence. Source attribution does not authenticate a source or establish a predictive relationship. No numeric convergence score is calculated.</p><dl><dt>Data mode</dt><dd>Retained snapshot; not live</dd><dt>Availability</dt><dd>Measurement dates are not verified publication times</dd><dt>Prediction</dt><dd>Not established</dd></dl></details></div>
 <div class="card advanced"><details id="importTools"><summary>Use your own evidence file</summary><p class="muted">Optional local JSON import. Files stay in this browser; no upload or storage. Import replaces the starter view.</p><input id="evidenceFile" type="file" accept=".json,application/json" aria-label="Select evidence JSON"><p id="importStatus" role="status">No evidence loaded.</p><button id="clearEvidence">Clear evidence</button></details><button id="restoreStarter">Restore retained evidence</button></div><div class="card legend"><h2 style="margin-top:0">Inspect a layer</h2><div id="layerButtons"></div></div><div class="card evidence" aria-live="polite"><h2 id="layerTitle">Select a ring</h2><p id="layerDetail">Select a layer to inspect what evidence would be needed.</p><p id="layerCaveat" class="muted"></p><div id="observations"></div></div></aside></div></main><footer>AMALGAM development preview · Source-linked information · No production deployment</footer>
 <script src="ring-evidence.js"></script>
+<script src="delta-company-evidence.js"></script>
 <script src="delta-context.js"></script>
 <script>
 "use strict";
@@ -236,7 +238,7 @@ function openDraft(intent){
   const capturedAt=new Date().toISOString();
   const table=[...document.querySelectorAll("#caseRows tr")].map(row=>[...row.cells].map(cell=>cell.textContent).join(" | ")).join("\n");
   const sources=[...document.querySelectorAll("#caseSources a")].map(a=>a.textContent+": "+a.href).join("\n");
-  const D=window.AmalgamDeltaContext,qe=D.quarterEvidence(window.AMALGAM_STARTER.issuer,Date.now()),rows=D.contextRows(wfLoad.data,{nowMs:Date.now(),retained:wfLoad.mode.indexOf("retained")===0});
+  const D=window.AmalgamDeltaContext,qe=D.quarterEvidence(window.AMALGAM_DELTA_COMPANY,Date.now()),rows=D.contextRows(wfLoad.data,{nowMs:Date.now(),retained:wfLoad.mode.indexOf("retained")===0});
   const historical=["PRESERVED HISTORICAL COMPARISON (does not refresh) — "+comparison,"Consolidated GAAP, USD millions except margin.","Measure | "+text("priorPeriod")+" | "+text("currentPeriod"),table,text("caseFinding"),sources].join("\n");
   const evidence=["AMALGAM Delta workflow (DAL) · copied "+capturedAt+" (browser clock, not source publication time).",D.quarterText(qe),D.contextText(rows,wfLoad),historical,"Crude oil is not airline fuel expense. The three classes have different dates and are not time-aligned. Market context is not independent corroboration of the company figures. Historical context only for the preserved comparison. Not a recommendation or trade signal."].join("\n\n");
   if(evidence.length>4000)throw Error("Evidence exceeds the card's text limit ("+evidence.length+" characters)");
@@ -310,32 +312,34 @@ function cell(tr,t,link){const td=document.createElement("td");if(link){const a=
 function chip(el,status){el.className="chip "+status;el.textContent=({fresh:"✓ Fresh",stale:"⚠ Stale",unavailable:"✕ Unavailable"})[status]}
 function sg(n,d,u){return (n>0?"+":"")+n.toFixed(d)+u}
 function renderQuarter(){
- const D=window.AmalgamDeltaContext,issuer=window.AMALGAM_STARTER.issuer,qe=D.quarterEvidence(issuer,Date.now());
+ const D=window.AmalgamDeltaContext,issuer=window.AMALGAM_DELTA_COMPANY,qe=D.quarterEvidence(issuer,Date.now());
  chip($("wfQChip"),qe.status);$("wfQReason").textContent=qe.reason;
  const body=$("wfQRows");body.replaceChildren();
  const ex=$("wfExposureRows");ex.replaceChildren();
- if(!qe.latest){return}
+ if(!qe.latest){$("wfQCaption").textContent="Product company evidence unavailable; the preserved historical case is separate.";$("wfQMeta").textContent="";$("wfQSources").replaceChildren();for(const id of ["wfQLatestH","wfQYoyH","wfQQoqH"])$(id).textContent="Not loaded";const tr=document.createElement("tr");cell(tr,"Business exposures");cell(tr,"Missing — product company evidence is not available.");ex.append(tr);return}
  const l=qe.latest,y=qe.yoy,q=qe.qoq;
- $("wfQCaption").textContent="Consolidated GAAP · USD millions except ratios · hand-transcribed from issuer releases";
+ $("wfQCaption").textContent="Consolidated GAAP · USD millions except ratios";
+ const tableRegion=$("wfQuarter").querySelector(".tw");tableRegion.tabIndex=0;tableRegion.setAttribute("role","region");tableRegion.setAttribute("aria-label","Quarterly comparison; scroll for prior periods");
  $("wfQLatestH").textContent=l.period+" (ended "+l.periodEnd+")";
  $("wfQYoyH").textContent=y?"vs "+y.period+" (ended "+y.periodEnd+")":"Prior year: not loaded";
  $("wfQQoqH").textContent=q?"vs "+q.period+" (ended "+q.periodEnd+")":"Prior quarter: not loaded";
  const m=[["Revenue",o=>o.revenue.toLocaleString("en-US"),c=>sg(c.revenuePct,1,"%")],["Fuel expense",o=>o.fuelExpense.toLocaleString("en-US"),c=>sg(c.fuelPct,1,"%")],["Operating margin",o=>o.margin.toFixed(1)+"%",c=>sg(c.marginPp,1," pp")],["Fuel share of revenue",o=>o.fuelShare.toFixed(1)+"%",c=>sg(c.fuelSharePp,1," pp")]];
  for(const [n,f,c] of m){const tr=document.createElement("tr");cell(tr,n);cell(tr,f(l));cell(tr,y?f(y)+" → "+f(l)+" ("+c(qe.yoyChange)+")":"Missing");cell(tr,q?f(q)+" → "+f(l)+" ("+c(qe.qoqChange)+")":"Missing");body.append(tr)}
- $("wfQMeta").textContent="Measurement: quarter ended "+l.periodEnd+". Retrieval: reviewed "+qe.reviewed+" by manual transcription; exact fetch time not recorded. Publication time "+(qe.publicationTimeVerified?"verified":"not verified")+". Freshness uses a "+D.QUARTER_WINDOW_DAYS+"-day publication rule that is our assumption.";
- const src=$("wfQSources");src.replaceChildren();for(const k of [...new Set([y&&y.source,q&&q.source,l.source].filter(Boolean))]){if(!issuer.sources[k])continue;const a=document.createElement("a");a.href=issuer.sources[k];a.textContent="Delta "+k+" release";a.rel="noopener noreferrer";a.target="_blank";src.append(a,document.createTextNode(" "))}
+ $("wfQMeta").textContent="Fuel expense means aircraft fuel and related taxes, not adjusted fuel expense. Scroll the table for prior-period comparisons. Measurement: quarter ended "+l.periodEnd+". Source publication date: "+qe.sources[l.source].published_date+". Retrieved: "+qe.sources[l.source].retrieved_utc+". Publication time and historical first availability are not independently verified. Publication check: "+qe.reviewed+" (review again after "+qe.reviewMaxAgeDays+" days; no assumed quarterly release deadline).";
+ const src=$("wfQSources");src.replaceChildren();for(const k of [...new Set([y&&y.source,q&&q.source,l.source].filter(Boolean))]){const s=qe.sources[k];if(!s)continue;const row=document.createElement("div"),a=document.createElement("a");a.href=s.url;a.textContent="Delta "+k+" release";a.rel="noopener noreferrer";a.target="_blank";row.append(a,document.createTextNode(" · published "+s.published_date+" · retrieved "+s.retrieved_utc));src.append(row)}
  const rows=[["Fuel cost","Fuel was "+l.fuelShare.toFixed(1)+"% of revenue in "+l.period+" (source: issuer release, "+l.period+")."],["Interest-rate exposure","Missing — no debt or floating-rate figures are loaded."],["Currency exposure","Missing — no foreign-revenue or hedging figures are loaded."],["Hedging","Missing — not loaded."]];
  for(const [a,b] of rows){const tr=document.createElement("tr");cell(tr,a);cell(tr,b);ex.append(tr)}
 }
 function renderContext(){
  const D=window.AmalgamDeltaContext,rows=D.contextRows(wfLoad.data,{nowMs:Date.now(),retained:wfLoad.mode.indexOf("retained")===0});
+ const tableRegion=$("wfContext").querySelector(".tw");tableRegion.tabIndex=0;tableRegion.setAttribute("role","region");tableRegion.setAttribute("aria-label","Market context; scroll for dates and source status");
  const body=$("wfCRows");body.replaceChildren();
  for(const r of rows){const tr=document.createElement("tr");cell(tr,r.label);
   cell(tr,r.value==null?"Unavailable":r.value.toFixed(r.dp)+" "+r.unit+(r.change28?" ("+sg(r.change28.value,r.change28.unit==="bp"?0:1,r.change28.unit==="bp"?" bp":"%")+" / 28d)":""));
   cell(tr,"Measured "+(r.asof||"—")+" · retrieved "+(r.retrievedUtc||"time not recorded"));
   const st=cell(tr,"");const c=document.createElement("span");chip(c,r.status);c.title=r.reason;st.append(c," ");const al=document.createElement("a");al.href=r.source.url;al.textContent=r.source.name;al.rel="noopener noreferrer";al.target="_blank";st.append(al);const rs=document.createElement("div");rs.className="note";rs.textContent=r.reason;st.append(rs);body.append(tr)}
  const order={unavailable:2,stale:1,fresh:0},worst=rows.reduce((w,r)=>order[r.status]>order[w]?r.status:w,"fresh");chip($("wfCChip"),worst);
- const labels={live:"Loaded from this site's data.json just now","retained-last-success":"Refresh failed — showing the last successful refresh from this browser","retained-bundle":"Refresh failed — showing the snapshot bundled with this page",unavailable:"Unavailable — no refresh and no retained copy"};
+ const labels={live:"Loaded from this site's data.json just now","retained-last-success":"Refresh failed — showing the last successful refresh from this browser","retained-site-cache":"Offline — showing this site's cached data; no new source retrieval verified","retained-bundle":"Refresh failed — showing the snapshot bundled with this page",unavailable:"Unavailable — no refresh and no retained copy"};
  $("wfLoad").textContent=(labels[wfLoad.mode]||wfLoad.mode)+(wfLoad.loadedUtc?" · data loaded "+wfLoad.loadedUtc:"")+(wfLoad.error?" · "+wfLoad.error:"");
 }
 function renderWorkflow(){try{renderQuarter();renderContext()}catch(err){$("wfLoad").textContent="Workflow could not render: "+err.message}}

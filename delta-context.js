@@ -1,6 +1,6 @@
 /* AMALGAM: Delta "what changed" workflow, pure logic. No DOM, no network of its own.
    Three evidence classes are kept apart on purpose:
-     quarterly company evidence  (issuer releases, aged by the 45-day publication rule below)
+     quarterly company evidence  (product-only issuer releases and dated publication checks)
      refreshed market context     (data.json observations, aged by per-series limits)
      preserved historical case    (a fixed, dated comparison that does not age)
    Every row carries: measurement date, retrieval time, source link, freshness status.
@@ -9,7 +9,6 @@
   'use strict';
   var DAY = 864e5;
   var CACHE_KEY = 'amalgam.context.last.v1';
-  var QUARTER_WINDOW_DAYS = 45;   // our assumption for when a quarter's results should be public; shown to the user as an assumption
   // Same limits as the live map (map.html HUBDEF age): calendar days.
   var SOURCES = {
     eia: { name: 'U.S. Energy Information Administration', url: 'https://www.eia.gov/opendata/' },
@@ -24,7 +23,7 @@
     { id: 'LON', label: 'EUR/GBP reference rate', unit: 'GBP per EUR', src: 'ecb', dp: 5, maxAge: 5, role: 'Currency' }
   ];
 
-  function parseDay(s) { return typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s) ? Date.parse(s + 'T00:00:00Z') : NaN; }
+  function parseDay(s) { if(typeof s!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(s))return NaN;var t=Date.parse(s+'T00:00:00Z');return isFinite(t)&&new Date(t).toISOString().slice(0,10)===s?t:NaN; }
   function isTime(s) { return typeof s === 'string' && /(?:Z|[+-]\d\d:\d\d)$/.test(s) && isFinite(Date.parse(s)); }
   function ageDays(asof, nowMs) { var t = parseDay(asof); return isFinite(t) ? Math.floor((nowMs - t) / DAY) : NaN; }
   function fin(n) { return typeof n === 'number' && isFinite(n); }
@@ -88,28 +87,36 @@
     return { revenuePct: pctChg(a.revenue, b.revenue), fuelPct: pctChg(a.fuelExpense, b.fuelExpense), marginPp: a.margin - b.margin, fuelSharePp: a.fuelShare - b.fuelShare };
   }
   function quarterEvidence(issuer, nowMs) {
-    var obs = ((issuer && issuer.observations) || []).filter(function (o) { return periodEnd(o.period); }).map(enrich)
+    var unavailable=function(reason){return {status:'unavailable',reason:reason,latest:null};};
+    if(!issuer||issuer.schema!=='amalgam.delta-company-evidence.v1')return unavailable('Product company evidence is not loaded; the historical research case is separate.');
+    if(issuer.symbol!=='DAL'||issuer.basis!=='consolidated_GAAP'||issuer.unit!=='USD_millions'||!isTime(issuer.reviewed_utc)||!fin(issuer.review_max_age_days)||issuer.review_max_age_days<=0||!isFinite(nowMs))return unavailable('Product evidence metadata is invalid.');
+    if(!issuer.metric_definitions||issuer.metric_definitions.revenue!=='Total operating revenue'||issuer.metric_definitions.operatingIncome!=='Operating income'||issuer.metric_definitions.fuelExpense!=='Aircraft fuel and related taxes')return unavailable('Product GAAP measure definitions are invalid.');
+    if(Date.parse(issuer.reviewed_utc)>nowMs)return unavailable('The source review is after this device’s clock; currentness cannot be judged.');
+    var sources=issuer.sources,raw=issuer.observations;
+    if(!sources||typeof sources!=='object'||Array.isArray(sources)||!Array.isArray(raw))return unavailable('Product sources or observations are missing.');
+    var sourceKeys=Object.keys(sources);
+    if(!sourceKeys.length||sourceKeys.some(function(k){var s=sources[k];return !s||!periodEnd(s.reported_period)||!/^https:\/\/ir\.delta\.com\//.test(s.url)||!isFinite(parseDay(s.published_date))||!isTime(s.retrieved_utc)||!/^[a-f0-9]{64}$/.test(s.raw_sha256)||parseDay(s.published_date)<parseDay(periodEnd(s.reported_period))||Date.parse(s.retrieved_utc)<parseDay(s.published_date)||Date.parse(s.retrieved_utc)>Date.parse(issuer.reviewed_utc);} ))return unavailable('Product source provenance is invalid.');
+    var seen=new Set();
+    if(raw.some(function(o){if(!o||!periodEnd(o.period)||seen.has(o.period)||!fin(o.revenue)||o.revenue<=0||!fin(o.operatingIncome)||!fin(o.fuelExpense)||o.fuelExpense<0||typeof o.source!=='string'||!Object.prototype.hasOwnProperty.call(sources,o.source))return true;seen.add(o.period);return parseDay(periodEnd(o.period))>parseDay(sources[o.source].published_date);} ))return unavailable('Product observations are invalid or duplicated.');
+    var obs = raw.map(enrich)
       .sort(function (a, b) { return a.period < b.period ? -1 : 1; });
-    if (!obs.length) return { status: 'unavailable', reason: 'No quarterly observations are loaded.', latest: null };
-    var latest = obs[obs.length - 1], idx = obs.length - 1;
+    if (!obs.length) return unavailable('No product quarterly observations are loaded.');
+    var latest = obs[obs.length - 1];
     var yoy = obs.filter(function (o) { return o.quarter === latest.quarter && o.year === latest.year - 1; })[0] || null;
-    var qoq = idx > 0 ? obs[idx - 1] : null;
-    var behind = [], y = latest.year, q = +latest.quarter[1];
-    for (var guard = 0; guard < 12; guard++) {
-      q++; if (q > 4) { q = 1; y++; }
-      var pe = periodEnd(y + 'Q' + q), due = parseDay(pe) + QUARTER_WINDOW_DAYS * DAY;
-      if (due <= nowMs) behind.push(y + 'Q' + q); else break;
-    }
-    var status = behind.length ? 'stale' : 'fresh';
+    var priorQuarter=+latest.quarter[1]-1,priorYear=latest.year;if(priorQuarter===0){priorQuarter=4;priorYear--;}
+    var qoq=obs.find(function(o){return o.period===priorYear+'Q'+priorQuarter;})||null;
+    var behind=[...new Set(sourceKeys.map(function(k){return sources[k].reported_period;}))].filter(function(p){return !seen.has(p);}).sort();
+    var reviewOld=(nowMs-Date.parse(issuer.reviewed_utc))>issuer.review_max_age_days*DAY;
+    var status = behind.length||reviewOld ? 'stale' : 'fresh';
     return {
       status: status,
-      reason: behind.length
-        ? behind.length + ' newer quarter' + (behind.length === 1 ? '' : 's') + ' (' + behind.join(', ') + ') should be public by now under a ' + QUARTER_WINDOW_DAYS + '-day rule (our assumption) and ' + (behind.length === 1 ? 'is' : 'are') + ' not loaded.'
-        : 'No later quarter is due yet under a ' + QUARTER_WINDOW_DAYS + '-day rule (our assumption).',
+      reason: behind.length?'Published quarter(s) '+behind.join(', ')+' are known from linked releases but not loaded.'
+        :reviewOld?'The last publication check is older than '+issuer.review_max_age_days+' days. A newer release may be missing; retained figures are shown.'
+        :'Latest confirmed published quarter '+latest.period+' is loaded. Publication check: '+issuer.reviewed_utc.slice(0,10)+'. This is a reviewed snapshot, not continuous live coverage.',
       latest: latest, yoy: yoy, qoq: qoq,
       yoyChange: yoy ? diff(latest, yoy) : null, qoqChange: qoq ? diff(latest, qoq) : null,
       missingQuarters: behind, all: obs,
-      sources: issuer.sources, reviewed: issuer.reviewed_date, publicationTimeVerified: issuer.publication_time_verified === true
+      sources:sources,reviewed:issuer.reviewed_utc,reviewMaxAgeDays:issuer.review_max_age_days,publicationTimeVerified:false
     };
   }
 
@@ -135,11 +142,13 @@
   // env: {fetchFn, storage, bundle, url, nowFn}. Never throws.
   function loadContext(env) {
     var now = function () { return (env.nowFn ? env.nowFn() : new Date()).toISOString(); };
+    var offlineResponse=false;
     return Promise.resolve().then(function () { return env.fetchFn(env.url, { cache: 'no-store' }); })
-      .then(function (res) { if (!res || !res.ok) throw new Error('HTTP ' + (res && res.status)); return res.text(); })
+      .then(function (res) { if (!res || !res.ok) throw new Error('HTTP ' + (res && res.status));offlineResponse=!!(res.headers&&res.headers.get('X-Amalgam-Offline-Fallback')==='1'); return res.text(); })
       .then(function (text) {
         var data = JSON.parse(text);
         if (!validContext(data)) throw new Error('data.json has no hubs object');
+        if(offlineResponse)return {mode:'retained-site-cache',data:data,loadedUtc:null,error:'Network refresh unavailable; this response came from the site’s offline cache.'};
         var loaded = now();
         try { env.storage.setItem(CACHE_KEY, JSON.stringify({ loadedUtc: loaded, data: minimal(data) })); } catch (e) { /* storage unavailable: still live */ }
         return { mode: 'live', data: data, loadedUtc: loaded, error: null };
@@ -162,7 +171,7 @@
   function quarterText(qe) {
     if (!qe.latest) return 'COMPANY EVIDENCE (quarterly): not loaded.';
     var l = qe.latest, lines = ['COMPANY EVIDENCE (quarterly) · status: ' + qe.status.toUpperCase() + ' · ' + qe.reason,
-      'Latest on file ' + l.period + ' (quarter ended ' + l.periodEnd + '); issuer release: ' + qe.sources[l.source] + '. Transcribed by hand, reviewed ' + qe.reviewed + '; publication time not verified.'];
+      'Latest '+l.period+' (ended '+l.periodEnd+'); published '+qe.sources[l.source].published_date+'; retrieved '+qe.sources[l.source].retrieved_utc+'; '+qe.sources[l.source].url+'. Publication date is not verified first availability.'];
     if (qe.yoyChange) lines.push('vs ' + qe.yoy.period + ': revenue ' + sgn(qe.yoyChange.revenuePct, 1, '%') + ', fuel expense ' + sgn(qe.yoyChange.fuelPct, 1, '%') + ', operating margin ' + sgn(qe.yoyChange.marginPp, 1, ' pp') + ', fuel share of revenue ' + l.fuelShare.toFixed(1) + '% (' + sgn(qe.yoyChange.fuelSharePp, 1, ' pp') + ').');
     return lines.join('\n');
   }
@@ -173,7 +182,7 @@
     })).join('\n');
   }
 
-  var api = { SERIES: SERIES, SOURCES: SOURCES, CACHE_KEY: CACHE_KEY, QUARTER_WINDOW_DAYS: QUARTER_WINDOW_DAYS, parseDay: parseDay, ageDays: ageDays, seriesStatus: seriesStatus,
+  var api = { SERIES: SERIES, SOURCES: SOURCES, CACHE_KEY: CACHE_KEY, parseDay: parseDay, ageDays: ageDays, seriesStatus: seriesStatus,
     contextRows: contextRows, quarterEvidence: quarterEvidence, periodEnd: periodEnd, loadContext: loadContext, fromBundle: fromBundle, quarterText: quarterText, contextText: contextText, baselineFromHist: baselineFromHist };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.AmalgamDeltaContext = api;
 })(typeof window !== 'undefined' ? window : this);

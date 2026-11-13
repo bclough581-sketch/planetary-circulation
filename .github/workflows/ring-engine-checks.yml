@@ -1,7 +1,7 @@
 name: Ring Engine Checks
 on:
   pull_request:
-    branches: [amalgam-event-foundation, integration-draft-1, main]
+    branches: [amalgam-event-foundation, integration-draft-1, delta-what-changed, main]
     paths:
       - 'ring-engine-lab.html'
       - 'index.html'
@@ -24,6 +24,10 @@ on:
       - 'tests/test_evidence_handoff.cjs'
       - 'tests/test_ring_*.cjs'
       - 'delta-context.js'
+      - 'delta-company-evidence.js'
+      - 'product-data/delta-company-evidence.json'
+      - 'scripts/build_delta_product_evidence.py'
+      - 'tests/test_delta_product_evidence.py'
       - 'decision-journal.html'
       - 'gates.js'
       - 'tests/test_delta_*.cjs'
@@ -60,6 +64,10 @@ on:
       - 'tests/test_evidence_handoff.cjs'
       - 'tests/test_ring_*.cjs'
       - 'delta-context.js'
+      - 'delta-company-evidence.js'
+      - 'product-data/delta-company-evidence.json'
+      - 'scripts/build_delta_product_evidence.py'
+      - 'tests/test_delta_product_evidence.py'
       - 'decision-journal.html'
       - 'gates.js'
       - 'tests/test_delta_*.cjs'
@@ -94,6 +102,7 @@ jobs:
       - run: node tests/test_journal_migration.cjs
       - run: node tests/test_scoreboard.js
       - run: node tests/test_delta_context.cjs
+      - run: python -m unittest discover -s tests -p test_delta_product_evidence.py
       - run: node tests/test_gates.js
       - run: python -m unittest discover -s tests -p test_ring_starter.py
       - run: python -m unittest discover -s tests -p test_evidence_export.py
