@@ -69,6 +69,14 @@ class DarkCollectorTests(unittest.TestCase):
         self.assertEqual(s['request_count'], 0)
         self.assertEqual(s['status'], 'missing_key')
 
+    def test_documented_clarity_two_crossed_estimates_preserved(self):
+        p = page()
+        p['Result'][0].update(event_clarity=2, low=5, best=6, high=3)
+        s = c.safe_collect(c.initial(), 'synthetic-secret-only', lambda *a: p)
+        self.assertEqual(s['status'], 'collected_historical_context')
+        self.assertEqual(s['regions'][0]['fatalities'], dict(low=5, best=6, high=3))
+        self.assertEqual(s['regions'][0]['fatality_order_exceptions'], 1)
+
     def test_schema_fail_closed(self):
         for mutation in (lambda s: s.pop('display_allowed'), lambda s: s.update(display_allowed=True),
                          lambda s: s.update(dataset_version='guessed'), lambda s: s.update(request_count=5000)):

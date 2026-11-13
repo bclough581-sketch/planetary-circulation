@@ -13,7 +13,7 @@ https://ucdp.uu.se/downloads/ged/ged261.pdf defines coverage through 2025-12-31.
 No automatic version promotion or candidate/annual concatenation is implemented.
 
 Initial bounded context window: December 2025, collected in successive seven-day
-date_end slices, at most 20 requests/run, 1,000 rows/page, one scheduled run/day.
+date_end slices, at most 20 requests/run, 100 rows/page, one scheduled run/day.
 This bootstrap is historical source context, never contemporary conflict coverage
 or historical first availability. Completed coverage makes zero further requests
 and does not advance retrieved_utc. A version/window expansion needs review.
@@ -50,5 +50,12 @@ still required. Source citation is carried inside the encrypted summary.
 Run synthetic checks with:
 `python -m unittest discover -s tests -p test_ucdp_dark.py`
 
-Real workflow verification: pending; do not report collection operational until a
-successful workflow log confirms a real authenticated request and sealed upload.
+The first real workflow checks rejected incomplete pagination at requested page
+size 1,000; page size 100 progressed to event validation. The official GED codebook
+section 5.5 explicitly permits crossed low/best/high estimates in clarity-2 events.
+These are preserved unchanged and counted per region, not sorted or relabeled as
+confidence bounds. Unexpected crossed estimates in other event classes fail closed.
+
+Real workflow verification: pending final successful collection; encrypted state
+upload/restore already verified on the failed integration runs. No derived values
+were published. Synthetic suite now includes the documented clarity-2 exception.

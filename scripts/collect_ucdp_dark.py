@@ -80,8 +80,8 @@ def validate(s):
         f = r.get('fatalities', {})
         if not integer(r.get('event_count')) or not all(integer(f.get(k)) for k in ('low', 'best', 'high')):
             raise CollectionError('invalid_counts')
-        if not f['low'] <= f['best'] <= f['high']:
-            raise CollectionError('invalid_fatality_bounds')
+        if not integer(r.get('fatality_order_exceptions', 0)) or r.get('fatality_order_exceptions', 0) > r['event_count']:
+            raise CollectionError('invalid_quality_count')
     if w.get('end') is not None and s.get('retrieved_utc') is None:
         raise CollectionError('missing_retrieval')
     return s
@@ -153,8 +153,10 @@ def collect(previous, token, get=fetch, now=None):
                     raise CollectionError('invalid_event_date') from None
                 if not start <= date_end <= end:
                     raise CollectionError('filter_not_respected')
-                if r.get('region') not in REGIONS or not all(integer(r.get(k)) for k in ('low', 'best', 'high')) or not r['low'] <= r['best'] <= r['high']:
+                if r.get('region') not in REGIONS or not all(integer(r.get(k)) for k in ('low', 'best', 'high')):
                     raise CollectionError('invalid_event_counts')
+                if not r['low'] <= r['best'] <= r['high'] and r.get('event_clarity') != 2:
+                    raise CollectionError('unexpected_fatality_order')
                 rows.append(r)
             if page >= pages:
                 break
@@ -163,13 +165,15 @@ def collect(previous, token, get=fetch, now=None):
             raise CollectionError('incomplete_pagination')
         aggregates = {r['region']: copy.deepcopy(r) for r in previous['regions']}
         for r in rows:
-            a = aggregates.setdefault(r['region'], dict(region=r['region'], event_count=0, fatalities=dict(low=0, best=0, high=0)))
+            a = aggregates.setdefault(r['region'], dict(region=r['region'], event_count=0, fatalities=dict(low=0, best=0, high=0), fatality_order_exceptions=0))
             a['event_count'] += 1
+            a['fatality_order_exceptions'] = a.get('fatality_order_exceptions', 0) + int(not r['low'] <= r['best'] <= r['high'])
             for k in ('low', 'best', 'high'):
                 a['fatalities'][k] += r[k]
         result['regions'] = sorted(aggregates.values(), key=lambda r: r['region'])
         result['window']['end'] = end.isoformat()
         result.update(retrieved_utc=now, stale=True, status='collected_historical_context')
+        result['fatality_semantics'] = 'Source low/best/high are summed unchanged, not confidence bounds. GED codebook section 5.5 permits crossed estimates for event_clarity=2; counted per region.'
         # Historical coverage stays stale for contemporary context even on a successful pull.
     except CollectionError:
         raise
@@ -189,7 +193,7 @@ def safe_collect(previous, token, get=fetch, now=None):
         codes = {'auth_error', 'rate_error', 'http_error', 'transport_or_json_error',
                  'request_budget_exhausted', 'invalid_page', 'invalid_pagination',
                  'pagination_changed', 'duplicate_or_invalid_event', 'invalid_event_date',
-                 'filter_not_respected', 'invalid_event_counts', 'incomplete_pagination', 'response_too_large'}
+                 'filter_not_respected', 'invalid_event_counts', 'unexpected_fatality_order', 'incomplete_pagination', 'response_too_large'}
         code = str(error) if isinstance(error, CollectionError) and str(error) in codes else 'collection_failed'
         result.update(stale=True, status=code, last_attempt_utc=now or utcnow(), request_count=count)
         return validate(result)
