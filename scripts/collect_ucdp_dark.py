@@ -125,7 +125,7 @@ def collect(previous, token, get=fetch, now=None):
     end = min(start + dt.timedelta(days=6), END)
     rows, seen, total, pages = [], set(), None, None
     try:
-        page = 1
+        page = 0
         while True:
             if result['request_count'] >= MAX_REQUESTS:
                 raise CollectionError('request_budget_exhausted')
@@ -156,7 +156,7 @@ def collect(previous, token, get=fetch, now=None):
                 if r.get('region') not in REGIONS or not all(integer(r.get(k)) for k in ('low', 'best', 'high')):
                     raise CollectionError('invalid_event_counts')
                 rows.append(r)
-            if page >= pages:
+            if page + 1 >= max(1, pages):
                 break
             page += 1
         if len(rows) != total:

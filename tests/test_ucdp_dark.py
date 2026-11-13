@@ -24,6 +24,7 @@ class DarkCollectorTests(unittest.TestCase):
         self.assertEqual(s['window']['end'], '2025-12-07')
         self.assertFalse(s['display_allowed'])
         self.assertIn('StartDate=2025-12-01', calls[0])
+        self.assertIn('page=0', calls[0])
         next_calls = []
         c.safe_collect(s, 'synthetic-secret-only', lambda u, k: next_calls.append(u) or page([]))
         self.assertIn('StartDate=2025-12-08', next_calls[0])
@@ -56,13 +57,26 @@ class DarkCollectorTests(unittest.TestCase):
     def test_partial_second_page_never_commits(self):
         rows = [dict(id=i, region='Africa', date_end='2025-12-02', low=1, best=1, high=1) for i in range(c.PAGE_SIZE)]
         def get(url, token):
-            if 'page=2' in url:
+            if 'page=1' in url:
                 raise c.CollectionError('rate_error')
             return dict(TotalCount=c.PAGE_SIZE + 1, TotalPages=2, Result=rows)
         s = c.safe_collect(c.initial(), 'synthetic-secret-only', get)
         self.assertEqual(s['request_count'], 2)
         self.assertEqual(s['regions'], [])
         self.assertIsNone(s['window']['end'])
+
+    def test_zero_based_complete_pagination(self):
+        calls = []
+        def get(url, token):
+            calls.append(url)
+            ids = range(c.PAGE_SIZE) if 'page=0' in url else [c.PAGE_SIZE]
+            rows = [dict(id=i, region='Africa', date_end='2025-12-02', low=1, best=1, high=1) for i in ids]
+            return dict(TotalCount=c.PAGE_SIZE + 1, TotalPages=2, Result=rows)
+        s = c.safe_collect(c.initial(), 'synthetic-secret-only', get)
+        self.assertEqual(s['status'], 'collected_historical_context')
+        self.assertEqual(s['regions'][0]['event_count'], c.PAGE_SIZE + 1)
+        self.assertEqual(len(calls), 2)
+        self.assertIn('page=1', calls[-1])
 
     def test_missing_key_no_requests(self):
         s = c.safe_collect(c.initial(), '', lambda *a: self.fail('network called'))

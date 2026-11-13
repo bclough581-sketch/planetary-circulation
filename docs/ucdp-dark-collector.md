@@ -50,8 +50,10 @@ still required. Source citation is carried inside the encrypted summary.
 Run synthetic checks with:
 `python -m unittest discover -s tests -p test_ucdp_dark.py`
 
-The first real workflow checks rejected incomplete pagination at requested page
-size 1,000; page size 100 progressed to event validation. The official GED codebook
+The real workflow checks exposed zero-based API pagination: requesting pages
+1..TotalPages skipped page zero and failed completeness. The collector now requests
+0..TotalPages-1, and a multi-page synthetic fixture pins this behavior. Page size
+is conservatively 100. The official GED codebook
 section 5.5 explicitly permits crossed low/best/high estimates in clarity-2 events.
 All source estimates are preserved unchanged and crossed estimates counted per
 region, regardless of clarity class; they are not sorted or relabeled as confidence
