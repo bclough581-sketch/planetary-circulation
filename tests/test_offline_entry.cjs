@@ -13,7 +13,7 @@ try{
   await page.goto(preview.url);await page.waitForURL(/ring-engine-lab\.html/);
   await page.evaluate(()=>navigator.serviceWorker.ready);
   const cached=await page.evaluate(async()=>{const ks=await caches.keys();const c=await caches.open(ks[0]);return (await c.keys()).map(r=>new URL(r.url).pathname);});
-  for(const f of ['/','/index.html','/ring-engine-lab.html','/amalgam-theme.css','/ring-evidence.js','/galaxy-ring.svg','/intelligence/data/delta-quarterly-curated.json','/decision-journal.html','/journal-core.js','/journal-legacy.js','/journal.html','/scoreboard.html','/scoreboard.json','/map.html'])assert.ok(cached.includes(f),'cached: '+f);
+  for(const f of ['/','/index.html','/ring-engine-lab.html','/amalgam-theme.css','/ring-evidence.js','/delta-company-evidence.js','/product-data/delta-company-evidence.json','/galaxy-ring.svg','/intelligence/data/delta-quarterly-curated.json','/decision-journal.html','/journal-core.js','/journal-legacy.js','/journal.html','/scoreboard.html','/scoreboard.json','/map.html'])assert.ok(cached.includes(f),'cached: '+f);
   await page.reload();await page.waitForSelector('#openCase');
   assert.ok(await page.evaluate(()=>!!navigator.serviceWorker.controller),'page controlled by the service worker');
   await preview.close();closed=true; // server unavailable from here on
@@ -21,6 +21,9 @@ try{
   await root.goto(preview.url);await root.waitForURL(/ring-engine-lab\.html/);
   assert.match(await root.textContent('header'),/EVIDENCE EXPLORER/);
   assert.ok(await root.locator('#openCase').count(),'Explorer content renders offline');
+  assert.match(await root.locator('#wfQuarter').innerText(),/2026Q3 \(ended 2026-09-30\)/,'product-only company figures render offline');
+  await root.waitForFunction(()=>document.getElementById('wfLoad').textContent.includes('Offline'));
+  assert.doesNotMatch(await root.locator('#wfLoad').innerText(),/just now/,'cached success is not a newly verified retrieval');
   await root.click('header a[href="scoreboard.html"]');await root.waitForURL(/scoreboard\.html/);await root.waitForSelector('#grave details');
   await root.click('a.back[href="decision-journal.html"]');await root.waitForURL(/decision-journal\.html/);
   const recovery=await ctx.newPage();await recovery.goto(preview.url+'journal.html');

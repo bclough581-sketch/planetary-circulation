@@ -7,7 +7,7 @@ const vm = require('node:vm');
 const D = require('../delta-context.js');
 const root = path.resolve(__dirname, '..');
 const data = JSON.parse(fs.readFileSync(path.join(root, 'data.json'), 'utf8'));
-const issuer = JSON.parse(fs.readFileSync(path.join(root, 'intelligence/data/delta-quarterly-curated.json'), 'utf8'));
+const issuer = JSON.parse(fs.readFileSync(path.join(root, 'product-data/delta-company-evidence.json'), 'utf8'));
 const sandbox = { window: {} }; vm.createContext(sandbox); vm.runInContext(fs.readFileSync(path.join(root, 'ring-evidence.js'), 'utf8'), sandbox);
 const bundle = sandbox.window.AMALGAM_STARTER;
 const T = s => Date.parse(s);
@@ -49,14 +49,21 @@ ok(!JSON.stringify(rows).includes('Hormuz') && !JSON.stringify(D.SERIES).toLower
 for (const e of bundle.snapshot.events) { const hub = e.metadata.hub, s = D.SERIES.find(x => x.id === hub); if (s) assert.equal(D.SOURCES[s.src].url, e.source.url, hub); } n++;
 
 // ---- quarterly evidence
-const q = D.quarterEvidence(issuer, T('2026-11-12T20:00:00Z'));
-assert.equal(q.latest.period, '2025Q4'); assert.equal(q.latest.periodEnd, '2025-12-31'); assert.equal(q.status, 'stale'); assert.deepEqual(q.missingQuarters, ['2026Q1', '2026Q2']); n += 4;
-assert.ok(Math.abs(q.yoyChange.fuelPct - (2380 / 2409 - 1) * 100) < 1e-9);
-assert.ok(Math.abs(q.yoyChange.marginPp - (100 * 1467 / 16003 - 100 * 1717 / 15559)) < 1e-9);
-assert.ok(Math.abs(q.latest.fuelShare - 100 * 2380 / 16003) < 1e-9); n += 3;
-assert.equal(q.yoy.period, '2024Q4'); assert.equal(q.qoq.period, '2025Q3'); n += 2;
-assert.equal(D.quarterEvidence(issuer, T('2026-02-20T00:00:00Z')).status, 'fresh', 'before the next quarter is due, the loaded quarter is current'); n++;
-assert.deepEqual(D.quarterEvidence(issuer, T('2026-05-14T00:00:00Z')).missingQuarters, [], 'day before 2026Q1 is due'); assert.deepEqual(D.quarterEvidence(issuer, T('2026-05-15T00:00:00Z')).missingQuarters, ['2026Q1']); n += 2;
+const reviewed=T(issuer.reviewed_utc),q = D.quarterEvidence(issuer, reviewed+3600000);
+assert.equal(q.latest.period, '2026Q3'); assert.equal(q.latest.periodEnd, '2026-09-30'); assert.equal(q.status, 'fresh'); assert.deepEqual(q.missingQuarters, []); n += 4;
+assert.ok(Math.abs(q.yoyChange.fuelPct - (4351 / 2570 - 1) * 100) < 1e-9);
+assert.ok(Math.abs(q.yoyChange.marginPp - (100 * 1454 / 20186 - 100 * 1684 / 16673)) < 1e-9);
+assert.ok(Math.abs(q.latest.fuelShare - 100 * 4351 / 20186) < 1e-9); n += 3;
+assert.equal(q.yoy.period, '2025Q3'); assert.equal(q.qoq.period, '2026Q2'); n += 2;
+const oldReview=D.quarterEvidence(issuer,reviewed+8*864e5);
+assert.equal(oldReview.status,'stale');assert.match(oldReview.reason,/publication check/);n+=2;
+const missing=D.quarterEvidence({...issuer,observations:issuer.observations.filter(o=>o.period!=='2026Q3')},reviewed+3600000);
+assert.equal(missing.status,'stale');assert.deepEqual(missing.missingQuarters,['2026Q3']);assert.match(missing.reason,/Published quarter/);n+=3;
+assert.equal(D.quarterEvidence(bundle.issuer,reviewed+3600000).status,'unavailable','never substitute the frozen research fixture');n++;
+assert.equal(D.quarterEvidence(issuer,reviewed-1).status,'unavailable','future review never marked fresh');n++;
+const noQ2=D.quarterEvidence({...issuer,observations:issuer.observations.filter(o=>o.period!=='2026Q2')},reviewed+3600000);
+assert.equal(noQ2.qoq,null,'a missing quarter is not replaced with a nonadjacent comparison');n++;
+for(const changed of [{unit:'USD_billions'},{observations:[...issuer.observations,issuer.observations[0]]},{sources:{}},{metric_definitions:{...issuer.metric_definitions,fuelExpense:'Adjusted fuel expense'}},{observations:[{...issuer.observations[0],source:'constructor'}]}])assert.equal(D.quarterEvidence({...issuer,...changed},reviewed+3600000).status,'unavailable'),n++;
 assert.equal(D.quarterEvidence({ observations: [] }, T('2026-11-12')).status, 'unavailable'); n++;
 assert.equal(q.publicationTimeVerified, false); n++;
 
@@ -68,6 +75,9 @@ const good = { ok: true, status: 200, text: async () => JSON.stringify(data) };
   let r = await D.loadContext({ fetchFn: async () => good, storage: st, bundle, url: 'data.json', nowFn: now });
   assert.equal(r.mode, 'live'); assert.equal(r.loadedUtc, '2026-11-12T20:00:00.000Z'); assert.ok(st._m.has(D.CACHE_KEY)); assert.equal(r.error, null); n += 4;
   const cached = JSON.parse(st._m.get(D.CACHE_KEY)); assert.ok(Object.keys(cached.data.hubs).length === 5 && !JSON.stringify(cached).includes('chokepoints')); n++;
+  const offline=await D.loadContext({fetchFn:async()=>({...good,headers:{get:key=>key==='X-Amalgam-Offline-Fallback'?'1':null}}),storage:st,bundle,url:'data.json',nowFn:()=>new Date('2026-11-14T00:00:00Z')});
+  assert.equal(offline.mode,'retained-site-cache');assert.equal(offline.loadedUtc,null);assert.equal(JSON.parse(st._m.get(D.CACHE_KEY)).loadedUtc,cached.loadedUtc);n+=3;
+  assert.ok(D.contextRows(offline.data,{nowMs:T('2026-11-04T12:00:00Z'),retained:true}).every(r=>r.status==='stale'),'even recent cached observations are not a fresh network retrieval');n++;
   for (const [name, f] of [['network error', async () => { throw new Error('offline'); }], ['404', async () => ({ ok: false, status: 404, text: async () => '' })], ['html body', async () => ({ ok: true, status: 200, text: async () => '<html>Not found</html>' })], ['wrong shape', async () => ({ ok: true, status: 200, text: async () => '{"x":1}' })]]) {
     const r2 = await D.loadContext({ fetchFn: f, storage: st, bundle, url: 'data.json', nowFn: () => new Date('2026-11-13T09:00:00Z') });
     assert.equal(r2.mode, 'retained-last-success', name); assert.equal(r2.loadedUtc, '2026-11-12T20:00:00.000Z', name + ': keeps the ORIGINAL retrieval time, not the failed attempt'); assert.ok(r2.error, name); n += 3;

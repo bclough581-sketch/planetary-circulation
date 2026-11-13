@@ -7,7 +7,9 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');const path=require('node:path');
 const shots=process.env.SHOT_DIR||null;
 const real=JSON.parse(fs.readFileSync(path.resolve(__dirname,'..','data.json'),'utf8'));
-const today=new Date().toISOString().slice(0,10),nowIso=new Date().toISOString();
+const company=JSON.parse(fs.readFileSync(path.resolve(__dirname,'..','product-data/delta-company-evidence.json'),'utf8'));
+const fixedNow=Date.parse(company.reviewed_utc)+3600000;
+const today=new Date(fixedNow).toISOString().slice(0,10),nowIso=new Date(fixedNow).toISOString();
 const fresh=JSON.parse(JSON.stringify(real));
 for(const h of Object.values(fresh.hubs))h.asof=today;
 fresh.generated_utc=nowIso;
@@ -18,8 +20,9 @@ const rows=async page=>page.$$eval('#wfCRows tr',trs=>trs.map(t=>({cells:[...t.c
 const browser=await chromium.launch({headless:true,channel:process.env.PLAYWRIGHT_CHANNEL||undefined});
 const preview=await startPreview();
 const errors=[],remote=[];
-async function open(ctx,route){
+async function open(ctx,route,clock=fixedNow){
  const page=await ctx.newPage();
+ await page.addInitScript(ms=>{const Original=Date;window.Date=class extends Original{constructor(...args){super(...(args.length?args:[ms]));}static now(){return ms;}};},clock);
  page.on('pageerror',e=>errors.push(e.message));
  page.on('request',r=>{if(/^https?:/.test(r.url())&&!r.url().startsWith(preview.url))remote.push(r.url())});
  if(route)await page.route('**/data.json',route);
@@ -36,10 +39,12 @@ try{
  assert.match(await page.locator('#wfExposure').innerText(),/Interest-rate exposure\s+Missing/);
  assert.match(await page.locator('#wfExposure').innerText(),/Currency exposure\s+Missing/);
  const q=await page.locator('#wfQuarter').innerText();
- assert.match(q,/2025Q4 \(ended 2025-12-31\)/);assert.match(q,/2024Q4/);assert.match(q,/2025Q3/);
- assert.match(q,/reviewed 2026-11-05/);assert.match(q,/fetch time not recorded/);assert.match(q,/our assumption/);
+ assert.match(q,/2026Q3 \(ended 2026-09-30\)/);assert.match(q,/2025Q3/);assert.match(q,/2026Q2/);
+ assert.match(q,/published 2026-10-09|publication date: 2026-10-09/);assert.match(q,/Retrieved:/);assert.match(q,/not independently verified/);
+ assert.match(q,/aircraft fuel and related taxes/);
+ assert.match(q,/GAAP revenue includes refinery sales/);assert.match(q,/fuel share uses GAAP revenue/);
  assert.ok(await page.locator('#wfQSources a').count()>=1);
- assert.match(await page.locator('#wfQChip').innerText(),/Stale/);
+ assert.match(await page.locator('#wfQChip').innerText(),/Fresh/);
  let r=await rows(page);assert.equal(r.length,5);
  if(real.hubs.HOU.asof<today){for(const x of r)assert.match(x.text,/Stale/);assert.match(await page.locator('#wfCChip').innerText(),/Stale/)}
  assert.ok(r.every(x=>/eia\.gov|treasury\.gov|ecb\.europa\.eu/.test(x.text)||true));
@@ -53,7 +58,7 @@ try{
  r=await rows(page);for(const x of r){assert.match(x.text,/Fresh/);assert.ok(x.text.includes(nowIso.slice(0,10)),'measured/retrieved date shown')}
  assert.match(await page.locator('#wfCChip').innerText(),/Fresh/);
  assert.match(await page.locator('#wfLoad').innerText(),/just now/);
- assert.match(await page.locator('#wfQChip').innerText(),/Stale/,'quarterly status is independent of market-context status');
+ assert.match(await page.locator('#wfQChip').innerText(),/Fresh/,'company publication-check status is independent of market-context status');
  const cached=await page.evaluate(()=>localStorage.getItem('amalgam.context.last.v1'));assert.ok(cached&&JSON.parse(cached).loadedUtc);
  if(shots)await page.screenshot({path:path.join(shots,'02_fresh_context.png'),fullPage:true});
 
@@ -93,6 +98,7 @@ try{
    const ev=await page.locator('#evidence').inputValue();
    assert.ok(ev.length<4000,'length '+ev.length);
    assert.match(ev,/COMPANY EVIDENCE \(quarterly\)/);assert.match(ev,/MARKET CONTEXT \(refreshed/);assert.match(ev,/PRESERVED HISTORICAL COMPARISON \(does not refresh\)/);
+   assert.match(ev,/GAAP revenue includes refinery sales/);
    assert.match(ev,/measured \d{4}-\d{2}-\d{2}, retrieved /);assert.match(ev,/FRESH|STALE/);assert.match(ev,/eia\.gov/);
    assert.equal(await page.evaluate(()=>localStorage.getItem('amalgam.decision-journal.v1')),original,'hand-off saves nothing');
   }
@@ -120,6 +126,23 @@ try{
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'no page overflow at '+w);
   if(shots)await page.locator('#deltaWorkflow').screenshot({path:path.join(shots,'05_mobile_'+w+'.png')});
  }
+ /* 8. product source is independent; missing product data never falls back to research */
+ await ctx.close();ctx=await browser.newContext({serviceWorkers:'block'});
+ await ctx.route('**/delta-company-evidence.js',rt=>rt.abort());page=await open(ctx);
+ assert.match(await page.locator('#wfQChip').innerText(),/Unavailable/);
+ assert.match(await page.locator('#wfQReason').innerText(),/historical research case is separate/);
+ assert.match(await page.locator('#starterCase').innerText(),/2024.*2025/s);
+ /* 9. a known publication missing its row is distinct from an overdue source review */
+ await ctx.close();ctx=await browser.newContext({serviceWorkers:'block'});
+ const partial=structuredClone(company);partial.observations=partial.observations.filter(o=>o.period!=='2026Q3');
+ await ctx.route('**/delta-company-evidence.js',rt=>rt.fulfill({status:200,contentType:'text/javascript',body:'window.AMALGAM_DELTA_COMPANY='+JSON.stringify(partial)+';'}));
+ page=await open(ctx);assert.match(await page.locator('#wfQReason').innerText(),/Published quarter.*2026Q3.*not loaded/);
+ assert.match(await page.locator('#wfQChip').innerText(),/Stale/);
+ await ctx.close();ctx=await browser.newContext({serviceWorkers:'block'});page=await open(ctx,null,fixedNow+8*864e5);
+ assert.match(await page.locator('#wfQReason').innerText(),/publication check is older/);
+ assert.match(await page.locator('#wfQuarter').innerText(),/2026Q3 \(ended 2026-09-30\)/);
+ assert.doesNotMatch(await page.locator('#wfQReason').innerText(),/45.day|should be public/);
+ await ctx.close();
  assert.deepEqual(errors,[]);assert.deepEqual(remote,[]);
  console.log('PASS delta workflow: separated evidence classes, freshness labels, retain-on-failure, bundled fallback, decision/no-trade hand-off, journal protections, layout, no remote requests, no page errors.');
 }catch(e){console.error(e);process.exitCode=1}finally{await browser.close();await preview.close()}
