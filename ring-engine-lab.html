@@ -7,6 +7,15 @@ header,main{max-width:1180px}.layout{grid-template-columns:minmax(0,1.45fr) minm
 .eyebrow{font-size:.76rem;letter-spacing:.12em;text-transform:uppercase;color:#71d8c9}.hero{display:flex;justify-content:space-between;align-items:center;gap:20px;margin:22px 0}.hero h1{font-size:clamp(1.8rem,4vw,2.7rem);font-weight:650;letter-spacing:-.04em}.hero p{max-width:650px;color:#a9bed1;margin:9px 0}.pill{display:inline-block;font-size:.75rem;border:1px solid #48677c;border-radius:25px;padding:6px 10px;color:#b9d0e2}.primary{background:#3cc9b2;color:#061b24;border:0;font-weight:750}.source-note{padding:12px 16px;border:1px solid #374e64;border-radius:10px;color:#b4c8d9;background:#102033;font-size:.88rem;margin-bottom:18px}.stage{min-height:400px}.assembly{width:310px;height:310px}.case-study{margin-top:20px}.case-study h2{font-size:1.5rem;line-height:1.25;margin:8px 0}.case-study .lead{color:#b5c8d8}.journey{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0}.journey button{flex:1;min-width:110px;text-align:left;font-size:.85rem}.metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:18px 0}.metric{padding:14px 10px;border:1px solid #365269;border-radius:10px;background:#0a1828}.metric strong{display:block;font-size:1.65rem;color:#eaf3fa}.metric span,.metric small{display:block;font-size:.8rem;color:#b2c6d8;margin-top:6px}.metric small{color:#86a5bc}.case-study ul{padding-left:20px;color:#bfd1df}.case-study li{margin:9px 0;line-height:1.5}.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:.85rem}td,th{text-align:right;padding:10px 6px;border-bottom:1px solid #2d455b;white-space:nowrap}td:first-child,th:first-child{text-align:left}.source-links{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0}.coverage{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.coverage div{padding:8px 6px;border:1px solid #304a61;border-radius:7px;font-size:.72rem;color:#9bb2c6}.coverage .present{border-color:#328878;color:#a1e8d9;background:#123336}.coverage small{display:block;margin-top:4px}.legend button{margin:5px 0}.evidence>h2{font-size:1.15rem}.evidence details{padding:10px 0;border-bottom:1px solid #2d455b}summary{cursor:pointer;line-height:1.45}details p{font-size:.87rem;line-height:1.5;overflow-wrap:anywhere}.advanced{margin-top:15px}.advanced input{max-width:100%}.card[hidden]{display:none}.empty{color:#9cb7ca;font-size:.9rem}.case-study details{margin-top:15px}.case-study summary{font-size:.9rem;color:#9fcece}.case-study select{background:#132c40;color:#ecf5fc;border:1px solid #55728b;border-radius:6px;padding:8px;font:inherit}.topline{display:flex;justify-content:space-between;gap:10px;align-items:center}.legend h2,.card h2{font-weight:600}.compact-status{font-size:.85rem;color:#b6cbdc}.card dl{font-size:.83rem}.controls button{font-size:.8rem}.center{font-size:.8rem;color:#8be0d0;letter-spacing:.04em}
 @media(max-width:700px){.layout{grid-template-columns:1fr}.hero{align-items:flex-start;flex-direction:column;gap:8px}.stage{min-height:330px}.assembly{width:265px;height:265px}.metrics{gap:6px}.metric{padding:12px 7px}.metric strong{font-size:1.3rem}.card{padding:14px}.hero h1{font-size:2rem}header,main{padding:14px}.coverage{grid-template-columns:repeat(3,minmax(0,1fr))}}
 .layout>*{min-width:0}.topline{flex-wrap:wrap}#keepCaseEvidence{max-width:100%;white-space:normal;text-align:left}
+
+.wf{margin:0 0 14px}.wf h2{margin:.2rem 0 .5rem}.wf .step{display:inline-block;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:#71d8c9}
+.wf .panel{border:1px solid #284058;border-radius:12px;padding:12px;margin:10px 0;background:#0b1828}.wf .panel h3{margin:0 0 6px;font-size:1rem}
+.chip{display:inline-block;border:1px solid currentColor;border-radius:999px;padding:1px 9px;font-size:.74rem;font-weight:600;white-space:nowrap}
+.chip.fresh{color:#7ee2a8}.chip.stale{color:#ffd166}.chip.unavailable{color:#ff8a8a}.chip.preserved{color:#9fb8d0}
+.wf table{width:100%;table-layout:auto;border-collapse:collapse;font-size:.86rem}.wf th,.wf td{text-align:left;padding:5px 6px;border-bottom:1px solid #1d3248;vertical-align:top}
+.wf .tw{overflow-x:auto}.wf td,.wf th{overflow-wrap:anywhere;white-space:normal;text-align:left;padding:6px}.wf caption{text-align:left;white-space:normal;caption-side:top}.wf a{color:#8fd3ff;overflow-wrap:anywhere}.wf .note{font-size:.82rem;color:#a9bdd0;margin:.3rem 0}
+.wf button{max-width:100%;white-space:normal}.wf .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+@media(max-width:700px){.wf table{font-size:.8rem}}
 </style><link rel="stylesheet" href="amalgam-theme.css"></head><body><header><strong>◉ AMALGAM</strong> <span class="muted">/ EVIDENCE EXPLORER</span> <span style="float:right"><a href="decision-journal.html">My decisions →</a> · <a href="scoreboard.html">Scoreboard</a> · <a href="map.html">Live map</a></span></header><main>
 <section class="hero"><div><div class="eyebrow">Cross-domain market intelligence</div><h1>Follow the evidence.<br>See the connections.</h1><p>Explore the forces around a business, inspect the source, and see what the connection can actually tell you.</p></div><button class="primary" id="openCase">Explore the airline case ↓</button></section>
 <div class="source-note" id="dataNotice" role="status">Opening retained evidence…</div>
@@ -17,6 +26,13 @@ header,main{max-width:1180px}.layout{grid-template-columns:minmax(0,1.45fr) minm
 <button class="ring" data-id="market" aria-label="Inspect market evidence" style="--inset:30%;--thick:14px;--color:#7496c7;--glow:#466184;--z:42px;--speed:19s"><img class="galaxy-face" src="galaxy-ring.svg" alt="" draggable="false" aria-hidden="true"></button>
 <button class="ring" data-id="stock" aria-label="Inspect stock evidence" style="--inset:40%;--thick:10px;--color:#e3ecf8;--glow:#8aabc7;--z:56px;--speed:16s"><img class="galaxy-face" src="galaxy-ring.svg" alt="" draggable="false" aria-hidden="true"></button>
 <div class="center">AMALGAM</div></div></div><div class="controls"><button id="spin" aria-pressed="true">Pause motion</button><button id="settle">Settle view</button><button id="depth">Depth view</button><button id="reset">Reset</button></div><div class="motion-presets" role="group" aria-label="Visual motion"><span>Motion</span><button data-motion="still" aria-pressed="false">Still</button><button data-motion="drift" aria-pressed="true">Drift</button><button data-motion="flow" aria-pressed="false">Flow</button></div><p class="motion-note muted">Drag to tilt · Motion is decorative, not signal strength.</p>
+<section class="card wf" id="deltaWorkflow" hidden aria-labelledby="wfTitle">
+<div class="topline"><div><span class="step">Step 1 · Choose a company</span><h2 id="wfTitle">Delta Air Lines (DAL)</h2></div><span class="pill">1 issuer loaded</span></div>
+<p class="note">Delta is the only issuer built so far. Add others only after this workflow is validated.</p>
+<div class="panel" id="wfExposure"><span class="step">Step 2 · Business exposures</span><div class="tw"><table><caption class="note">What the retained company figures show about exposure. "Missing" means no source is loaded; it is not zero.</caption><thead><tr><th>Exposure</th><th>What is loaded</th></tr></thead><tbody id="wfExposureRows"></tbody></table></div></div>
+<div class="panel" id="wfQuarter" aria-labelledby="wfQTitle"><span class="step">Step 3 · What changed</span><h3 id="wfQTitle">A. Quarterly company evidence <span id="wfQChip" class="chip"></span></h3><p class="note" id="wfQReason"></p><div class="tw"><table><caption class="note" id="wfQCaption"></caption><thead><tr><th>Measure</th><th id="wfQLatestH"></th><th id="wfQYoyH"></th><th id="wfQQoqH"></th></tr></thead><tbody id="wfQRows"></tbody></table></div><p class="note" id="wfQMeta"></p><div class="source-links" id="wfQSources"></div></div>
+<div class="panel" id="wfContext" aria-labelledby="wfCTitle"><h3 id="wfCTitle">B. Refreshed market context <span id="wfCChip" class="chip"></span></h3><div class="row"><button id="wfRefresh" type="button">Refresh now</button><span class="note" id="wfLoad" role="status"></span></div><div class="tw"><table><caption class="note">Reference series, not Delta's own figures. Crude oil is not airline fuel expense; no causal link or trade signal is inferred.</caption><thead><tr><th>Series</th><th>Value</th><th>Dates</th><th>Status and source</th></tr></thead><tbody id="wfCRows"></tbody></table></div></div>
+</section>
 <section class="card case-study" id="starterCase" hidden aria-labelledby="caseTitle">
 <div class="topline"><span class="eyebrow">Company exposure · DAL</span><span class="pill">Historical business context</span></div>
 <h2 id="caseTitle">Lower fuel costs.<br>A stronger airline?</h2><p class="lead">Compare the cost with the business result.</p>
@@ -27,13 +43,18 @@ header,main{max-width:1180px}.layout{grid-template-columns:minmax(0,1.45fr) minm
 <details class="case-explanation"><summary>What does this establish—and what doesn’t it?</summary><ul><li><strong>What is established:</strong> fuel expense is a reported cost in this issuer's accounts. The figures below are descriptive comparisons.</li><li><strong>What could offset it:</strong> other costs, revenue mix, pricing and hedging are competing explanations to investigate; this view does not attribute the margin change.</li><li><strong>What remains open:</strong> the stock-price response, contemporaneous expectations and any predictive advantage. No stock-return data is included.</li></ul></details>
 <details class="source-figures"><summary>Inspect all source figures</summary><div class="table-wrap"><table><caption class="muted">Consolidated GAAP · USD millions, except margin</caption><thead><tr><th>Measure</th><th id="priorPeriod"></th><th id="currentPeriod"></th></tr></thead><tbody id="caseRows"></tbody></table></div></details>
 <div class="source-links" id="caseSources"></div>
-<button id="keepCaseEvidence" class="primary">Keep this evidence in a decision draft →</button>
-<p class="compact-status" id="decisionDraftStatus" role="status">Copies the selected comparison and its sources. Nothing is saved as a decision until you review the draft.</p>
+<p class="note"><span class="step">C. Preserved historical comparison</span> <span class="chip preserved">Preserved · does not refresh</span></p>
 <details><summary>Source provenance and limits</summary><p id="caseProvenance"></p><p>The energy and FX snapshot above has different dates from these financial periods. It is separate reference context, not time-aligned corroboration. Crude oil is not the same measure as airline fuel expense. No causal relationship or trade signal is inferred.</p></details>
-</section></div>
+</section>
+<section class="card wf" id="wfDecision" hidden aria-labelledby="wfDTitle"><span class="step">Step 4 · Record a decision</span><h2 id="wfDTitle">Decide, or decide not to trade</h2>
+<p class="note">Copies all three evidence classes, each labelled with its own dates and freshness, into an unsaved journal draft. Nothing is saved until you review it there.</p>
+<div class="row"><button id="keepCaseEvidence" class="primary" type="button">Open a decision draft with this evidence →</button><button id="recordNoTrade" type="button">Record a no-trade decision →</button></div>
+<p class="compact-status" id="decisionDraftStatus" role="status"></p></section>
+</div>
 <aside><div class="card"><div class="topline"><h2 style="margin-top:0">Evidence coverage</h2><span class="pill">9 domains</span></div><p class="compact-status" id="sourceSummary">Opening retained snapshot</p><div class="coverage" id="domainCoverage"></div><details class="advanced"><summary>Prediction status and source limits</summary><p><strong>INSUFFICIENT EVIDENCE — NO TRADE SIGNAL</strong></p><p>Coverage is not convergence. Source attribution does not authenticate a source or establish a predictive relationship. No numeric convergence score is calculated.</p><dl><dt>Data mode</dt><dd>Retained snapshot; not live</dd><dt>Availability</dt><dd>Measurement dates are not verified publication times</dd><dt>Prediction</dt><dd>Not established</dd></dl></details></div>
 <div class="card advanced"><details id="importTools"><summary>Use your own evidence file</summary><p class="muted">Optional local JSON import. Files stay in this browser; no upload or storage. Import replaces the starter view.</p><input id="evidenceFile" type="file" accept=".json,application/json" aria-label="Select evidence JSON"><p id="importStatus" role="status">No evidence loaded.</p><button id="clearEvidence">Clear evidence</button></details><button id="restoreStarter">Restore retained evidence</button></div><div class="card legend"><h2 style="margin-top:0">Inspect a layer</h2><div id="layerButtons"></div></div><div class="card evidence" aria-live="polite"><h2 id="layerTitle">Select a ring</h2><p id="layerDetail">Select a layer to inspect what evidence would be needed.</p><p id="layerCaveat" class="muted"></p><div id="observations"></div></div></aside></div></main><footer>AMALGAM development preview · Source-linked information · No production deployment</footer>
 <script src="ring-evidence.js"></script>
+<script src="delta-context.js"></script>
 <script>
 "use strict";
 const layers={geo:{name:"Geopolitical",detail:"Inspect external events and their proposed transmission paths to a business.",caveat:"No geopolitical, weather or shipping evidence is bundled in this retained view."},econ:{name:"Economic",detail:"Compare reference currencies, Treasury yields and crude oil measurements, with a date and source for each record.",caveat:"A measurement date does not establish when a trader could first have known it."},sector:{name:"Sector",detail:"Follow a business exposure through to the company accounts. In the airline case, fuel is a reported operating cost.",caveat:"An exposure is a channel to investigate, not a validated sector-return relationship."},market:{name:"Market",detail:"This layer is reserved for dated market evidence with appropriate public-display rights.",caveat:"No stock prices or market-return records are bundled. Company accounts do not establish a share-price response."},stock:{name:"Stock",detail:"Inspect the issuer's reported revenue, fuel expense and operating income, then compare margins across matching periods.",caveat:"Reported company facts do not by themselves predict the share price."}};
@@ -149,7 +170,7 @@ function evidenceView(id){
 
 function updateOverview(){
  const coverage=document.getElementById("domainCoverage");coverage.replaceChildren();
- const casePanel=document.getElementById("starterCase");casePanel.hidden=!starterActive;
+ const casePanel=document.getElementById("starterCase");casePanel.hidden=!starterActive;document.getElementById("deltaWorkflow").hidden=!starterActive;document.getElementById("wfDecision").hidden=!starterActive;if(starterActive)renderWorkflow();
  document.getElementById("openCase").hidden=!starterActive;
  const counts=new Map();for(const e of imported?imported.events:[])counts.set(e.domain,(counts.get(e.domain)||0)+1);
  if(starterActive)counts.set("corporate",window.AMALGAM_STARTER.issuer.observations.length);
@@ -206,22 +227,27 @@ function restoreStarter(){
  }catch(err){imported=null;starterActive=false;updateOverview();document.getElementById("importStatus").textContent="Starter unavailable: "+err.message+". Local import remains available.";document.getElementById("observations").replaceChildren()}
 }
 document.getElementById("casePeriod").onchange=renderCase;
-document.getElementById("keepCaseEvidence").onclick=()=>{
+function openDraft(intent){
  if(!starterActive)return;
+ const status=document.getElementById("decisionDraftStatus");
  try{
   const text=id=>document.getElementById(id).textContent;
   const comparison=document.getElementById("casePeriod").selectedOptions[0].textContent;
   const capturedAt=new Date().toISOString();
   const table=[...document.querySelectorAll("#caseRows tr")].map(row=>[...row.cells].map(cell=>cell.textContent).join(" | ")).join("\n");
   const sources=[...document.querySelectorAll("#caseSources a")].map(a=>a.textContent+": "+a.href).join("\n");
-  const evidence=["AMALGAM historical airline case — DAL",comparison,"Copied from the local preview at "+capturedAt+" (browser clock; not source publication time).","Retained figures: consolidated GAAP; USD millions except margin.","Measure | "+text("priorPeriod")+" | "+text("currentPeriod"),table,text("caseFinding"),sources,text("caseProvenance"),"Separate energy/FX reference snapshot was not copied: different dates, not time-aligned corroboration.","Historical context only. Not current market evidence, independent corroboration or a recommendation."].join("\n\n");
-  if(evidence.length>4000)throw Error("Evidence exceeds the card's text limit");
-  sessionStorage.setItem("amalgam.evidence-draft.v1",JSON.stringify({schema:"amalgam.evidence-draft.v1",ticker:"DAL",capturedAt,evidence}));
+  const D=window.AmalgamDeltaContext,qe=D.quarterEvidence(window.AMALGAM_STARTER.issuer,Date.now()),rows=D.contextRows(wfLoad.data,{nowMs:Date.now(),retained:wfLoad.mode.indexOf("retained")===0});
+  const historical=["PRESERVED HISTORICAL COMPARISON (does not refresh) — "+comparison,"Consolidated GAAP, USD millions except margin.","Measure | "+text("priorPeriod")+" | "+text("currentPeriod"),table,text("caseFinding"),sources].join("\n");
+  const evidence=["AMALGAM Delta workflow (DAL) · copied "+capturedAt+" (browser clock, not source publication time).",D.quarterText(qe),D.contextText(rows,wfLoad),historical,"Crude oil is not airline fuel expense. The three classes have different dates and are not time-aligned. Market context is not independent corroboration of the company figures. Historical context only for the preserved comparison. Not a recommendation or trade signal."].join("\n\n");
+  if(evidence.length>4000)throw Error("Evidence exceeds the card's text limit ("+evidence.length+" characters)");
+  sessionStorage.setItem("amalgam.evidence-draft.v1",JSON.stringify({schema:"amalgam.evidence-draft.v1",ticker:"DAL",capturedAt,evidence,intent}));
   location.href="decision-journal.html#evidence-draft";
- }catch(err){document.getElementById("decisionDraftStatus").textContent="Draft could not be opened: "+err.message+". Your evidence and saved cards are unchanged.";}
-};
+ }catch(err){status.textContent="Draft could not be opened: "+err.message+". Your evidence and saved cards are unchanged."}
+}
+document.getElementById("keepCaseEvidence").onclick=()=>openDraft("consider");
+document.getElementById("recordNoTrade").onclick=()=>openDraft("no-trade");
 document.getElementById("restoreStarter").onclick=restoreStarter;
-document.getElementById("openCase").onclick=()=>document.getElementById("starterCase").scrollIntoView({behavior:reducedMotion.matches?"instant":"smooth",block:"start"});
+document.getElementById("openCase").onclick=()=>document.getElementById("deltaWorkflow").scrollIntoView({behavior:reducedMotion.matches?"instant":"smooth",block:"start"});
 document.querySelectorAll("[data-case-layer]").forEach(button=>button.onclick=()=>select(button.dataset.caseLayer));
 
 const reducedMotion=matchMedia("(prefers-reduced-motion: reduce)");
@@ -274,6 +300,57 @@ function endDrag(e){
 stage.addEventListener("pointerup",endDrag);stage.addEventListener("pointercancel",endDrag);
 stage.addEventListener("lostpointercapture",()=>{drag=null;assembly.style.transition=""});
 reducedMotion.addEventListener("change",e=>{if(e.matches){running=false;motion()}});
-motion();restoreStarter();
+
 if('serviceWorker' in navigator&&location.protocol.startsWith('http')){navigator.serviceWorker.register('sw.js').catch(()=>{});}
+
+/* ---- Delta workflow: exposures, quarterly evidence, refreshed market context ---- */
+let wfLoad={mode:"unavailable",data:{hubs:{},status:{}},loadedUtc:null,error:"Not loaded yet"};
+const $=id=>document.getElementById(id);
+function cell(tr,t,link){const td=document.createElement("td");if(link){const a=document.createElement("a");a.href=link;a.textContent=t;a.rel="noopener noreferrer";a.target="_blank";td.append(a)}else td.textContent=t;tr.append(td);return td}
+function chip(el,status){el.className="chip "+status;el.textContent=({fresh:"✓ Fresh",stale:"⚠ Stale",unavailable:"✕ Unavailable"})[status]}
+function sg(n,d,u){return (n>0?"+":"")+n.toFixed(d)+u}
+function renderQuarter(){
+ const D=window.AmalgamDeltaContext,issuer=window.AMALGAM_STARTER.issuer,qe=D.quarterEvidence(issuer,Date.now());
+ chip($("wfQChip"),qe.status);$("wfQReason").textContent=qe.reason;
+ const body=$("wfQRows");body.replaceChildren();
+ const ex=$("wfExposureRows");ex.replaceChildren();
+ if(!qe.latest){return}
+ const l=qe.latest,y=qe.yoy,q=qe.qoq;
+ $("wfQCaption").textContent="Consolidated GAAP · USD millions except ratios · hand-transcribed from issuer releases";
+ $("wfQLatestH").textContent=l.period+" (ended "+l.periodEnd+")";
+ $("wfQYoyH").textContent=y?"vs "+y.period+" (ended "+y.periodEnd+")":"Prior year: not loaded";
+ $("wfQQoqH").textContent=q?"vs "+q.period+" (ended "+q.periodEnd+")":"Prior quarter: not loaded";
+ const m=[["Revenue",o=>o.revenue.toLocaleString("en-US"),c=>sg(c.revenuePct,1,"%")],["Fuel expense",o=>o.fuelExpense.toLocaleString("en-US"),c=>sg(c.fuelPct,1,"%")],["Operating margin",o=>o.margin.toFixed(1)+"%",c=>sg(c.marginPp,1," pp")],["Fuel share of revenue",o=>o.fuelShare.toFixed(1)+"%",c=>sg(c.fuelSharePp,1," pp")]];
+ for(const [n,f,c] of m){const tr=document.createElement("tr");cell(tr,n);cell(tr,f(l));cell(tr,y?f(y)+" → "+f(l)+" ("+c(qe.yoyChange)+")":"Missing");cell(tr,q?f(q)+" → "+f(l)+" ("+c(qe.qoqChange)+")":"Missing");body.append(tr)}
+ $("wfQMeta").textContent="Measurement: quarter ended "+l.periodEnd+". Retrieval: reviewed "+qe.reviewed+" by manual transcription; exact fetch time not recorded. Publication time "+(qe.publicationTimeVerified?"verified":"not verified")+". Freshness uses a "+D.QUARTER_WINDOW_DAYS+"-day publication rule that is our assumption.";
+ const src=$("wfQSources");src.replaceChildren();for(const k of [...new Set([y&&y.source,q&&q.source,l.source].filter(Boolean))]){if(!issuer.sources[k])continue;const a=document.createElement("a");a.href=issuer.sources[k];a.textContent="Delta "+k+" release";a.rel="noopener noreferrer";a.target="_blank";src.append(a,document.createTextNode(" "))}
+ const rows=[["Fuel cost","Fuel was "+l.fuelShare.toFixed(1)+"% of revenue in "+l.period+" (source: issuer release, "+l.period+")."],["Interest-rate exposure","Missing — no debt or floating-rate figures are loaded."],["Currency exposure","Missing — no foreign-revenue or hedging figures are loaded."],["Hedging","Missing — not loaded."]];
+ for(const [a,b] of rows){const tr=document.createElement("tr");cell(tr,a);cell(tr,b);ex.append(tr)}
+}
+function renderContext(){
+ const D=window.AmalgamDeltaContext,rows=D.contextRows(wfLoad.data,{nowMs:Date.now(),retained:wfLoad.mode.indexOf("retained")===0});
+ const body=$("wfCRows");body.replaceChildren();
+ for(const r of rows){const tr=document.createElement("tr");cell(tr,r.label);
+  cell(tr,r.value==null?"Unavailable":r.value.toFixed(r.dp)+" "+r.unit+(r.change28?" ("+sg(r.change28.value,r.change28.unit==="bp"?0:1,r.change28.unit==="bp"?" bp":"%")+" / 28d)":""));
+  cell(tr,"Measured "+(r.asof||"—")+" · retrieved "+(r.retrievedUtc||"time not recorded"));
+  const st=cell(tr,"");const c=document.createElement("span");chip(c,r.status);c.title=r.reason;st.append(c," ");const al=document.createElement("a");al.href=r.source.url;al.textContent=r.source.name;al.rel="noopener noreferrer";al.target="_blank";st.append(al);const rs=document.createElement("div");rs.className="note";rs.textContent=r.reason;st.append(rs);body.append(tr)}
+ const order={unavailable:2,stale:1,fresh:0},worst=rows.reduce((w,r)=>order[r.status]>order[w]?r.status:w,"fresh");chip($("wfCChip"),worst);
+ const labels={live:"Loaded from this site's data.json just now","retained-last-success":"Refresh failed — showing the last successful refresh from this browser","retained-bundle":"Refresh failed — showing the snapshot bundled with this page",unavailable:"Unavailable — no refresh and no retained copy"};
+ $("wfLoad").textContent=(labels[wfLoad.mode]||wfLoad.mode)+(wfLoad.loadedUtc?" · data loaded "+wfLoad.loadedUtc:"")+(wfLoad.error?" · "+wfLoad.error:"");
+}
+function renderWorkflow(){try{renderQuarter();renderContext()}catch(err){$("wfLoad").textContent="Workflow could not render: "+err.message}}
+let wfBusy=false;
+async function refreshContext(){
+ if(wfBusy||!window.AmalgamDeltaContext)return;wfBusy=true;
+ try{
+  let storage=null;try{storage=window.localStorage}catch(e){}
+  wfLoad=await window.AmalgamDeltaContext.loadContext({fetchFn:window.fetch?window.fetch.bind(window):null,storage,bundle:window.AMALGAM_STARTER,url:"data.json"});
+ }catch(err){wfLoad={mode:"unavailable",data:{hubs:{},status:{}},loadedUtc:null,error:String(err&&err.message||err)}}
+ wfBusy=false;if(starterActive)renderContext();
+}
+$("wfRefresh").onclick=refreshContext;
+setInterval(refreshContext,15*60*1000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)refreshContext()});
+motion();restoreStarter();
+refreshContext();
 </script></body></html>

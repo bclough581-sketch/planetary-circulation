@@ -159,9 +159,10 @@ if(location.hash==='#evidence-draft'){
  try{
   const raw=sessionStorage.getItem('amalgam.evidence-draft.v1');if(!raw||raw.length>15000)throw Error('No valid evidence draft is available in this tab.');
   const d=JSON.parse(raw);
-  if(!exactKeys(d,['schema','ticker','capturedAt','evidence'])||d.schema!=='amalgam.evidence-draft.v1'||typeof d.ticker!=='string'||!d.ticker.trim()||d.ticker.length>20||!validTime(d.capturedAt)||typeof d.evidence!=='string'||!d.evidence.trim()||d.evidence.length>4000)throw Error('The evidence draft is invalid.');
-  $('ticker').value=d.ticker;$('evidence').value=d.evidence;$('recordType').value='Plan recorded now';$('outcome').value='Considering';$('draftNotice').hidden=false;
-  if(writable)status('Evidence copied into an unsaved draft. Add your own reason; existing records are unchanged.');
+  const hasIntent=d&&typeof d==='object'&&Object.prototype.hasOwnProperty.call(d,'intent');
+  if(!exactKeys(d,hasIntent?['schema','ticker','capturedAt','evidence','intent']:['schema','ticker','capturedAt','evidence'])||(hasIntent&&d.intent!=='consider'&&d.intent!=='no-trade')||d.schema!=='amalgam.evidence-draft.v1'||typeof d.ticker!=='string'||!d.ticker.trim()||d.ticker.length>20||!validTime(d.capturedAt)||typeof d.evidence!=='string'||!d.evidence.trim()||d.evidence.length>4000)throw Error('The evidence draft is invalid.');
+  $('ticker').value=d.ticker;$('evidence').value=d.evidence;$('recordType').value='Plan recorded now';$('outcome').value=d.intent==='no-trade'?'Decided against trading':'Considering';$('draftNotice').hidden=false;
+  if(writable)status(d.intent==='no-trade'?'Evidence copied into an unsaved no-trade draft. Add your own reason before saving; existing records are unchanged.':'Evidence copied into an unsaved draft. Add your own reason; existing records are unchanged.');
  }catch(error){if(writable)status('Evidence draft not loaded: '+error.message+' Existing cards are unchanged.');}
 }
 }

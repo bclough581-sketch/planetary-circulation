@@ -23,6 +23,12 @@ on:
       - 'tests/test_journal_*.cjs'
       - 'tests/test_evidence_handoff.cjs'
       - 'tests/test_ring_*.cjs'
+      - 'delta-context.js'
+      - 'decision-journal.html'
+      - 'gates.js'
+      - 'tests/test_delta_*.cjs'
+      - 'tests/test_gates.js'
+      - 'tests/make_gates_ref.py'
       - 'scripts/build_ring_evidence.py'
       - 'intelligence/events.py'
       - 'intelligence/ingest.py'
@@ -53,6 +59,12 @@ on:
       - 'tests/test_journal_*.cjs'
       - 'tests/test_evidence_handoff.cjs'
       - 'tests/test_ring_*.cjs'
+      - 'delta-context.js'
+      - 'decision-journal.html'
+      - 'gates.js'
+      - 'tests/test_delta_*.cjs'
+      - 'tests/test_gates.js'
+      - 'tests/make_gates_ref.py'
       - 'scripts/build_ring_evidence.py'
       - 'intelligence/data/delta-quarterly-curated.json'
       - 'tests/test_ring_starter.py'
@@ -81,6 +93,8 @@ jobs:
       - run: node tests/test_journal_regression.cjs
       - run: node tests/test_journal_migration.cjs
       - run: node tests/test_scoreboard.js
+      - run: node tests/test_delta_context.cjs
+      - run: node tests/test_gates.js
       - run: python -m unittest discover -s tests -p test_ring_starter.py
       - run: python -m unittest discover -s tests -p test_evidence_export.py
   ring-mobile-browser:
@@ -106,6 +120,7 @@ jobs:
       - run: node tests/test_nav_smoke.cjs
       - run: node tests/test_offline_entry.cjs
       - run: node tests/test_evidence_handoff.cjs
+      - run: node tests/test_delta_workflow_browser.cjs
       - run: node tests/test_ring_comparisons.cjs
       - run: node tests/test_ring_galaxy.cjs
       - run: node tests/test_ring_theme.cjs
