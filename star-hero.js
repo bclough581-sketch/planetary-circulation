@@ -23,8 +23,8 @@
     '.star-hero .star-hint{position:absolute;left:0;right:0;bottom:11%;margin:0;text-align:center;font-size:.82rem;' +
     'letter-spacing:.02em;color:#bcd3ee;opacity:0;transition:opacity 1.2s ease;pointer-events:none;text-shadow:0 0 12px #030712}' +
     '.star-hero .star-hint.on{opacity:.85}' +
-    '.star-hero .star-reset{position:absolute;z-index:3;left:50%;bottom:3%;transform:translateX(-50%);min-height:44px;padding:0 22px;border-radius:22px;' +
-    'border:1px solid #8fb4e688;background:#050b1acc;color:#d6e6ff;font:inherit;font-size:.85rem;letter-spacing:.03em;opacity:0;pointer-events:none;transition:opacity .5s ease;-webkit-tap-highlight-color:transparent}' +
+    '.star-hero .star-reset{position:absolute;z-index:3;left:50%;bottom:15%;transform:translateX(-50%);min-height:48px;padding:0 26px;border-radius:24px;' +
+    'border:1px solid #bcd6ffcc;background:#0a1630e6;color:#eef5ff;box-shadow:0 0 18px #5aa0ff55;font:inherit;font-size:.85rem;letter-spacing:.03em;opacity:0;pointer-events:none;transition:opacity .5s ease;-webkit-tap-highlight-color:transparent}' +
     '.star-hero .star-reset.on{opacity:1;pointer-events:auto}' +
     '@media(max-width:700px){.star-hero{height:clamp(380px,68vh,640px);height:clamp(380px,68svh,640px)}}';
   document.head.appendChild(css);
@@ -201,7 +201,7 @@
       hot[l] += ((held[l] ? 1 : 0) - hot[l]) * Math.min(1, dt * 8);
     }
     if (resetting) {                                     /* Reset: every turn eases back to the start by the shortest way round */
-      var rk = Math.min(1, dt * 4.5), done = true; uvX = uvY = 0;
+      var rk = Math.min(1, dt * 3.5), done = true; uvX = uvY = 0;
       var ox = Math.round(uX / TAU), oy = Math.round(uY / TAU); uX += (ox * TAU - uX) * rk; uY += (oy * TAU - uY) * rk;
       if (Math.abs(uX - ox * TAU) > 0.003 || Math.abs(uY - oy * TAU) > 0.003) done = false;
       for (var rl = 0; rl < 3; rl++) { w[rl] = 0; var oa = Math.round(ang[rl] / TAU); ang[rl] += (oa * TAU - ang[rl]) * rk; if (Math.abs(ang[rl] - oa * TAU) > 0.003) done = false; }
@@ -280,11 +280,15 @@
     else if (!g.moved && !cancelled && now - g.t0 < 500) { pulses.push(clock); kick = 1; if (reduce) draw(clock); }
   }
   rbtn.addEventListener('pointerdown', function (e) { e.stopPropagation(); });
-  rbtn.addEventListener('click', function () {
-    uvX = uvY = 0; wake();
+  var lastHit = 0;
+  function recenter() {
+    var nowT = performance.now(); if (nowT - lastHit < 400) return; lastHit = nowT;   /* pointerup and click both land on a phone */
+    uvX = uvY = 0; tgtX = 0.12; tgtY = 0; wake(); pulses.push(clock); kick = 1;     /* a ring and a flash show the tap landed */
     if (reduce) { uX = uY = 0; for (var q = 0; q < 3; q++) { ang[q] = 0; vis[q] = 0; w[q] = 0; } draw(0); return; }
     resetting = true;
-  });
+  }
+  rbtn.addEventListener('pointerup', recenter);
+  rbtn.addEventListener('click', recenter);
   pad.addEventListener('pointerup', function (e) { release(e, false); });
   pad.addEventListener('pointercancel', function (e) { release(e, true); });
   host.addEventListener('pointermove', function (e) { if (e.pointerType === 'mouse' && e.buttons === 0) { wake(); aim(e); } });
