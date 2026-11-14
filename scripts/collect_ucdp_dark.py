@@ -17,9 +17,17 @@ START = dt.date(2025, 12, 1)
 END = dt.date(2025, 12, 31)
 MAX_REQUESTS = 20
 PAGE_SIZE = 100
-CITATION = ('Sundberg, Ralph, and Erik Melander (2013). Introducing the UCDP '
+LEGACY_CITATION = ('Sundberg, Ralph, and Erik Melander (2013). Introducing the UCDP '
             'Georeferenced Event Dataset. Journal of Peace Research 50(4): 523-532. '
             'UCDP GED version 26.1; Högbladh, Stina (2026), UCDP GED Codebook version 26.1.')
+CITATION = (LEGACY_CITATION + ' '
+            'Davies, Shawn, Therése Pettersson, and Magnus Öberg (2026). '
+            'Organized violence 1989–2025, and violent political protests. '
+            'Journal of Peace Research. https://doi.org/10.1093/jopres/xjag046 . '
+            'UCDP is part of and funded by DEMSCORE, national research infrastructure '
+            'grant 2021-00162 from the Swedish Research Council. '
+            'Source: https://ucdp.uu.se/downloads/ . '
+            'License: CC BY 4.0, https://creativecommons.org/licenses/by/4.0/ .')
 REGIONS = {'Africa', 'Americas', 'Asia', 'Europe', 'Middle East'}
 
 
@@ -47,7 +55,7 @@ def validate(s):
     if not isinstance(s, dict) or s.get('schema') != SCHEMA or s.get('display_allowed') is not False:
         raise CollectionError('invalid_schema_or_display')
     if (s.get('dataset_version') != VERSION or s.get('source_url') != ENDPOINT or
-            s.get('citation') != CITATION or s.get('dataset_coverage_end') != END.isoformat()):
+            s.get('citation') not in (CITATION, LEGACY_CITATION) or s.get('dataset_coverage_end') != END.isoformat()):
         raise CollectionError('invalid_provenance')
     if type(s.get('stale')) is not bool or not integer(s.get('request_count')) or s['request_count'] > MAX_REQUESTS:
         raise CollectionError('invalid_status')
@@ -120,7 +128,7 @@ def collect(previous, token, get=fetch, now=None):
         return result
     start = START if previous['window']['end'] is None else dt.date.fromisoformat(previous['window']['end']) + dt.timedelta(days=1)
     if start > END:
-        result.update(stale=True, status='pinned_coverage_complete')
+        result.update(stale=True, status='pinned_coverage_complete', citation=CITATION)
         return result  # No clock advancement or claim of contemporary coverage.
     end = min(start + dt.timedelta(days=6), END)
     rows, seen, total, pages = [], set(), None, None
@@ -170,8 +178,8 @@ def collect(previous, token, get=fetch, now=None):
                 a['fatalities'][k] += r[k]
         result['regions'] = sorted(aggregates.values(), key=lambda r: r['region'])
         result['window']['end'] = end.isoformat()
-        result.update(retrieved_utc=now, stale=True, status='collected_historical_context')
-        result['fatality_semantics'] = 'Source low/best/high are summed unchanged, not confidence bounds. Crossed estimates are counted per region; no values are sorted, imputed or discarded. GED codebook section 5.5 discusses crossed estimates.'
+        result.update(retrieved_utc=now, stale=True, status='collected_historical_context', citation=CITATION)
+        result['fatality_semantics'] = 'Source low/best/high are summed unchanged, not confidence bounds. Crossed estimates are counted per region; no values are sorted, imputed or discarded. GED codebook sections 2 and 5.7 describe fatality estimates; section 5.5 (Clarity) notes that clarity-2 events can have high below best or low.'
         # Historical coverage stays stale for contemporary context even on a successful pull.
     except CollectionError:
         raise
