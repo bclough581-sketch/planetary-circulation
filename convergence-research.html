@@ -449,7 +449,7 @@ async function verifyHistoricalPair(){
 }
 let historicalImportVersion=0;
 document.getElementById('historical-file').addEventListener('change',async e=>{
- const file=e.target.files[0];if(!file)return;const version=++historicalImportVersion;
+ const file=e.target.files[0];const version=++historicalImportVersion;
  historicalPanel=null;
  ++auditImportVersion;
  historicalAudit=null;
@@ -459,6 +459,7 @@ document.getElementById('historical-file').addEventListener('change',async e=>{
  document.getElementById('descriptive-values').replaceChildren();
  document.getElementById('descriptive-status').textContent='Historical panel changed; descriptive report must be reverified.';
  document.getElementById('historical-status').textContent='Historical panel changed; audit must be reverified.';
+ if(!file){document.getElementById('historical-status').textContent='No historical panel selected. Prior panel, audit summary and descriptive report cleared.';return;}
  try{const data=JSON.parse(await file.text());if(version!==historicalImportVersion)return;if(data.schema!=='amalgam.cross-domain-observation-panel.v1'||!Array.isArray(data.observations))throw Error('Invalid historical panel');historicalPanel=data;}
  catch(err){if(version!==historicalImportVersion)return;document.getElementById('historical-status').textContent='Historical panel rejected: '+err.message;return;}
  await verifyDescriptive();

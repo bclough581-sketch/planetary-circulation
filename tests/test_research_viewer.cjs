@@ -261,6 +261,12 @@ const loadAudit=async data=>{
  await loadAudit(audit);assert.match(document.getElementById('historical-status').textContent,/fingerprint MATCH/);
  await document.getElementById('audit-file').handlers.change({target:{files:[]}});assertNotMatched();
  await loadAudit(audit);assert.match(document.getElementById('historical-status').textContent,/fingerprint MATCH/);
+ // Empty panel selection must clear the loaded panel and dependent verification, like the audit control.
+ await document.getElementById('historical-file').handlers.change({target:{files:[]}});
+ assertNotMatched();
+ assert.match(document.getElementById('historical-status').textContent,/No historical panel selected/);
+ assert.match(document.getElementById('audit-status').textContent,/cleared/);
+ await loadHistorical(panel);await loadAudit(audit);assert.match(document.getElementById('historical-status').textContent,/fingerprint MATCH/);
 
 
  await load(good);
