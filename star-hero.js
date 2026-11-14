@@ -35,7 +35,7 @@
   var cv = document.createElement('canvas'); cv.setAttribute('aria-hidden', 'true');
   var hint = document.createElement('p'); hint.className = 'star-hint';
   hint.textContent = 'Flick a star to spin it. Drag outside the star to turn the whole thing any way.';
-  var rbtn = document.createElement('button'); rbtn.type = 'button'; rbtn.className = 'star-reset'; rbtn.textContent = 'Reset';
+  var rbtn = document.createElement('button'); rbtn.type = 'button'; rbtn.className = 'star-reset'; rbtn.textContent = 'Recenter';
   var pad = document.createElement('div'); pad.className = 'star-pad'; pad.setAttribute('aria-hidden', 'true');
   host.appendChild(cv); host.appendChild(pad); host.appendChild(hint); host.appendChild(rbtn);
   main.parentNode.insertBefore(host, main);
