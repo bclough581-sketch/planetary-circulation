@@ -19,7 +19,7 @@ with sync_playwright() as p:
     b=p.chromium.launch();pg=b.new_page(viewport={'width':390,'height':844})
     errs=[];pg.on('pageerror',lambda e:errs.append(str(e)));pg.on('console',lambda m:m.type=='error' and errs.append(m.text))
     pg.route('**/api.twelvedata.com/**',handle)
-    pg.goto('http://localhost:8765/index.html');pg.wait_for_timeout(1800)
+    pg.goto('http://localhost:8765/map.html');pg.wait_for_timeout(1800)
     assert pg.is_visible('#checkview'),'check view visible'
     assert not pg.is_visible('#mapview'),'map hidden'
     pg.fill('#ckki','demo');pg.click('#ckkf button')

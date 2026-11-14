@@ -1,0 +1,19 @@
+{
+  "schema": "amalgam.airline-daily-study-spec.v1",
+  "status": "draft_not_preregistered",
+  "universe": ["DAL", "UAL"],
+  "benchmark": "SPY",
+  "primary_horizon_trading_sessions": 5,
+  "secondary_horizon_trading_sessions": 10,
+  "hypothesis": "A larger increase in reported jet-fuel spot prices is associated with lower subsequent airline total return minus SPY total return.",
+  "exposure": "Continuous percent change over five reported EIA observations; elapsed calendar days retained; no optimized threshold.",
+  "entry_rule": "First verified exchange-session close strictly after independently established signal availability. Observation dates alone never establish availability.",
+  "exit_rule": "Close exactly 5 or 10 verified exchange sessions after entry; missing entry, exit, or adjustment evidence excludes the outcome.",
+  "price_basis": "Same-vendor documented dividend-and-split-adjusted close series for airline and benchmark. Subtract benchmark total return over identical endpoints; no raw/adjusted mixing.",
+  "controls_draft": ["Prior 5-session airline excess return", "Prior 5-session SPY return", "Calendar effects fixed before outcome inspection"],
+  "dependence": "Shared fuel shocks across companies and overlapping forward windows require dependence-aware uncertainty; company rows are not independent trials.",
+  "evaluation": "Predeclare chronological training/validation/locked holdout dates and minimum sample before reading new outcomes. Compare controls-only versus controls-plus-fuel. Report all horizons, uncertainty, exclusions and incremental out-of-sample performance. Register executable prices, costs and a separate strategy before claiming tradability.",
+  "lock_blockers": ["Licensed daily adjusted price source and adjustment policy", "Availability evidence source and conservative decision schedule", "Exchange calendar", "Fixed sample dates, minimum sample and uncertainty method"],
+  "predictive_advantage": "not_established",
+  "quarterly_role": "Business context only; quarterly margin associations are not evidence of days-to-weeks stock-return predictability."
+}

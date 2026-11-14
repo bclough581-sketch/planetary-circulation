@@ -1,0 +1,55 @@
+name: airline-fuel-research
+on:
+  push:
+    branches: [amalgam-event-foundation]
+    paths: ['intelligence/jet_fuel_history.py', 'intelligence/airline_research_panel.py', 'intelligence/data/delta-quarterly-curated.json', 'tests/test_jet_fuel_history.py', 'tests/test_airline_research_panel.py', '.github/workflows/airline-fuel-research.yml']
+  workflow_dispatch: {}
+permissions:
+  contents: read
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m unittest tests.test_jet_fuel_history tests.test_airline_research_panel -v
+      - name: Collect retained fuel input and assemble research bundle
+        env:
+          EIA_API_KEY: ${{ secrets.EIA_API_KEY }}
+        run: |
+          mkdir airline-bundle
+          python -m intelligence.jet_fuel_history --start 2024-01 --end 2025-12 --output airline-bundle/jet-fuel-history.json
+          cp intelligence/data/delta-quarterly-curated.json airline-bundle/
+          python -m intelligence.airline_research_panel --directory airline-bundle
+          python -m intelligence.airline_research_panel --directory airline-bundle --verify
+      - uses: actions/upload-artifact@v4
+        with:
+          name: amalgam-jet-fuel-${{ github.run_id }}
+          path: airline-bundle/jet-fuel-history.json
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        with:
+          name: amalgam-airline-research-${{ github.run_id }}
+          path: airline-bundle/
+          retention-days: 30
+  reproduce-downloaded:
+    needs: collect
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          name: amalgam-airline-research-${{ github.run_id }}
+          path: downloaded-airline-bundle
+      - run: python -m intelligence.airline_research_panel --directory downloaded-airline-bundle --verify

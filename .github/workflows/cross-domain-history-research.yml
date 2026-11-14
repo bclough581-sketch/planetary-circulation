@@ -1,0 +1,145 @@
+name: intelligence-cross-domain-history-research
+on:
+  push:
+    branches: [amalgam-event-foundation]
+    paths:
+      - '.github/workflows/cross-domain-history-research.yml'
+      - 'intelligence/cross_domain_history.py'
+      - 'tests/test_cross_domain_history.py'
+      - 'intelligence/point_in_time.py'
+      - 'tests/test_point_in_time.py'
+      - 'intelligence/audit_validation.py'
+      - 'tests/test_audit_validation.py'
+      - 'intelligence/verify_bundle.py'
+      - 'intelligence/verify_downloaded_zip.py'
+      - 'tests/test_verify_bundle.py'
+      - 'intelligence/coverage_audit.py'
+      - 'tests/test_coverage_audit.py'
+      - 'intelligence/decision_schedule.py'
+      - 'intelligence/descriptive_history.py'
+      - 'tests/test_decision_schedule.py'
+      - 'tests/test_descriptive_history.py'
+  workflow_dispatch: {}
+permissions:
+  contents: read
+jobs:
+  cross-domain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - name: Verify executed commit
+        env:
+          EXPECTED_COMMIT: ${{ github.sha }}
+        run: git rev-parse HEAD | grep -Fx "$EXPECTED_COMMIT"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test historical cross-domain alignment
+        run: python -m unittest tests.test_cross_domain_history tests.test_eia_history tests.test_treasury_history tests.test_point_in_time tests.test_audit_validation tests.test_verify_bundle tests.test_coverage_audit tests.test_decision_schedule tests.test_descriptive_history -v
+      - name: Retrieve 2025 EIA and Treasury observations
+        env:
+          EIA_API_KEY: ${{ secrets.EIA_API_KEY }}
+        run: |
+          python -m intelligence.eia_history --start 2025-01-01 --end 2025-12-31 --output eia-history-research.json
+          python -m intelligence.treasury_history --year 2025 --output treasury-history-research.json
+      - name: Align independent historical observations
+        run: |
+          python -m intelligence.cross_domain_history --energy eia-history-research.json --treasury treasury-history-research.json --output cross-domain-observation-panel.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          data = json.loads(Path("cross-domain-observation-panel.json").read_text())
+          print("Verified cross-domain dates:", len(data["observations"]))
+          from intelligence.descriptive_history import descriptive_report
+          summary = descriptive_report(data)
+          print("Descriptive Brent-WTI spread mean (USD/barrel):", summary["brent_minus_wti_usd_per_barrel"]["mean"])
+          assert summary["asof_eligible_dates"] == 0
+          assert len(data["observations"]) >= 150, "Insufficient cross-domain overlap"
+          assert data["publication_time_verified"] is False
+          assert data["predictive_advantage"] == "not_established"
+          from intelligence.point_in_time import assess_asof
+          gate = assess_asof(data, "2026-11-04T00:00:00Z")
+          Path("point-in-time-audit.json").write_text(json.dumps(gate, indent=2) + "\n", encoding="utf-8")
+          print("As-of usable observations:", gate["usable_count"])
+          print("As-of blocked observations:", gate["blocked_count"])
+          assert gate["usable_count"] == 0, "Unverified publication timestamps must fail closed"
+          assert gate["source_observation_count"] == len(data["observations"])
+          assert len(gate["source_observations_sha256"]) == 64
+          from intelligence.audit_validation import validate_audit
+          saved_panel = json.loads(Path("cross-domain-observation-panel.json").read_text(encoding="utf-8"))
+          saved_audit = json.loads(Path("point-in-time-audit.json").read_text(encoding="utf-8"))
+          verdict = validate_audit(saved_panel, saved_audit)
+          assert verdict["status"] == "verified_internal_consistency"
+          print("Retained-file audit consistency:", verdict["status"])
+          PY
+      - name: Export descriptive-only historical research summary
+        run: |
+          python -m intelligence.descriptive_history --panel cross-domain-observation-panel.json --output descriptive-historical-research.json
+          python -m intelligence.descriptive_history --panel cross-domain-observation-panel.json --verify-report descriptive-historical-research.json
+      - name: Audit exact-date source coverage
+        run: python -m intelligence.coverage_audit --energy eia-history-research.json --treasury treasury-history-research.json --panel cross-domain-observation-panel.json --output historical-coverage-audit.json
+      - name: Record artifact provenance and file checksums
+        env:
+          RESEARCH_RUN_ID: ${{ github.run_id }}
+          RESEARCH_COMMIT: ${{ github.sha }}
+          RESEARCH_REPOSITORY: ${{ github.repository }}
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          import os
+          from datetime import datetime, timezone
+          from pathlib import Path
+          names = ("eia-history-research.json", "treasury-history-research.json",
+                   "cross-domain-observation-panel.json", "point-in-time-audit.json",
+                   "historical-coverage-audit.json")
+          manifest = {
+              "schema": "amalgam.research-artifact-manifest.v1",
+              "captured_utc": datetime.now(timezone.utc).isoformat(),
+              "repository": os.environ["RESEARCH_REPOSITORY"],
+              "commit_sha": os.environ["RESEARCH_COMMIT"],
+              "workflow_run_id": os.environ["RESEARCH_RUN_ID"],
+              "workflow_url": "https://github.com/" + os.environ["RESEARCH_REPOSITORY"] +
+                              "/actions/runs/" + os.environ["RESEARCH_RUN_ID"],
+              "files": {name: hashlib.sha256(Path(name).read_bytes()).hexdigest()
+                        for name in names},
+              "predictive_advantage": "not_established",
+              "historical_decision_schedule": {
+                  "status": "not_supplied",
+                  "scheduled_observations": 0,
+                  "asof_eligible_observations": 0,
+                  "note": "No historical decision timestamps were provided or inferred."
+              },
+              "warning": "Capture time is not historical publication time. Artifact retention is 30 days."
+          }
+          Path("research-artifact-manifest.json").write_text(
+              json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+          for name, expected in manifest["files"].items():
+              assert hashlib.sha256(Path(name).read_bytes()).hexdigest() == expected
+          print("Manifest verified for", len(manifest["files"]), "research files")
+          from intelligence.verify_bundle import verify_bundle
+          result = verify_bundle(".")
+          assert result["status"] == "verified_internal_consistency"
+          print("Offline bundle verification:", result["status"])
+          PY
+      - name: Retain independently validated source and joined artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: amalgam-cross-domain-history-${{ github.run_id }}
+          path: |
+            eia-history-research.json
+            treasury-history-research.json
+            cross-domain-observation-panel.json
+            point-in-time-audit.json
+            historical-coverage-audit.json
+            research-artifact-manifest.json
+          retention-days: 30
+      - name: Retain descriptive-only report separately from verified research bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: amalgam-descriptive-history-${{ github.run_id }}
+          path: descriptive-historical-research.json
+          retention-days: 30

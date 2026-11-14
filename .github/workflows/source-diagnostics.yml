@@ -1,0 +1,39 @@
+name: intelligence-source-diagnostics
+on:
+  push:
+    branches: [amalgam-event-foundation]
+    paths: ['.github/workflows/source-diagnostics.yml']
+  workflow_dispatch: {}
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: amalgam-event-foundation
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Inspect PortWatch service metadata
+        continue-on-error: true
+        run: python -m intelligence.portwatch_diagnostic
+      - name: Probe PortWatch query API
+        continue-on-error: true
+        run: python -m intelligence.portwatch_query_probe
+      - name: Probe bounded PortWatch pagination
+        continue-on-error: true
+        run: python -m intelligence.portwatch_pagination_probe
+      - name: Isolate PortWatch parameter failures
+        continue-on-error: true
+        run: python -m intelligence.portwatch_parameter_probe
+      - name: Compare PortWatch queries against working baseline
+        continue-on-error: true
+        run: python -m intelligence.portwatch_working_baseline_probe
+      - name: Inspect EIA latest publication dates
+        continue-on-error: true
+        env:
+          EIA_API_KEY: ${{ secrets.EIA_API_KEY }}
+        run: python -m intelligence.eia_diagnostic

@@ -1,0 +1,50 @@
+name: intelligence-historical-eia-research
+on:
+  push:
+    branches: [amalgam-event-foundation]
+    paths:
+      - '.github/workflows/historical-eia-research.yml'
+      - 'intelligence/eia_history.py'
+      - 'tests/test_eia_history.py'
+  workflow_dispatch: {}
+permissions:
+  contents: read
+jobs:
+  historical-eia:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: amalgam-event-foundation
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify historical EIA collector tests
+        run: python -m unittest tests.test_eia_history -v
+      - name: Fetch 2025 daily WTI and Brent observations
+        env:
+          EIA_API_KEY: ${{ secrets.EIA_API_KEY }}
+        run: |
+          python -m intelligence.eia_history --start 2025-01-01 --end 2025-12-31 --output eia-history-research.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          result = json.loads(Path("eia-history-research.json").read_text(encoding="utf-8"))
+          from intelligence.eia_history import aligned_price_dates
+          paired = aligned_price_dates(result["observations"])
+          print("Exact-date WTI/Brent pairs:", len(paired))
+          assert len(paired) >= 150, "Insufficient aligned historical dates"
+          counts = {series: sum(x["series"] == series for x in result["observations"]) for series in ("RWTC", "RBRTE")}
+          print("Historical series counts:", counts)
+          print("Earliest:", min(x["date"] for x in result["observations"]))
+          print("Latest:", max(x["date"] for x in result["observations"]))
+          assert all(count >= 150 for count in counts.values()), "Incomplete 2025 oil history"
+          assert result["predictive_advantage"] == "not_established"
+          PY
+      - name: Upload research-only historical oil observations
+        uses: actions/upload-artifact@v4
+        with:
+          name: amalgam-eia-history-${{ github.run_id }}
+          path: eia-history-research.json
+          retention-days: 30
