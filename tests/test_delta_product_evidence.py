@@ -21,10 +21,12 @@ class DeltaProductEvidenceTests(unittest.TestCase):
     def test_research_boundary_content_unchanged(self):
         # Normalize only line endings so the same fixture hashes work in clean
         # Linux and Windows checkouts. Git diff separately verifies no edits.
+        # The viewer baseline includes the separately authorized import-integrity
+        # fixes; research inputs and generated evidence retain their original pins.
         expected = {
             "intelligence/data/delta-quarterly-curated.json": "c838853a773acbecdbdb9effd3d085346a15241abec8abf7ffd295ecdced291e",
             "ring-evidence.js": "23781f4835839ffe13a60e69be998967a6c3e78f0cff28d1904ed3933159a6e2",
-            "convergence-research.html": "36ccbbb1b1a6c39feeedefa494f38ae39bc30bf5b030e7a69ad88465ded9658d",
+            "convergence-research.html": "efc3f8410cb22433aa4b784791dd2bf6466c6fa20ce549d3aaf8c9b017e0bd48",
         }
         for name, digest in expected.items():
             with self.subTest(name=name):

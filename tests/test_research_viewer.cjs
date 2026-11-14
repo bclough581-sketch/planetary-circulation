@@ -226,6 +226,43 @@ const loadAudit=async data=>{
  await loadAudit({...audit,blocked_count:3});
  assert.match(document.getElementById('audit-status').textContent,/Audit rejected/);
 
+ // Research binding regressions: duplicate/mismatched dates must never verify,
+ // even when the supplied fingerprint correctly matches the corrupted panel.
+ const loadHistorical=async data=>document.getElementById('historical-file').handlers.change({target:{files:[{text:async()=>JSON.stringify(data)}]}});
+ const canonicalForTest=value=>Array.isArray(value)?'['+value.map(canonicalForTest).join(',')+']':value&&typeof value==='object'?'{'+Object.keys(value).sort().map(key=>JSON.stringify(key)+':'+canonicalForTest(value[key])).join(',')+'}':JSON.stringify(value);
+ const boundAudit=(source,changes={})=>({...audit,source_observation_count:source.observations.length,
+   source_observations_sha256:createHash('sha256').update(canonicalForTest(source.observations)).digest('hex'),...changes});
+ const assertNotMatched=()=>assert.doesNotMatch(document.getElementById('historical-status').textContent,/fingerprint MATCH/);
+ const duplicatePanel={...panel,observations:[panel.observations[0],{...panel.observations[0]}]};
+ await loadHistorical(duplicatePanel);await loadAudit(boundAudit(duplicatePanel));
+ assert.match(document.getElementById('historical-status').textContent,/FAILED/);assertNotMatched();
+ for(const badDate of ['2025-02-30','0000-01-02','2025-1-02']){
+   const invalid={...panel,observations:[{...panel.observations[0],date:badDate},panel.observations[1]]};
+   await loadHistorical(invalid);await loadAudit(boundAudit(invalid));assertNotMatched();
+ }
+ await loadHistorical(panel);
+ await loadAudit({...audit,blocked:[audit.blocked[0],{...audit.blocked[1],date:'2025-01-04'}]});
+ assert.match(document.getElementById('historical-status').textContent,/FAILED/);assertNotMatched();
+ await loadAudit({...audit,blocked:[audit.blocked[0],{...audit.blocked[0]}]});assertNotMatched();
+ await loadAudit({...audit,blocked:[audit.blocked[0]],blocked_count:1});assertNotMatched();
+ await loadAudit({...audit,blocked:[...audit.blocked,{date:'2025-01-04',reason:'missing_independent_availability_evidence'}],blocked_count:3});assertNotMatched();
+ for(const badTime of ['2026-11-04','2026-11-04T00:00:00','2026-02-30T00:00:00Z']){
+   await loadAudit({...audit,decision_utc:badTime});
+   assert.match(document.getElementById('audit-status').textContent,/Audit rejected/);assertNotMatched();
+ }
+ await loadAudit({...audit,decision_utc:'2026-11-04T05:30:00+05:30'});
+ assert.match(document.getElementById('historical-status').textContent,/fingerprint MATCH/);
+
+ // Invalidate an earlier success immediately, before reading its replacement.
+ let finishBadReplacement;
+ const badReplacement=document.getElementById('audit-file').handlers.change({target:{files:[{text:()=>new Promise(resolve=>{finishBadReplacement=resolve;})}]}});
+ assertNotMatched();finishBadReplacement('{broken');await badReplacement;
+ assert.match(document.getElementById('audit-status').textContent,/Audit rejected/);assertNotMatched();
+ await loadAudit(audit);assert.match(document.getElementById('historical-status').textContent,/fingerprint MATCH/);
+ await document.getElementById('audit-file').handlers.change({target:{files:[]}});assertNotMatched();
+ await loadAudit(audit);assert.match(document.getElementById('historical-status').textContent,/fingerprint MATCH/);
+
+
  await load(good);
  assert.equal(document.getElementById('ring-domains').children.length,9);
  const weatherNode=document.getElementById('ring-domains').children[0];
@@ -380,5 +417,5 @@ const loadAudit=async data=>{
  await load(stale);
  assert.match(document.getElementById('status').textContent,/STALE DATASET/);
  assert.match(document.getElementById('status').textContent,/imported observations are outside viewer-time freshness/);
- console.log('Viewer JavaScript interaction checks passed: valid load + 15 rejected imports + stale warning');
+ console.log('Viewer JavaScript interaction checks passed: valid load + rejected imports + stale warning + research binding/date/replacement regressions');
 })().catch(err=>{console.error(err);process.exitCode=1;});

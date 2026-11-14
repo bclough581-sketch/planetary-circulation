@@ -395,6 +395,17 @@ const canonicalJson=value=>{
  if(value&&typeof value==='object')return '{'+Object.keys(value).sort().map(key=>JSON.stringify(key)+':'+canonicalJson(value[key])).join(',')+'}';
  return JSON.stringify(value);
 };
+// Match the offline verifier's canonical-date and explicit-timezone boundary.
+function canonicalHistoricalDay(value){
+ if(typeof value!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(value))return false;
+ const [year,month,day]=value.split('-').map(Number);if(year<1)return false;
+ const parsed=new Date(0);parsed.setUTCFullYear(year,month-1,day);
+ return parsed.getUTCFullYear()===year&&parsed.getUTCMonth()===month-1&&parsed.getUTCDate()===day;
+}
+function zonedHistoricalInstant(value){
+ return typeof value==='string'&&canonicalHistoricalDay(value.slice(0,10))&&
+  /^\d{4}-\d{2}-\d{2}T(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d(?:\.\d+)?)?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)$/.test(value)&&Number.isFinite(Date.parse(value));
+}
 let historicalVerificationVersion=0;
 async function verifyHistoricalPair(){
  const verification=++historicalVerificationVersion;
@@ -407,6 +418,9 @@ async function verifyHistoricalPair(){
      historicalAudit.source_panel_schema!==historicalPanel.schema||
      historicalAudit.source_observation_count!==historicalPanel.observations.length||
      !/^[a-f0-9]{64}$/.test(historicalAudit.source_observations_sha256))throw Error('Missing or inconsistent panel binding');
+  const panelDates=historicalPanel.observations.map(row=>row?.date);
+  const panelDateSet=new Set(panelDates);
+  if(!panelDates.length||panelDates.some(day=>!canonicalHistoricalDay(day))||panelDateSet.size!==panelDates.length)throw Error('Invalid or repeated panel dates');
   if(!globalThis.crypto?.subtle)throw Error('SHA-256 verification unavailable in this browser');
   const canonical=canonicalJson(historicalPanel.observations);
   const bytes=new TextEncoder().encode(canonical);
@@ -421,8 +435,9 @@ async function verifyHistoricalPair(){
    if(exclusions.has(item.date))throw Error('Repeated audit date');
    exclusions.set(item.date,item.reason);
   }
+  if(exclusions.size!==panelDates.length||[...exclusions.keys()].some(day=>!panelDateSet.has(day)))throw Error('Audit dates do not match panel exactly');
   for(const row of historicalPanel.observations){
-   if(typeof row.date!=='string'||!exclusions.has(row.date))throw Error('Audit date does not match panel');
+   if(!exclusions.has(row.date))throw Error('Audit date does not match panel');
    // The only independently reproducible exclusion in the current panel
    // is missing publication evidence. Other decisions require a trusted verifier.
    if(row.availability_evidence!==undefined||
@@ -451,12 +466,16 @@ document.getElementById('historical-file').addEventListener('change',async e=>{
 });
 let auditImportVersion=0;
 document.getElementById('audit-file').addEventListener('change',async e=>{
- const file=e.target.files[0];if(!file)return;const version=++auditImportVersion;
+ const version=++auditImportVersion;
+ ++historicalVerificationVersion; // An older pending digest cannot revive a prior result.
+ const file=e.target.files[0];
  const status=document.getElementById('audit-status');
  const reasons=document.getElementById('audit-reasons');
  const dates=document.getElementById('audit-dates');
  reasons.replaceChildren();dates.replaceChildren();historicalAudit=null;
  status.textContent='Audit changed; verification required.';
+ document.getElementById('historical-status').textContent='Audit changed; panel binding must be reverified.';
+ if(!file){status.textContent='No historical audit selected. Prior verification cleared.';return;}
  try{
   const audit=JSON.parse(await file.text());
   if(version!==auditImportVersion)return;
@@ -464,10 +483,10 @@ document.getElementById('audit-file').addEventListener('change',async e=>{
      !Array.isArray(audit.blocked)||!Number.isSafeInteger(audit.blocked_count)||
      !Number.isSafeInteger(audit.usable_count)||audit.usable_count!==0||
      audit.blocked_count!==audit.blocked.length||audit.blocked_count<1||
-     !Number.isFinite(Date.parse(audit.decision_utc)))throw Error('Unsupported or inconsistent audit');
+     !zonedHistoricalInstant(audit.decision_utc))throw Error('Unsupported or inconsistent audit');
   const summary=new Map();
   for(const item of audit.blocked){
-   if(!item||typeof item.date!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(item.date)||
+   if(!item||!canonicalHistoricalDay(item.date)||
       typeof item.reason!=='string'||!item.reason)throw Error('Invalid exclusion entry');
    summary.set(item.reason,(summary.get(item.reason)||0)+1);
   }
