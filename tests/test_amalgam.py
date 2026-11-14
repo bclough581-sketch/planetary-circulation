@@ -125,9 +125,8 @@ class SelfCheck(unittest.TestCase):
 
     def test_catches_bad_chokepoint(self):
         d = copy.deepcopy(self.data)
-        if d["chokepoints"]:
-            d["chokepoints"][0]["ratio"] = 17
-            self.assertTrue(any("ratio" in b for b in check_data.check(d, self.tic, self.now)))
+        d["chokepoints"] = [{"ratio": 17, "latest": 1, "avg7": 1, "base": 1, "id": "synthetic", "asof": "2026-01-01"}]
+        self.assertTrue(any("ratio" in b for b in check_data.check(d, self.tic, self.now)))
 
 
 class Alerts(unittest.TestCase):

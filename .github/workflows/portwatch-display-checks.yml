@@ -1,0 +1,24 @@
+name: PortWatch Display Checks
+on:
+  push:
+    branches: [fix/portwatch-display-off]
+  pull_request:
+    branches: [main]
+    paths: [index.html, sw.js, fetch_data.py, check_data.py, data.json, tests/**, .github/workflows/portwatch-display-checks.yml]
+permissions:
+  contents: read
+jobs:
+  display-browser:
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.56.1-noble
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save --no-package-lock playwright@1.56.1
+      - run: apt-get update -qq && apt-get install -y -qq python3
+      - run: python3 -m unittest discover -s tests -p "test_*.py"
+      - run: node tests/test_portwatch_display_browser.cjs
