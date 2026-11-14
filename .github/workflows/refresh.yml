@@ -32,6 +32,7 @@ jobs:
         id: check
         run: python check_data.py
       - name: Commit if changed
+        id: commit
         if: steps.fetch.outcome == 'success' && steps.check.outcome == 'success'
         run: |
           git config user.name "refresh-bot"
@@ -47,4 +48,5 @@ jobs:
           TESTS: ${{ steps.tests.outcome }}
           FETCH: ${{ steps.fetch.outcome }}
           CHECK: ${{ steps.check.outcome }}
+          COMMIT: ${{ steps.commit.outcome }}
         run: python alert.py
