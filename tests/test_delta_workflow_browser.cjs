@@ -48,7 +48,10 @@ try{
  assert.match(await page.locator('#wfQChip').innerText(),/Fresh/);
  let r=await rows(page);assert.equal(r.length,5);
  for(const x of r)assert.match(x.text,/Stale/);assert.match(await page.locator('#wfCChip').innerText(),/Stale/);
- assert.ok(r.every(x=>/eia\.gov|treasury\.gov|ecb\.europa\.eu/.test(x.text)||true));
+ const sourceLinks=await page.locator('#wfCRows a[href^="https://"]').evaluateAll(links=>links.map(a=>a.href));
+ assert.deepEqual(sourceLinks.map(url=>new URL(url).hostname),
+  ['www.eia.gov','www.eia.gov','home.treasury.gov','www.ecb.europa.eu','www.ecb.europa.eu'],
+  'each market row links its actual expected source host');
  assert.equal(await page.locator('#wfCRows a[href^="https://"]').count(),5,'every row links its source');
  assert.doesNotMatch(await page.locator('#deltaWorkflow').innerText(),/PortWatch|chokepoint/i);
  if(shots)await page.screenshot({path:path.join(shots,'01_stale_desktop.png'),fullPage:false});

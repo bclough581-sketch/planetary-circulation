@@ -116,10 +116,14 @@ journal core/regression/migration, ring engine, scoreboard and check_data.py.
 git diff --check passed; current data blob matches main exactly. The extra two
 Python tests address retained-context independence/quarantine.
 
-The local runtime lacks Playwright, so no local browser rerun is claimed. The
-candidate-only CI workflow runs those suites against the published candidate tree;
-its run ID and conclusions will be reported separately once complete. No approval
-or deployment readiness is implied until those results and Claude's review exist.
+The local runtime lacks Playwright, so no local browser rerun is claimed. CI run
+43538297739 passed on 9614ea265e8af60fd5cbae5e3b283a2260179a7f: both jobs completed
+successfully, with 248 Python tests, 87 context assertions and all 11 browser suites
+passing. Job IDs are 132272563255 (Python) and 132272563720 (browser). Counts were
+verified from Python logs and individual browser step results. A later browser
+assertion repair replaces the pre-existing always-true source-host assertion with
+five exact expected host checks; its new CI result must also be checked.
+No deployment readiness or whole-diff approval is implied by passing CI.
 
 Next: Claude reviews this isolated candidate and integration fixes. Brent decides
 the Pages publication/refresh effects. Only after those decisions should a separate
