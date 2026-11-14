@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Amalgam™</title>
-<meta name="description" content="A free open-data HUD of global money flows and shipping chokepoints. Information only; not investment advice.">
+<meta name="description" content="A free open-data HUD of global money flows. Information only; not investment advice.">
 <meta name="theme-color" content="#03060e">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Amalgam™: a live map of global markets and shipping">
-<meta property="og:description" content="A free open-data HUD of global money flows and shipping chokepoints. Information only; not investment advice.">
+<meta property="og:title" content="Amalgam™: a live map of global markets">
+<meta property="og:description" content="A free open-data HUD of global money flows. Information only; not investment advice.">
 <meta property="og:url" content="https://bclough581-sketch.github.io/planetary-circulation/">
 <meta property="og:image" content="https://bclough581-sketch.github.io/planetary-circulation/og.png">
 <meta property="og:image:width" content="1200">
@@ -205,7 +205,7 @@ a.card{text-decoration:none;color:inherit;display:block}
 <div id="splash" aria-hidden="true"><img src="icon-512.png" alt=""><b>AMALGAM</b></div>
 <script>(function(){var s=document.getElementById("splash");if(!s)return;function go(){s.style.display="none"}s.addEventListener("click",go);s.addEventListener("touchstart",go,{passive:true});setTimeout(go,4600);})();</script>
 <header>
-  <div class="brand"><img class="mark" src="icon-192.png" alt=""><div><h1>AMALGAM<sup>™</sup></h1><span class="sub">global markets and shipping, from public data</span></div></div>
+  <div class="brand"><img class="mark" src="icon-192.png" alt=""><div><h1>AMALGAM<sup>™</sup></h1><span class="sub">global markets, from public data</span></div></div>
   <span class="status" role="status"><i class="dot" id="dot"></i><span id="stxt">loading…</span></span>
 </header>
 <details class="disc" id="disc"><summary><b>Information only.</b> Not investment advice. <span class="more">Tap for more</span></summary>A display of public data. Color shows how far a reading sits from its own 52-week range. Not investment advice, not a recommendation to buy or sell anything, and not personalized to anyone. Data is delayed and can be wrong or stale; every number carries its own as-of date. Verify with primary sources. The full disclaimer is at the bottom of the page.</details>
@@ -213,13 +213,13 @@ a.card{text-decoration:none;color:inherit;display:block}
 <a href="#gates" class="cta" id="cta">START HERE: THE FIVE GATES &darr;</a>
 <div class="stage" id="stage">
   <canvas id="hc" aria-hidden="true"></canvas>
-  <canvas id="c" aria-label="Animated world map: particles flow along lines between financial markets; markets far from normal pulse; diamonds mark shipping chokepoints, larger and brighter when traffic is below normal"></canvas>
+  <canvas id="c" aria-label="Animated world map: particles flow along lines between financial markets; markets far from normal pulse"></canvas>
   <button class="ht tl" id="ht0" type="button"></button><button class="ht tr" id="ht1" type="button"></button>
   <button class="ht bl" id="ht2" type="button"></button><button class="ht br" id="ht3" type="button"></button>
   <div class="hcap">The star ripples more when today's readings sit further from normal.</div>
   <div class="tip" id="tip"></div>
 </div>
-<div id="welcome" hidden><b>Welcome to Amalgam.</b> Three things in one place: a live map of global money and shipping, the five checklist questions people ask before a stock trade (with the math and where each one breaks), and a practice game. It never touches your money and never tells you what to buy. <b>Open a gate, drag the slider, see the rule fire.</b><br><button type="button" id="welok">GOT IT</button></div>
+<div id="welcome" hidden><b>Welcome to Amalgam.</b> Three things in one place: a live map of global markets, the five checklist questions people ask before a stock trade (with the math and where each one breaks), and a practice game. It never touches your money and never tells you what to buy. <b>Open a gate, drag the slider, see the rule fire.</b><br><button type="button" id="welok">GOT IT</button></div>
 <section class="gates" id="gates" aria-label="The five gates"><h2>THE FIVE GATES</h2><div class="lead"><b>A checklist of questions, not a signal.</b> Each gate asks one thing about a stock. Open any of them to see the exact math, why it is a sensible question, and where it breaks. <b>Straight answer:</b> the first three, tested together on 2018-2021 data held back in advance, did <b>not</b> beat matched random stock-days after costs (hit-rate ratio 1.036, range 0.979 to 1.085; money difference -0.028, range -0.056 to +0.001). We publish that because the point is the reasoning and where it fails, not a promise.</div><details class="gt" open><summary><i>G1</i><div><b>RANGE POSITION</b></div><span>how far it has run</span></summary><div class="body"><svg viewBox="0 0 320 70" role="img" aria-hidden="true"><rect x="14" y="30" width="292" height="10" rx="5" fill="#12233a"/><rect x="263" y="30" width="43" height="10" rx="5" fill="#e0605a" opacity=".55"/><circle cx="276" cy="35" r="7" fill="#ecf7ff"/><text x="14" y="58" font-family="Share Tech Mono,monospace" font-size="11" fill="#a8d6ff">6-month low</text><text x="306" y="58" text-anchor="end" font-family="Share Tech Mono,monospace" font-size="11" fill="#a8d6ff">6-month high</text><text x="306" y="22" text-anchor="end" font-family="Share Tech Mono,monospace" font-size="11" fill="#a8d6ff">top 15%: fails</text></svg><h5>WHAT IT ASKS</h5><p>Where today's close sits between the lowest low and the highest high of the last six months.</p><h5>THE MATH</h5><p>Position = (close - 6-month low) / (6-month high - 6-month low). 0% is the bottom, 100% is the top. The rule fails a name in the top 15% of its range, or one that has already run more than two legs.</p><h5>WHY IT IS A SENSIBLE QUESTION</h5><p>Near a six-month high, many buyers are already in. The question is how much of the move is left to be early for.</p><h5>WHERE IT BREAKS</h5><p class="brk">Strong stocks stay near their highs for months. A "top of range" fail can skip the best movers, and a low reading can be a stock that is simply broken.</p><h5>TRY IT</h5><div class="lab" data-lab="g1"><label>Where the close sits in the 6-month range: <b class="lv">50</b>%<input type="range" min="0" max="100" value="50"></label><div class="labout" aria-live="polite"></div></div><h5>HOW IT TESTED</h5><p>Tested as part of the G1+G2+G3 stack on 2018-2021 data held back in advance. The stack failed (see above).</p></div></details><details class="gt"><summary><i>G2</i><div><b>RSI 14</b></div><span>how stretched</span></summary><div class="body"><svg viewBox="0 0 320 70" role="img" aria-hidden="true"><rect x="14" y="30" width="292" height="10" rx="5" fill="#12233a"/><rect x="130.8" y="30" width="73.0" height="10" fill="#3fbf7f" opacity=".7"/><rect x="218.39999999999998" y="30" width="87.6" height="10" rx="5" fill="#e0605a" opacity=".55"/><text x="14" y="58" font-family="Share Tech Mono,monospace" font-size="11" fill="#a8d6ff">0</text><text x="130.8" y="58" text-anchor="middle" font-family="Share Tech Mono,monospace" font-size="11" fill="#a8d6ff">40</text><text x="203.8" y="58" text-anchor="middle" font-family="Share Tech Mono,monospace" font-size="11" fill="#a8d6ff">65</text><text x="218.39999999999998" y="58" font-family="Share Tech Mono,monospace" font-size="11" fill="#a8d6ff">70</text><text x="306" y="58" text-anchor="end" font-family="Share Tech Mono,monospace" font-size="11" fill="#a8d6ff">100</text><text x="165.84" y="22" text-anchor="middle" font-family="Share Tech Mono,monospace" font-size="11" fill="#a8d6ff">meets</text></svg><h5>WHAT IT ASKS</h5><p>How stretched the last two weeks of price moves are.</p><h5>THE MATH</h5><p>Wilder's Relative Strength Index over 14 sessions: 100 - 100 / (1 + average gain / average loss), with Wilder smoothing. The rule meets from 40 to 65 and fails above 70.</p><h5>WHY IT IS A SENSIBLE QUESTION</h5><p>Extreme readings often come before a short-term pause, so a middle reading means the move is not yet stretched.</p><h5>WHERE IT BREAKS</h5><p class="brk">In a real trend, RSI can sit above 70 for weeks while price keeps rising. The rule would keep you out the whole way.</p><h5>TRY IT</h5><div class="lab" data-lab="g2"><label>RSI reading: <b class="lv">55</b><input type="range" min="0" max="100" value="55"></label><div class="labout" aria-live="polite"></div></div><h5>HOW IT TESTED</h5><p>Tested as part of the G1+G2+G3 stack on 2018-2021 data held back in advance. The stack failed (see above).</p></div></details><details class="gt"><summary><i>G3</i><div><b>VOLUME ON AN UP DAY</b></div><span>did real money show up</span></summary><div class="body"><svg viewBox="0 0 320 70" role="img" aria-hidden="true"><rect x="20" y="46" width="14" height="14" fill="#5aa8f0" opacity=".45"/><rect x="46" y="42" width="14" height="18" fill="#5aa8f0" opacity=".45"/><rect x="72" y="48" width="14" height="12" fill="#5aa8f0" opacity=".45"/><rect x="98" y="44" width="14" height="16" fill="#5aa8f0" opacity=".45"/><rect x="124" y="45" width="14" height="15" fill="#5aa8f0" opacity=".45"/><rect x="150" y="47" width="14" height="13" fill="#5aa8f0" opacity=".45"/><rect x="176" y="43" width="14" height="17" fill="#5aa8f0" opacity=".45"/><rect x="202" y="45" width="14" height="15" fill="#5aa8f0" opacity=".45"/><rect x="228" y="46" width="14" height="14" fill="#5aa8f0" opacity=".45"/><rect x="254" y="44" width="14" height="16" fill="#5aa8f0" opacity=".45"/><rect x="280" y="8" width="14" height="52" fill="#3fbf7f"/><text x="287" y="68" text-anchor="middle" font-family="Share Tech Mono,monospace" font-size="11" fill="#a8d6ff">1.5x+</text><line x1="14" y1="45" x2="306" y2="45" stroke="#a8d6ff" stroke-dasharray="4 4" opacity=".6"/></svg><h5>WHAT IT ASKS</h5><p>Did the stock close up on far more volume than usual?</p><h5>THE MATH</h5><p>Meets when the latest session closed up and its volume was at least 1.5 times the average of the prior 20 sessions.</p><h5>WHY IT IS A SENSIBLE QUESTION</h5><p>A move on heavy volume is harder to fake than one on thin volume.</p><h5>WHERE IT BREAKS</h5><p class="brk">A volume spike is often news that is already priced in. Heavy volume says people are interested, not that more is coming.</p><h5>TRY IT</h5><div class="lab" data-lab="g3"><label>Volume vs 20-day average: <b class="lv">1.0</b>x<input type="range" min="0" max="40" value="10"></label><label class="chk"><input type="checkbox" checked> closed up on the day</label><div class="labout" aria-live="polite"></div></div><h5>HOW IT TESTED</h5><p>On its own, G3 showed a small lift in how often trades hit (1.033, range 1.005 to 1.067) but no money edge after costs (-0.015, range -0.034 to +0.003). A lead, not a result.</p></div></details><details class="gt"><summary><i>G4</i><div><b>CATALYST</b></div><span>is there a reason</span></summary><div class="body"><svg viewBox="0 0 320 70" role="img" aria-hidden="true"><rect x="14" y="14" width="64" height="42" rx="5" fill="none" stroke="#5aa8f0"/><text x="46" y="39" text-anchor="middle" font-family="Share Tech Mono,monospace" font-size="11" fill="#a8d6ff">date</text><path d="M86 35h30" stroke="#a8d6ff"/><rect x="124" y="14" width="86" height="42" rx="5" fill="none" stroke="#5aa8f0"/><text x="167" y="39" text-anchor="middle" font-family="Share Tech Mono,monospace" font-size="11" fill="#a8d6ff">filing</text><path d="M218 35h30" stroke="#a8d6ff"/><text x="282" y="39" text-anchor="middle" font-family="Share Tech Mono,monospace" font-size="11" fill="#a8d6ff">your call</text></svg><h5>WHAT IT ASKS</h5><p>Is there a dated, checkable reason for attention: earnings, an approval date, a contract, an index change?</p><h5>THE MATH</h5><p>No formula. You find it in public filings and calendars, and decide yourself how strong the evidence is.</p><h5>WHY IT IS A SENSIBLE QUESTION</h5><p>It is the most logical of the five: a move with a reason behaves differently from one with none.</p><h5>WHERE IT BREAKS</h5><p class="brk">It is judgment, so it cannot be measured or tested the way the others can. Real catalysts are often priced in before you see them.</p><h5>HOW IT TESTED</h5><p>Not part of the tested stack. It cannot be scored by a rule.</p></div></details><details class="gt"><summary><i>G5</i><div><b>OVERLAP</b></div><span>are you doubling a bet</span></summary><div class="body"><svg viewBox="0 0 320 70" role="img" aria-hidden="true"><polyline points="14,50 60,38 100,44 150,24 200,32 250,16 306,22" fill="none" stroke="#ecf7ff" stroke-width="2"/><polyline points="14,54 60,44 100,48 150,30 200,38 250,22 306,28" fill="none" stroke="#ff7a45" stroke-width="2"/><text x="14" y="68" font-family="Share Tech Mono,monospace" font-size="11" fill="#a8d6ff">tracks together: you are doubling one bet</text></svg><h5>WHAT IT ASKS</h5><p>Is this stock moving with something you already hold?</p><h5>THE MATH</h5><p>Pearson correlation of daily moves over the last 60 sessions against each holding. High at 0.70 or above, moderate from 0.50.</p><h5>WHY IT IS A SENSIBLE QUESTION</h5><p>Two names that move together are one bet counted twice. It protects the portfolio.</p><h5>WHERE IT BREAKS</h5><p class="brk">It says nothing about whether the stock itself is any good. Correlations also shift in a crisis, exactly when you need them stable.</p><h5>TRY IT</h5><div class="lab" data-lab="g5"><label>Correlation with a stock you hold: <b class="lv">0.30</b><input type="range" min="0" max="100" value="30"></label><div class="labout" aria-live="polite"></div></div><h5>HOW IT TESTED</h5><p>Not part of the tested stack. A portfolio check, not an entry signal.</p></div></details><p class="note2">Information and education only. Nothing here is a recommendation to buy or sell anything, and a rule being met says nothing about what a stock will do.</p></section>
 <a class="prac" href="game.html"><b>PRACTICE: BEAT THE CHECKLIST</b><span>Five practice charts, ticker hidden, gates pre-measured. Call it, then see what happened and which gate misled you. Practice charts are generated, not real stocks.</span></a>
 <p class="legalrow"><a href="privacy.html">Privacy</a> · Information and education only. Not investment advice.</p>
@@ -245,15 +245,15 @@ a.card{text-decoration:none;color:inherit;display:block}
   <div id="ckscore" class="ck-box"></div>
 </section>
 <h2 class="mapsec" id="sec-map">THE MAP: LAYERS AND READINGS</h2>
-<form class="find" id="find" autocomplete="off"><input id="q" list="mk" placeholder="Find a market: GBP, oil, Hormuz, or any ticker" aria-label="Find a market or ticker" enterkeyhint="search" autocapitalize="off" spellcheck="false"><button type="submit">FIND</button></form>
+<form class="find" id="find" autocomplete="off"><input id="q" list="mk" placeholder="Find a market: GBP, oil, or any ticker" aria-label="Find a market or ticker" enterkeyhint="search" autocapitalize="off" spellcheck="false"><button type="submit">FIND</button></form>
 <datalist id="mk"></datalist>
 <div id="findres" role="status"></div>
-<div class="chips" id="presets" role="group" aria-label="Layers"><button data-pre="all">ALL LAYERS</button><button data-pre="sea">SEA ONLY</button><button data-pre="mkt">MARKETS ONLY</button><button disabled title="Needs an air-traffic data source" id="airpre">AIR ONLY</button><button id="fs" title="Full screen, landscape on phones">⛶ FULL SCREEN</button></div>
+<div class="chips" id="presets" role="group" aria-label="Layers"><button data-pre="all">ALL LAYERS</button><button data-pre="sea" disabled title="PortWatch shipping figures withheld pending reuse review">SEA WITHHELD</button><button data-pre="mkt">MARKETS ONLY</button><button disabled title="Needs an air-traffic data source" id="airpre">AIR ONLY</button><button id="fs" title="Full screen, landscape on phones">⛶ FULL SCREEN</button></div>
 <div class="chips" id="chips" role="group" aria-label="Overlays">
   <button data-ov="mkt" aria-pressed="true">MARKETS</button>
   <button data-ov="press" aria-pressed="true">FAR FROM NORMAL</button>
   <button data-ov="move" aria-pressed="false">TODAY'S MOVE</button>
-  <button data-ov="ship" aria-pressed="true">SHIPPING</button>
+  <button data-ov="ship" aria-pressed="false" disabled title="PortWatch shipping figures withheld pending reuse review">SHIPPING WITHHELD</button>
   <button data-ov="hold" aria-pressed="false">TREASURY HOLDINGS</button>
   <button data-ov="air" aria-pressed="false" disabled title="Needs an air-traffic data source">AIR TRAFFIC</button>
   <button data-ov="labels" aria-pressed="true">LABELS</button>
@@ -270,6 +270,7 @@ a.card{text-decoration:none;color:inherit;display:block}
 </tr></thead><tbody></tbody></table></div>
 
 <h2>SHIPPING CHOKEPOINTS</h2>
+<p id="shippingDisclosure" role="status">PortWatch shipping figures are withheld pending reuse review. Market readings remain available.</p>
 <div class="tablewrap"><table id="ctbl" style="min-width:700px"><thead><tr>
   <th>CHOKEPOINT</th><th>LATEST DAY</th><th>7-DAY AVG</th><th>BASELINE</th><th>% OF NORM</th><th>AS OF</th>
 </tr></thead><tbody></tbody></table></div>
@@ -279,13 +280,13 @@ a.card{text-decoration:none;color:inherit;display:block}
 <p class="note">
 <b>How to read it.</b> Deviation is how far a signal sits from normal: its distance from the middle of its 52-week range, or a large move in one session, whichever is bigger. The heart beats from New York. Particles lean toward the hotter end of each artery; that is a display rule, not measured capital flow. The ring around a hub is a pressure gauge: how far round it sits tells you where the reading is in its own 52-week range.<br>
 <b>Treasury holdings overlay.</b> Lines run from a country's market to New York. Particles move toward New York where that country's reported Treasury holdings rose over the last month, away where they fell; line weight is the six-month change. Holdings change with prices and custody, not only buying and selling. The UK, Belgium, Luxembourg and Ireland are custody centers: their rows show where assets are held, not whose money it is.<br>
-<b>Chokepoints.</b> Daily ship transit counts from satellite tracking, compared with the same chokepoint's own average. Published with a lag of days. Low traffic is a measurement, not a forecast.<br>
+<b>Shipping.</b> PortWatch shipping figures are withheld pending reuse review.<br>
 <b>What this is not.</b> It describes what already happened. It does not predict prices, and nothing here tells anyone what to do with money.
 <b>RSI (the PULSE layer).</b> The 14-day relative strength index (Wilder) of each market's own daily readings. It describes recent speed and direction of movement. It is not a signal and does not say what happens next.<br>
 <b>Correlation (the SYNC layer).</b> Pearson correlation of daily changes over the latest 60 shared days, shown only where it is 0.5 or stronger in either direction. The euro-quoted currencies all share the euro as their base, so some of their sync comes from that shared base. Correlation is not causation and changes over time.
 </p></details>
 <h2>SOURCES AND LICENSES</h2>
-<div class="pills"><a href="https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html" target="_blank" rel="noopener">ECB</a><a href="https://home.treasury.gov/resource-center/data-chart-center/interest-rates" target="_blank" rel="noopener">U.S. Treasury</a><a href="https://www.eia.gov/dnav/pet/pet_pri_spt_s1_d.htm" target="_blank" rel="noopener">EIA</a><a href="https://portwatch.imf.org" target="_blank" rel="noopener">IMF PortWatch</a><a href="https://ticdata.treasury.gov/resource-center/data-chart-center/tic/Documents/mfh.txt" target="_blank" rel="noopener">Treasury TIC</a></div>
+<div class="pills"><a href="https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html" target="_blank" rel="noopener">ECB</a><a href="https://home.treasury.gov/resource-center/data-chart-center/interest-rates" target="_blank" rel="noopener">U.S. Treasury</a><a href="https://www.eia.gov/dnav/pet/pet_pri_spt_s1_d.htm" target="_blank" rel="noopener">EIA</a><a href="https://portwatch.imf.org" target="_blank" rel="noopener">IMF PortWatch (withheld)</a><a href="https://ticdata.treasury.gov/resource-center/data-chart-center/tic/Documents/mfh.txt" target="_blank" rel="noopener">Treasury TIC</a></div>
 <details class="srcs"><summary>TERMS AND ATTRIBUTION</summary><div class="src" id="sources"></div></details>
 <p class="tip-jar" id="tipjar"><a id="tiplink" rel="noopener" target="_blank">Free to use. If it was useful, $1 keeps it running.</a></p>
 <p class="note" id="legal"><b>Disclaimer.</b> Amalgam™ is an information display built from public data sources. It is not investment, financial, legal, or tax advice, and it does not recommend buying or selling any security, currency, or commodity. Data may be delayed, incomplete, or stale, and visualizations are illustrative, not predictive. Past patterns do not indicate future results. You are solely responsible for your own decisions.</p>
@@ -316,7 +317,7 @@ const cv=$('c'),ctx=cv.getContext('2d'),stage=$('stage'),tip=$('tip');
 const LAT_TOP=80,LAT_BOT=-58;
 let W=0,H=0,DPR=1,landDots=[],arts=[],parts=[],farts=[],fparts=[],hover=-1,started=false;
 let LBL_DIM='rgba(190,226,255,.98)',LBL_HI='#ffffff';
-const ov={mkt:true,air:false,press:true,move:false,ship:true,hold:false,labels:true,pulse:false,sync:false};
+const ov={mkt:true,air:false,press:true,move:false,ship:false,hold:false,labels:true,pulse:false,sync:false};
 let pin=-1,pinC=-1,SYNC=[],sarts=[];
 function nodeVal(h){const v=[];if(ov.pulse&&h.rsi!=null)v.push(Math.min(1,Math.abs(h.rsi-50)/30)*0.9);if(ov.press&&h.pos!=null)v.push(Math.abs(2*h.pos-1)*0.9);if(ov.move&&!h.stale&&h.chg!=null)v.push(Math.min(1,Math.abs(h.chg)/h.typ));return v.length?Math.max(...v):null;}
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -364,12 +365,11 @@ function merge(){
     h.tic=null;h.d1=null;h.d6=null;
     if(TIC&&TIC.holders&&TIC.holders[h.id]&&ageDays(TIC.asof)<=TIC.max_age_days){const t=TIC.holders[h.id];h.tic=t;h.d1=t[0]-t[1];h.d6=t[0]-t[2];h.ticnote=(TIC.labels||{})[h.id]||'';}
   });
-  CH=((DATA&&DATA.chokepoints)||[]).map((c,ci)=>{
-    const stale=ageDays(c.asof)>21; const stress=(c.ratio==null||stale)?0:Math.max(0,Math.min(1,1-c.ratio));
-    return {...c,stale,stress,ci};
-  });
+  // PortWatch display is withheld regardless of fields retained in data.json.
+  // Keep the market snapshot untouched; never ingest shipping figures into CH.
+  CH=[];
   analytics();
-  const sin=byId.SIN, mal=CH.find(c=>c.id==='MAL'); if(mal){sin.chokeNote=mal;}
+  delete byId.SIN.chokeNote;
 }
 
 function mkArc(A,B){const pa=proj(A.lon,A.lat),pb=proj(B.lon,B.lat),mx=(pa[0]+pb[0])/2,my=(pa[1]+pb[1])/2,dx=pb[0]-pa[0],dy=pb[1]-pa[1],len=Math.hypot(dx,dy)||1;
@@ -484,7 +484,7 @@ function buildTable(){
     const asof=h.relay?'n/a':(h.missing?'no data':fmtDate(h.asof)+(h.stale?'<span class="tag">STALE</span>':''));
     tr.innerHTML=`<td>${h.name}</td><td${dim}>${h.sig}</td><td${dim}>${h.relay||h.missing?'':fmtVal(h)}</td><td>${mv}</td><td>${rng}</td><td>${ht}</td><td title="${h.ticnote||''}">${tc(h.d1)}</td><td>${tc(h.d6)}</td><td>${spark(h)}</td><td${dim}>${asof}</td>`;tb.appendChild(tr);});
   const cb=document.querySelector('#ctbl tbody');cb.innerHTML='';
-  if(!CH.length){cb.innerHTML='<tr><td colspan="6" class="stale">No chokepoint data yet. It appears after the first daily data run.</td></tr>';}
+  if(!CH.length){cb.innerHTML='<tr><td colspan="6" class="stale">PortWatch shipping figures withheld pending reuse review.</td></tr>';}
   CH.forEach(c=>{const tr=document.createElement('tr');const pc=c.ratio==null?'n/a':Math.round(c.ratio*100)+'%';
     tr.innerHTML=`<td>◆ ${c.name}</td><td>${c.latest}</td><td>${c.avg7}</td><td>${c.base} <span class="stale">(${c.baseline_note||''})</span></td><td>${c.stale?'<span class="stale">n/a</span>':`<span class="bar"><span style="width:${Math.min(100,(c.ratio||0)*100).toFixed(0)}%;background:${(c.ratio||0)>=0.9?'#56809f':(c.ratio||0)>=0.75?'#ffaa46':'#ff3c3c'}"></span></span> ${pc}`}</td><td>${fmtDate(c.asof)}${c.stale?'<span class="tag">STALE</span>':''}</td>`;cb.appendChild(tr);});
 }
@@ -496,7 +496,7 @@ function buildLegend(){$('legend').innerHTML='<span><i style="background:#56809f
  +(ov.pulse?'<span>inner ring + beat = 14-day RSI; faster beat = further from 50</span>':'')
  +(ov.sync?'<span><i style="background:#9fd2ff"></i>moved together</span><span><i style="background:#ff9a6a"></i>moved opposite</span><span>60-day correlation, 0.5 or stronger</span>':'')
  +'<span><i style="background:#6e323c"></i>grey = stale or missing</span><span>color = distance from the 52-week range</span>';}
-document.querySelectorAll('#chips button[data-ov]').forEach(b=>b.onclick=()=>{const k=b.dataset.ov;ov[k]=!ov[k];b.setAttribute('aria-pressed',ov[k]);buildLegend();syncNote();if(reduce)requestAnimationFrame(frame);});
+document.querySelectorAll('#chips button[data-ov]').forEach(b=>b.onclick=()=>{const k=b.dataset.ov;if(k==='ship')return;ov[k]=!ov[k];b.setAttribute('aria-pressed',ov[k]);buildLegend();syncNote();if(reduce)requestAnimationFrame(frame);});
 function setHold(){ov.hold=true;const b=document.querySelector('#chips button[data-ov="hold"]');if(b)b.setAttribute('aria-pressed','true');buildLegend();}
 
 function hit(ev){const r=cv.getBoundingClientRect(),x=(ev.clientX-r.left)*(W/r.width),y=(ev.clientY-r.top)*(H/r.height);let best=-1,bd=22,kind=null;
@@ -518,7 +518,7 @@ cv.addEventListener('pointermove',onPoint);cv.addEventListener('pointerdown',onP
 cv.addEventListener('pointerleave',()=>{hover=-1;tip.style.display='none';});
 
 function buildStatus(){
-  const st=(DATA&&DATA.status)||{},names={ecb:'ECB',ust:'Treasury yield',eia:'EIA oil',portwatch:'IMF PortWatch'};
+  const st=(DATA&&DATA.status)||{},names={ecb:'ECB',ust:'Treasury yield',eia:'EIA oil'};
   const bad=Object.keys(names).filter(k=>st[k]&&st[k].ok===false), gen=DATA&&DATA.generated_utc, age=gen?(Date.now()-Date.parse(gen))/36e5:Infinity;
   let msg='',cls='ok';
   if(!DATA){cls='';msg='no data loaded';}
@@ -535,7 +535,7 @@ function buildSources(){
    'Euro reference rates: Source: ECB statistics. Rates are EUR per one unit of the currency shown, published once each working day; ratios and ranges on this page are our own calculations from them.',
    'US 10-year yield: U.S. Department of the Treasury, daily par yield curve.',
    'Oil: Source: U.S. Energy Information Administration, spot prices, published in weekly batches so the latest print is usually several days old.',
-   'Chokepoints: Source: International Monetary Fund, PortWatch, daily chokepoint transit calls, <a href="https://portwatch.imf.org" target="_blank" rel="noopener">portwatch.imf.org</a>. Transit calls come from satellite ship tracking; the norm and percentages are our calculation. Not endorsed by the IMF.',
+   'Shipping: PortWatch figures are withheld pending reuse review.',
    'Treasury holdings: U.S. Department of the Treasury, Treasury International Capital (TIC), Major Foreign Holders'+(TIC?', '+TIC.label:'')+'.',
    'Not affiliated with or endorsed by any source named here. Map outlines are a simplified drawing.'
   ].map(s=>'<div>• '+s+'</div>').join('');
@@ -559,14 +559,14 @@ $('find').addEventListener('submit',ev=>{ev.preventDefault();const raw=$('q').va
   if(e){const o=e.k==='h'?HUBS[e.i]:CH[e.i];res.style.display='block';res.innerHTML='Showing <b style="color:var(--ink);font-weight:400">'+(e.k==='h'?o.name+': '+o.sig:'◆ '+o.name)+'</b> on the map.';pinTo(e);stage.scrollIntoView({behavior:'smooth',block:'nearest'});return;}
   pin=-1;pinC=-1;tip.style.display='none';
   const sym=raw.replace(/[^A-Za-z0-9.\-=^]/g,'').slice(0,12),res2=$('findres');res2.style.display='block';
-  if(!sym){res2.textContent='Try a currency (GBP, yen), oil, a chokepoint (Suez, Hormuz) or a ticker.';return;}
+  if(!sym){res2.textContent='Try a currency (GBP, yen), oil or a ticker.';return;}
   const E=encodeURIComponent(sym.toUpperCase());
-  res2.innerHTML='<b style="color:var(--ink);font-weight:400">'+sym.toUpperCase()+'</b> is not on this map. Amalgam shows currencies, oil, the 10-year yield and shipping chokepoints from public sources; it does not carry individual stock quotes. To look it up elsewhere:<br><a href="https://finance.yahoo.com/quote/'+E+'" target="_blank" rel="noopener noreferrer">Yahoo Finance</a><a href="https://www.tradingview.com/symbols/'+E+'/" target="_blank" rel="noopener noreferrer">TradingView</a><a href="https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK='+E+'" target="_blank" rel="noopener noreferrer">SEC filings</a><small>Third-party sites, not affiliated with Amalgam. Links are for reference only, not a recommendation.</small>';});
+  res2.innerHTML='<b style="color:var(--ink);font-weight:400">'+sym.toUpperCase()+'</b> is not on this map. Amalgam shows currencies, oil, the 10-year yield from public sources; it does not carry individual stock quotes. To look it up elsewhere:<br><a href="https://finance.yahoo.com/quote/'+E+'" target="_blank" rel="noopener noreferrer">Yahoo Finance</a><a href="https://www.tradingview.com/symbols/'+E+'/" target="_blank" rel="noopener noreferrer">TradingView</a><a href="https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK='+E+'" target="_blank" rel="noopener noreferrer">SEC filings</a><small>Third-party sites, not affiliated with Amalgam. Links are for reference only, not a recommendation.</small>';});
 $('q').addEventListener('input',()=>{if(!$('q').value){$('findres').style.display='none';pin=-1;pinC=-1;tip.style.display='none';}});
-const PRE={all:{mkt:1,press:1,move:0,ship:1,hold:0,labels:1,pulse:0,sync:0},sea:{mkt:0,press:0,move:0,ship:1,hold:0,labels:1,pulse:0,sync:0},mkt:{mkt:1,press:1,move:0,ship:0,hold:0,labels:1,pulse:0,sync:0}};
+const PRE={all:{mkt:1,press:1,move:0,ship:0,hold:0,labels:1,pulse:0,sync:0},sea:{mkt:0,press:0,move:0,ship:0,hold:0,labels:1,pulse:0,sync:0},mkt:{mkt:1,press:1,move:0,ship:0,hold:0,labels:1,pulse:0,sync:0}};
 function syncChips(){document.querySelectorAll('#chips button[data-ov]').forEach(b=>b.setAttribute('aria-pressed',!!ov[b.dataset.ov]));
   document.querySelectorAll('#presets button[data-pre]').forEach(b=>{const p=PRE[b.dataset.pre];b.setAttribute('aria-pressed',!!p&&Object.keys(p).every(k=>!!ov[k]===!!p[k]));});}
-document.querySelectorAll('#presets button[data-pre]').forEach(b=>b.onclick=()=>{const p=PRE[b.dataset.pre];Object.keys(p).forEach(k=>ov[k]=!!p[k]);pin=-1;pinC=-1;hover=-1;tip.style.display='none';syncChips();buildLegend();syncNote();if(reduce)requestAnimationFrame(frame);});
+document.querySelectorAll('#presets button[data-pre]').forEach(b=>b.onclick=()=>{const p=PRE[b.dataset.pre];Object.keys(p).forEach(k=>ov[k]=!!p[k]);ov.ship=false;pin=-1;pinC=-1;hover=-1;tip.style.display='none';syncChips();buildLegend();syncNote();if(reduce)requestAnimationFrame(frame);});
 document.querySelectorAll('#chips button[data-ov]').forEach(b=>b.addEventListener('click',syncChips));
 $('fs').onclick=async()=>{try{if(document.fullscreenElement){await document.exitFullscreen();return;}
   await stage.requestFullscreen();try{await screen.orientation.lock('landscape');}catch(e){}}catch(e){$('fs').title='Full screen is not available here; rotate your phone sideways instead';}};
@@ -648,7 +648,7 @@ function heroTiles(){
     const b3=$('ht3');let c=cs.slice().sort((a,b)=>b.stress-a.stress)[0];
     if(c){b3.className='ht br';b3.innerHTML='<span>◆ '+c.name.toUpperCase()+'</span><b>'+Math.round(c.ratio*100)+'% of norm</b><i>transits, '+fmtDate(c.asof)+'</i>';
       b3.onclick=()=>{try{pinTo({k:'c',i:c.ci});}catch(e){}$('stage').scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'});};}
-    else{b3.className='ht br n';b3.innerHTML='<span>◆ SHIPPING</span><b>n/a</b><i>no fresh data</i>';}
+    else{b3.className='ht br n';b3.disabled=true;b3.onclick=null;b3.innerHTML='<span>SHIPPING</span><b>withheld</b><i>pending reuse review</i>';}
   }catch(e){}
 }
 let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{if(!LAND.length)return;layout();if(reduce)requestAnimationFrame(frame);},150);});
