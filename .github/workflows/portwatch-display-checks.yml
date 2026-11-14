@@ -24,6 +24,7 @@ jobs:
           PORTWATCH_TEST_PAGE: map.html
 
       - run: apt-get update -qq && apt-get install -y -qq python3
+      - run: python3 -m unittest discover -s tests -p "test_portwatch_pause.py"
       - run: PYTHONPATH=. python3 tests/generate_evidence_fixture.py > tests/generated-evidence-fixture.json
       - run: PYTHONPATH=. python3 scripts/export_ring_snapshot.py data.json tests/generated-ring-snapshot.json
       - run: node tests/test_delta_workflow_browser.cjs

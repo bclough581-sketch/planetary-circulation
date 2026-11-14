@@ -5,7 +5,7 @@ Pulls ONLY sources whose terms allow public display with attribution:
   - ECB euro foreign exchange reference rates   (Source: ECB statistics.)
   - U.S. Treasury daily par yield curve         (public domain)
   - U.S. EIA spot prices, needs EIA_API_KEY     (public domain, cite EIA + date)
-  - IMF PortWatch chokepoint transit calls      (cite IMF; commercial reuse needs permission)
+  - IMF PortWatch is paused pending written reuse permission; no requests or retained figures.
 Writes data.json. Each source is independent: a failure marks that source
 not-ok and keeps its previous values (never silently shows a stale number as
 fresh: every series carries its own as-of date and the page enforces age limits).
@@ -147,6 +147,7 @@ _pw_good = [None]
 
 
 def _pw(q):
+    raise RuntimeError("PortWatch collection paused pending written reuse permission")
     q = dict(q)
     errs = []
     order = [_pw_good[0]] if _pw_good[0] is not None else range(len(PW_VARIANTS))
@@ -168,6 +169,7 @@ def _pw(q):
 
 
 def fetch_portwatch():
+    raise RuntimeError("PortWatch collection paused pending written reuse permission")
     # Step 1: list distinct chokepoints (no LIKE / percent signs, which this server's URL filter may reject)
     probe = date.today() - timedelta(days=21)
     names = _pw({"where": "year = %d AND month = %d AND day = %d" % (probe.year, probe.month, probe.day),
@@ -320,9 +322,10 @@ def fetch_tic():
 def main():
     prev = load_prev()
     data = {"generated_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "hubs": dict(prev.get("hubs", {})), "chokepoints": prev.get("chokepoints", []),
+            "hubs": dict(prev.get("hubs", {})), "chokepoints": [],
             "status": {}}
-    jobs = [("ecb", fetch_ecb), ("ust", fetch_ust), ("eia", fetch_eia), ("portwatch", fetch_portwatch), ("tic", fetch_tic)]
+    jobs = [("ecb", fetch_ecb), ("ust", fetch_ust), ("eia", fetch_eia), ("tic", fetch_tic)]
+    data["status"]["portwatch"] = {"ok": False, "paused": True, "reason": "reuse_permission_pending"}
     ok = 0
     for name, fn in jobs:
         try:

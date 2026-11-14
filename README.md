@@ -1,9 +1,9 @@
 # Amalgam (formerly Tributary, Planetary Circulation)
 
-A free, installable, open-data HUD of global money flows and shipping chokepoints. Information only; not investment advice.
+A free, installable, open-data HUD of global market readings. Information only; not investment advice.
 
 - `index.html`: entry; opens the Evidence Explorer (`ring-engine-lab.html`). `map.html` is the live money map, with `land.json` + `tic.json` + `data.json`: the static site. No backend, no accounts, no tracking.
-- `fetch_data.py`: daily job (stdlib Python) writing `data.json` from ECB, U.S. Treasury, EIA and IMF PortWatch.
+- `fetch_data.py`: daily job (stdlib Python) writing `data.json` from ECB, U.S. Treasury and EIA. PortWatch collection and redistribution are paused pending written reuse permission.
 - `.github/workflows/refresh.yml`: runs the job daily on GitHub and commits `data.json`.
 - `LICENSES.md`: source-by-source license audit and the gates the app enforces.
 

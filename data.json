@@ -4829,11 +4829,11 @@
     ],
     [
      "2026-10-26",
-     5.0
+     5
     ],
     [
      "2026-10-23",
-     5.0
+     5
     ],
     [
      "2026-10-22",
@@ -4941,7 +4941,7 @@
     ],
     [
      "2026-09-15",
-     5.0
+     5
     ],
     [
      "2026-09-14",
@@ -5304,7 +5304,7 @@
   },
   "HOU": {
    "price": 89.62,
-   "chg": 0.0,
+   "chg": 0,
    "lo": 55.44,
    "hi": 114.58,
    "hist": [
@@ -5754,7 +5754,7 @@
     ],
     [
      "2026-06-08",
-     95.0
+     95
     ],
     [
      "2026-06-05",
@@ -5940,7 +5940,7 @@
     ],
     [
      "2026-10-07",
-     126.0
+     126
     ],
     [
      "2026-10-06",
@@ -6072,7 +6072,7 @@
     ],
     [
      "2026-08-20",
-     94.0
+     94
     ],
     [
      "2026-08-19",
@@ -6363,80 +6363,7 @@
    "src": "eia"
   }
  },
- "chokepoints": [
-  {
-   "id": "HRM",
-   "name": "Strait of Hormuz",
-   "lat": 26.5,
-   "lon": 56.3,
-   "latest": 3,
-   "avg7": 3.9,
-   "base": 85.5,
-   "ratio": 0.045,
-   "asof": "2026-11-08",
-   "baseline_note": "mean of 2025"
-  },
-  {
-   "id": "BAB",
-   "name": "Bab el-Mandeb",
-   "lat": 12.6,
-   "lon": 43.3,
-   "latest": 24,
-   "avg7": 26.3,
-   "base": 33.5,
-   "ratio": 0.785,
-   "asof": "2026-11-08",
-   "baseline_note": "mean of 2025"
-  },
-  {
-   "id": "SUZ",
-   "name": "Suez Canal",
-   "lat": 30.0,
-   "lon": 32.5,
-   "latest": 43,
-   "avg7": 44.4,
-   "base": 38.5,
-   "ratio": 1.153,
-   "asof": "2026-11-08",
-   "baseline_note": "mean of 2025"
-  },
-  {
-   "id": "MAL",
-   "name": "Strait of Malacca",
-   "lat": 2.5,
-   "lon": 101.5,
-   "latest": 231,
-   "avg7": 235.9,
-   "base": 234.5,
-   "ratio": 1.006,
-   "asof": "2026-11-08",
-   "baseline_note": "mean of 2025"
-  },
-  {
-   "id": "PAN",
-   "name": "Panama Canal",
-   "lat": 9.1,
-   "lon": -79.7,
-   "latest": 22,
-   "avg7": 27.3,
-   "base": 31.1,
-   "ratio": 0.877,
-   "asof": "2026-11-08",
-   "baseline_note": "mean of 2025"
-  },
-  {
-   "id": "CAP",
-   "name": "Cape of Good Hope",
-   "lat": -34.4,
-   "lon": 18.5,
-   "latest": 77,
-   "avg7": 77.9,
-   "base": 89.5,
-   "ratio": 0.87,
-   "asof": "2026-11-08",
-   "baseline_note": "mean of 2025"
-  }
- ],
+ "chokepoints": [],
  "status": {
   "ecb": {
    "ok": true,
@@ -6454,9 +6381,9 @@
    "last_ok_utc": "2026-11-13T02:32:56Z"
   },
   "portwatch": {
-   "ok": true,
-   "ran_utc": "2026-11-13T02:32:56Z",
-   "last_ok_utc": "2026-11-13T02:32:56Z"
+   "ok": false,
+   "paused": true,
+   "reason": "reuse_permission_pending"
   },
   "tic": {
    "ok": true,
