@@ -7,7 +7,11 @@ let c=100,cs=[];for(let i=0;i<200;i++){c*=1+(rnd()-0.5)*0.04;cs.push(c)}
 const vs=cs.map(()=>1000+rnd()*200);
 const bars=mk(cs,vs);
 // reference RSI (Wilder) from python written below
-const ref=JSON.parse(require('fs').readFileSync('/tmp/ref.json'));
+const path=require('path'),{spawnSync}=require('child_process');
+function reference(){// reproducible from a clean checkout: no /tmp or other pre-made file
+ for(const py of ['python3','python']){const r=spawnSync(py,[path.join(__dirname,'make_gates_ref.py')],{encoding:'utf8'});if(r.status===0)return JSON.parse(r.stdout)}
+ throw Error('Python is required to compute the independent reference (tests/make_gates_ref.py)')}
+const ref=reference();
 ok(Math.abs(G.rsi(bars).value-ref.rsi)<1e-6,'RSI matches independent calc '+G.rsi(bars).value.toFixed(4)+' vs '+ref.rsi.toFixed(4));
 ok(Math.abs(G.rangePos(bars).pos-ref.pos)<1e-9,'range pos matches '+G.rangePos(bars).pos.toFixed(4));
 ok(Math.abs(G.pearson(G.returns(bars,60),G.returns(bars,60)).r-1)<1e-9,'self correlation = 1');

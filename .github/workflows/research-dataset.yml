@@ -1,0 +1,159 @@
+name: intelligence-research-dataset
+on:
+  push:
+    branches: [amalgam-event-foundation]
+    paths:
+      - '.github/workflows/research-dataset.yml'
+      - 'intelligence/**'
+      - 'fetch_data.py'
+      - 'tests/test_freshness.py'
+      - 'tests/test_research_view.py'
+      - 'tests/test_energy_overlay.py'
+      - 'tests/test_eia_research_snapshot.py'
+      - 'tests/test_relationship_readiness.py'
+  workflow_dispatch: {}
+permissions:
+  contents: read
+jobs:
+  research-dataset:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate research energy overlay isolation
+        run: python -m unittest tests.test_energy_overlay tests.test_eia_research_snapshot tests.test_freshness tests.test_research_view tests.test_relationship_readiness
+      - name: Fetch live NOAA alerts and assemble research view
+        env:
+          EIA_API_KEY: ${{ secrets.EIA_API_KEY }}
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from datetime import datetime, timezone
+          from intelligence.research_view import build, validate_view
+          from intelligence.relationship_readiness import audit_readiness
+          from intelligence.energy_overlay import refresh_energy
+          snapshot = json.loads(Path("data.json").read_text(encoding="utf-8"))
+          snapshot = refresh_energy(snapshot)  # research-only copy; fail closed on stale EIA
+          # Fetch NOAA once to keep all counts based on the same response.
+          import urllib.request
+          req = urllib.request.Request("https://api.weather.gov/alerts/active",
+              headers={"User-Agent": "Amalgam research prototype (github.com/bclough581-sketch/planetary-circulation)",
+                       "Accept": "application/geo+json"})
+          with urllib.request.urlopen(req, timeout=20) as response:
+              alerts = json.load(response)
+          result = build(snapshot, alerts, datetime.now(timezone.utc))
+          validate_view(result)
+          result["snapshot_status"] = snapshot.get("status", {})
+          result["noaa_raw_feature_count"] = len(alerts.get("features", []))
+          validate_view(result)
+          Path("research-view.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
+          print("Eligible observations:", len(result["observations"]))
+          print("Excluded observations:", len(result["excluded"]))
+          print("Expired NOAA alerts:", sum(x["reason"] == "alert expired" for x in result["excluded"]))
+          print("Provenance exclusions:", [(x["reason"], sum(y["reason"] == x["reason"] for y in result["excluded"])) for x in result["excluded"] if x["reason"] in {"missing hub provenance", "source provenance mismatch", "source value mismatch"}][:12])
+          assert not any(x["source"]["name"] == "NOAA National Weather Service" and not x["metadata"].get("expires") for x in result["observations"])
+          print("By domain:", result["domains"])
+          print("Relationships:", len(result["relationships"]))
+          print("Historical relationship readiness:", result["relationship_readiness"]["status"])
+          print("Distinct observation dates by domain:", result["relationship_readiness"]["distinct_observation_dates"])
+          assert result["domains"]["energy"] == 2, "Expected two fresh EIA observations"
+          print("Feed health:", [(x["feed"], x["condition"]) for x in result["feed_health"]])
+          print("PortWatch reuse:", result["licensing"]["portwatch_commercial_reuse"])
+          assert result["relationships"] == []
+          assert all(x["source"]["url"] and x["observed_at"] for x in result["observations"])
+          PY
+      - name: Record research artifact provenance and digest
+        env:
+          AMALGAM_COMMIT: ${{ github.sha }}
+          AMALGAM_RUN_ID: ${{ github.run_id }}
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          from intelligence.verify_research_artifact import create_research_manifest
+
+          payload = Path("research-view.json").read_bytes()
+          manifest = create_research_manifest(
+              payload, os.environ["AMALGAM_COMMIT"], os.environ["AMALGAM_RUN_ID"])
+          Path("research-view-manifest.json").write_bytes(manifest)
+          print("Research manifest generated and validated")
+          PY
+      - name: Verify research artifact manifest before upload
+        env:
+          AMALGAM_COMMIT: ${{ github.sha }}
+          AMALGAM_RUN_ID: ${{ github.run_id }}
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          from intelligence.verify_research_artifact import verify_research_payload
+
+          manifest = verify_research_payload(
+              Path("research-view.json").read_bytes(),
+              Path("research-view-manifest.json").read_bytes(),
+              expected_commit=os.environ["AMALGAM_COMMIT"],
+              expected_run=os.environ["AMALGAM_RUN_ID"],
+          )
+          print("Research artifact pre-upload integrity verified:", manifest["sha256"])
+          PY
+      - name: Generate readable research artifact audit
+        run: |
+          python -m intelligence.research_artifact_audit research-view.json > research-view-audit.txt
+          cat research-view-audit.txt
+      - name: Upload research dataset (not deployed)
+        uses: actions/upload-artifact@v4
+        with:
+          name: amalgam-research-view-${{ github.run_id }}
+          path: |
+            research-view.json
+            research-view-manifest.json
+            research-view-audit.txt
+          retention-days: 30
+
+  verify-uploaded-artifact:
+    needs: research-dataset
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Download the actual uploaded research artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: amalgam-research-view-${{ github.run_id }}
+          path: verified-artifact
+      - name: Verify downloaded artifact against expected run and commit
+        env:
+          AMALGAM_COMMIT: ${{ github.sha }}
+          AMALGAM_RUN_ID: ${{ github.run_id }}
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          from intelligence.verify_research_artifact import verify_research_payload
+
+          folder = Path("verified-artifact")
+          actual = {p.name for p in folder.iterdir() if p.is_file()}
+          assert actual == {"research-view.json", "research-view-manifest.json", "research-view-audit.txt"}, "unexpected downloaded artifact files"
+          manifest = verify_research_payload(
+              (folder / "research-view.json").read_bytes(),
+              (folder / "research-view-manifest.json").read_bytes(),
+              expected_commit=os.environ["AMALGAM_COMMIT"],
+              expected_run=os.environ["AMALGAM_RUN_ID"],
+          )
+          from intelligence.research_artifact_audit import summarize, render_text
+          import json
+          expected_audit = render_text(summarize(json.loads((folder / "research-view.json").read_bytes())))
+          assert (folder / "research-view-audit.txt").read_text(encoding="utf-8") == expected_audit, "downloaded audit summary mismatch"
+          print("Downloaded artifact and audit verified:", manifest["sha256"])
+          PY

@@ -1,0 +1,225 @@
+{
+  "asof": "2026-11-06",
+  "headline": "No edge validated under our rules yet. Below: selected documented results and two forward paper tracks.",
+  "counters": [
+    [
+      "Premises counted in our ledger",
+      "24"
+    ],
+    [
+      "Sealed hold-out openings spent",
+      "4"
+    ],
+    [
+      "Of those, passed",
+      "0"
+    ],
+    [
+      "Real money at risk in these tests",
+      "$0"
+    ]
+  ],
+  "counterNote": "Counts follow the reconciled research ledger and were checked against it on 2026-11-06. $0 refers to these research tests and paper tracks only. Historical studies differ in how much was written down in advance and what had already been seen; each record carries its own disclosures. Several hold-out tests were underpowered, so a fail there is weak evidence, not proof that nothing exists.",
+  "tracks": [
+    {
+      "name": "BTC40 trend filter (paper only)",
+      "rule": "Weekly close above the 40-week average: hold Bitcoin. Otherwise cash. Cost 0.25% per switch.",
+      "source": "Locked rule: lock_btc40_paper_track (2026-10-31).",
+      "disclosure": "Chosen after seeing backtests of close neighbours (BTC1 and BTC2 both failed the drawdown bar), so this is a forward test of the closest variant, not a clean result. Paper fills at weekly closes do not show what limit orders would achieve.",
+      "verdictDate": "2027-10-31",
+      "verdictRule": "Pass only if buy-and-hold's forward drawdown is at least 20% AND this rule's drawdown is at most 60% of it with at least 70% of its return and at least 2 switches. Otherwise inconclusive.",
+      "cols": [
+        "Week",
+        "Close",
+        "40-wk avg",
+        "Rule state (paper log)"
+      ],
+      "rows": [
+        [
+          "2026-10-26 (seed)",
+          "77,726",
+          "72,321",
+          "Long"
+        ]
+      ]
+    },
+    {
+      "name": "CRY2 Bitcoin / Ether rotation (paper only)",
+      "rule": "Hold whichever of Bitcoin or Ether has the better 8-week return, if either is positive. Otherwise cash. Cost 0.25% per leg.",
+      "source": "Locked rule: lock_cry2_paper_track (2026-10-31). Backtest: cry2_result (2026-10-31).",
+      "disclosure": "Backtest verdict: provisional pass on its five locked tests. Robustness check: at double the costs the edge falls to about +0.6 points a year, below its own +3 bar. Paper fills at Monday opens do not show what limit orders would achieve.",
+      "verdictDate": "2027-10-31",
+      "verdictRule": "Judged on a version filled at the next Monday open: pass if its return is at least the Bitcoin fund's and its worst drawdown is no worse, with at least 10 position changes. Otherwise inconclusive.",
+      "cols": [
+        "Week",
+        "BTC 8-wk",
+        "ETH 8-wk",
+        "Rule state (paper log)"
+      ],
+      "rows": [
+        [
+          "2026-10-26",
+          "-2.47%",
+          "-9.51%",
+          "Cash"
+        ]
+      ]
+    }
+  ],
+  "trackNote": "The rule state is a dated log of what each rule said, kept to test the rule. It is not a signal and not a suggestion to trade. The BTC40 row shows the locked seed, recorded while that week was still open; a different data feed shows a closed-bar close of 78,354 and average of 72,337 for the same week, with the same state. The two sources are not yet reconciled and the original row is not being changed. Rows are added by hand each Monday.",
+  "graveyard": [
+    {
+      "id": "GATESTACK",
+      "name": "Gate stack G1+G2+G3 (gates 1 to 3 only)",
+      "verdict": "FAIL",
+      "kind": "Sealed hold-out, 2018-2021, run once",
+      "numbers": "Hit-rate ratio 1.036 (95% range 0.979 to 1.085). Average-R difference -0.028 (95% range -0.056 to +0.001), where R is profit as a multiple of the amount risked.",
+      "read": "Did not clear its pass conditions against matched random stock-days after costs. This is why the app teaches the reasoning and makes no promise.",
+      "source": "report_holdout_gate_stack_v1; ledger row 20.",
+      "check": "Cross-checked against the local report on 2026-11-06."
+    },
+    {
+      "id": "RSI1",
+      "name": "Buy the RSI dip",
+      "verdict": "FAIL",
+      "kind": "Pre-registered, development data",
+      "numbers": "Raw trades averaged +1.58%, but lift over matched random volatile days was about zero (99% range -1.07% to +1.06%).",
+      "read": "The test did not show the signal added anything beyond what matched controls earned.",
+      "source": "rsi1_dev_result (2026-10-28).",
+      "check": "Cross-checked against the local output file on 2026-11-06."
+    },
+    {
+      "id": "ANALYST_SPEED",
+      "name": "Trade analyst rating changes faster than the market",
+      "verdict": "DEAD",
+      "kind": "Pre-registered, development data",
+      "numbers": "Lift after the assumed 0.5% cost was -0.41% (99% range -0.72% to -0.11%) on 108 events. Before cost the lift was about +0.09%.",
+      "read": "The gross lift was too small to cover the assumed cost.",
+      "source": "analyst_speed_v1_result (2026-10-28).",
+      "check": "Cross-checked against the local summary on 2026-11-06."
+    },
+    {
+      "id": "ROTCHESS1",
+      "name": "Sector rotation: trade the second move",
+      "verdict": "DEAD",
+      "kind": "Pre-registered, development data",
+      "numbers": "Lift after cost -0.26% (99% range -0.63% to +0.10%) on 154 events.",
+      "read": "In this sample the range rules out lifts above about +0.10% per trade. The bar was +1.0%.",
+      "source": "rotchess1_dev_result (2026-10-30).",
+      "check": "Figures re-read against the project result record on 2026-11-06 by its original author (Claude); not an independent check.",
+      "hashes": "Prereg sha256 33177b2e…c6bc28; code sha256 6fda2878…0b1cf8b; data sha256 8c1b096b…637ef8 (all stated in the result record). Run once; hold-out never read.",
+      "gap": "Supporting output file for this run is not on the reviewer's machine, so the figures above are not independently re-checkable from files. The hashes below are as stated in the result record, not re-verified.",
+      "extract": "docs/scoreboard_source_extracts_2026-11-06.md"
+    },
+    {
+      "id": "EXIT1",
+      "name": "State-based exit table (when to hold or sell)",
+      "verdict": "FAIL",
+      "kind": "Pre-registered, development data",
+      "numbers": "Lift -0.44% (99% range -1.12% to +0.28%). Shuffled labels scored -0.41%.",
+      "read": "No useful lift was shown under this test. Plain holding beat the cleverer exits here.",
+      "source": "exit1_dev_result (2026-10-19).",
+      "check": "Cross-checked against the local report on 2026-11-06."
+    },
+    {
+      "id": "REV1",
+      "name": "Buy after a sharp one-day drop on heavy volume",
+      "verdict": "FAIL",
+      "kind": "Pre-registered, development data 2004-2014",
+      "numbers": "Mean net excess return -2.09% per 20 sessions (99% range -3.36% to -0.77%) on 2,422 events. 0 of 11 years positive.",
+      "read": "These stocks went on to trail the market after costs in this sample.",
+      "source": "Trial ledger line 181.",
+      "check": "Verified against the trial ledger on 2026-11-06."
+    },
+    {
+      "id": "POLY_V2",
+      "name": "Prediction-market longshots",
+      "verdict": "FAIL",
+      "kind": "Pre-registered, development data",
+      "numbers": "Net return -19.3% (95% range -31.8% to -7.2%) on 889 markets.",
+      "read": "An earlier positive result came from picking the highest-volume markets. A fresh sample erased it.",
+      "source": "polymarket_dev_v2_result (2026-10-15).",
+      "check": "Figures re-read against the project result record on 2026-11-06 by its original author (Claude); not an independent check.",
+      "hashes": "Output file dev_mirror_v2_output.txt sha256 2DECB0D7…169B79C0 (hashed 2026-11-06; shows the file as it is now, not proof it is unchanged since the run)."
+    },
+    {
+      "id": "TREND1",
+      "name": "Trend-following sleeve",
+      "verdict": "FAIL",
+      "kind": "Pre-registered, development data",
+      "numbers": "Max drawdown -3.8% vs -25.1% for 60/40, but the blend beat 60/40 on risk-adjusted return in only 54% of resamples (needed 80%).",
+      "read": "It cut risk, as trend rules do, without a demonstrated gain in risk-adjusted return.",
+      "source": "trend_v1_dev_result (2026-10-15).",
+      "check": "Figures re-read against the project result record on 2026-11-06 by its original author (Claude); not an independent check.",
+      "hashes": "Output file trend_v1_dev_output.txt sha256 CA90AD11…EAFF92A7 (hashed 2026-11-06). Data file trend_monthly_v1.csv sha256 71587a7a…bff91 (stated in the result record)."
+    },
+    {
+      "id": "DEFENSE1",
+      "name": "60% stocks + 40% trend sleeve as a crash hedge",
+      "verdict": "FAIL",
+      "kind": "Pre-registered, development sanity check",
+      "numbers": "Max drawdown -27.0% vs -25.1% for 60/40.",
+      "read": "In 2008 to 2018, Treasuries were the better crash hedge. A separate test from the charter's hold-out H2.",
+      "source": "defense_v1_dev_result (2026-10-15).",
+      "check": "Figures re-read against the project result record on 2026-11-06 by its original author (Claude); not an independent check.",
+      "hashes": "Output file defense_v1_dev_output.txt sha256 21EE9BAC…F369803AC (hashed 2026-11-06; shows the file as it is now, not proof it is unchanged since the run)."
+    },
+    {
+      "id": "BTC1",
+      "name": "Bitcoin 30-week trend filter (defensive)",
+      "verdict": "FAIL",
+      "kind": "Pre-registered",
+      "numbers": "Full-sample drawdown cut was 28% against a required 40%. The last 104 weeks passed.",
+      "read": "Those last 104 weeks are a slice of the same price series, not a sealed data set, and are not one of the four hold-out openings counted above. One down-cycle does not rescue a miss on the full sample.",
+      "source": "btc1_result (2026-10-31).",
+      "check": "Figures re-read against the project result record on 2026-11-06 by its original author (Claude); not an independent check.",
+      "gap": "Supporting output file is not on the reviewer's machine, so these figures are not independently re-checkable from files. Unresolved: the record calls the price series Binance-sourced, but the data feed used is Twelve Data. Which source is correct is not settled.",
+      "extract": "docs/scoreboard_source_extracts_2026-11-06.md"
+    },
+    {
+      "id": "BTC2",
+      "name": "Bitcoin trend filter, four window lengths",
+      "verdict": "FAIL",
+      "kind": "Pre-registered grid",
+      "numbers": "0 of 4 windows passed. The closest missed the drawdown bar (ratio 0.63 to 0.64 against a 0.60 limit).",
+      "read": "The bar was not loosened. The closest variant became BTC40 above, as a forward test, after these results were seen.",
+      "source": "btc2_grid_result (2026-10-31).",
+      "check": "Figures re-read against the project result record on 2026-11-06 by its original author (Claude); not an independent check.",
+      "gap": "Supporting output file is not on the reviewer's machine, so these figures are not independently re-checkable from files. It uses the same price series as BTC1, so BTC1's source question applies here too.",
+      "extract": "docs/scoreboard_source_extracts_2026-11-06.md"
+    },
+    {
+      "id": "ODDLOT1",
+      "name": "Odd-lot tender offers",
+      "verdict": "CLOSED",
+      "kind": "Pre-registered frequency screen",
+      "numbers": "About 1.6 takeable deals a year against a bar of 6.",
+      "read": "A scarcity screen, not a return test: the mechanism is real, but too few usable deals. Most fund tenders deny odd-lot priority.",
+      "source": "oddlot_history_dev_result (2026-10-15).",
+      "check": "Figures re-read against the project result record on 2026-11-06 by its original author (Claude); not an independent check.",
+      "gap": "The deal list file for this screen exists but is empty, so the count of takeable deals rests on the result record alone and cannot be re-checked from files.",
+      "extract": "docs/scoreboard_source_extracts_2026-11-06.md"
+    },
+    {
+      "id": "CEF-BMEZ",
+      "name": "Closed-end fund tender at 98% of NAV (BMEZ, Nov 2026)",
+      "verdict": "ESTIMATE",
+      "kind": "Back-of-envelope estimate, not a test",
+      "numbers": "About +0.9% blended on a full position at an assumed 50% participation (a figure from a public note), against roughly 3% routine price swings.",
+      "read": "A descriptive feasibility estimate, not measured performance and not a research verdict. Real mechanism, but small and too rare to test.",
+      "source": "BMEZ tender offer filing (SEC, Oct 2026); public commentary.",
+      "check": "Estimate only; not a measured result."
+    }
+  ],
+  "parked": [
+    "Dilution and going-concern filter (DIL1): the data check passed, but the one-shot null-power check of 2026-11-06 returned PARK (gate MDE 11.70% against the 2.5% bar; adjusted null spread 16.20% against 3.46% allowed). That is a planning screen, not proof the filter does nothing. Parked; reopening needs a new preregistration. Result file SHA-256 0BB6ECCD4C9EDD162B481E98ABA00085321510BD35F242E9DB3BE59F9EF1FDEB.",
+    "Iowa tax-sale certificates (TAX1): closed by choice on 2026-11-06 before any research was run. No verdict; the possible payoff was too small for the effort.",
+    "SPAC common-share redemption: parked. The effort per expected result was too high.",
+    "Bank mutual-to-stock conversions: closed as a system. Eligibility is depositor-based."
+  ],
+  "lessons": [
+    "Picking markets by volume manufactured a pattern that a fresh sample erased.",
+    "A placebo that is not matched to the trade can pass pure noise. Ours is matched, and was tested on synthetic noise first.",
+    "A control definition once added about 0.35% of fake lift under pure noise. A null test caught it before any real data was used."
+  ]
+}

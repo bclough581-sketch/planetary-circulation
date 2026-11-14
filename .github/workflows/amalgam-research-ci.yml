@@ -1,0 +1,55 @@
+name: Amalgam research validation
+on:
+  push:
+    branches:
+      - amalgam-event-foundation
+  pull_request:
+    paths:
+      - "intelligence/**"
+      - "tests/**"
+      - "convergence-research.html"
+      - ".github/workflows/amalgam-research-ci.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  python-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run Python regression suite
+        shell: bash
+        run: |
+          set -o pipefail
+          python -m unittest discover -s tests -v 2>&1 | tee python-validation.log
+      - name: Preserve Python test output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: amalgam-python-validation
+          path: python-validation.log
+          if-no-files-found: warn
+  browser-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Run browser research viewer regression suite
+        shell: bash
+        run: |
+          set -o pipefail
+          node tests/test_research_viewer.cjs 2>&1 | tee browser-validation.log
+      - name: Preserve browser test output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: amalgam-browser-validation
+          path: browser-validation.log
+          if-no-files-found: warn

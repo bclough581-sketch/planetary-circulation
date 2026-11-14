@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AMALGAM — My decisions</title>
+<style>
+:root{color-scheme:dark;font:16px system-ui;background:#07101c;color:#eaf3fa}*{box-sizing:border-box}body{margin:0}header,main{max-width:1080px;margin:auto;padding:20px}header{border-bottom:1px solid #29445b;display:flex;justify-content:space-between;gap:12px}a{color:#82d9d1}h1{font-size:clamp(1.8rem,5vw,2.6rem);letter-spacing:-.04em;margin-bottom:8px}h2{font-size:1.2rem}p{line-height:1.5;color:#b8cbdc}.eyebrow{color:#71d8c9;font-size:.75rem;letter-spacing:.12em}.layout{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:20px}.card{border:1px solid #29445b;border-radius:14px;padding:20px;background:#102035;margin:16px 0}label{display:block;font-size:.9rem;color:#c7d9e8;margin:14px 0 7px}input,textarea,select{display:block;width:100%;padding:11px;border:1px solid #506b82;border-radius:7px;background:#091827;color:#eaf3fa;font:inherit}textarea{min-height:75px;resize:vertical}button,.button{display:inline-block;font:inherit;background:#17334c;color:#e9f4ff;border:1px solid #476782;border-radius:8px;padding:11px;cursor:pointer;margin:5px 5px 5px 0;text-decoration:none}.primary{background:#3cc9b2;color:#061b24;border:0;font-weight:700}.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.muted,small{color:#a3bbce;font-size:.85rem}.notice{padding:12px;border-left:3px solid #71d8c9;background:#102333}#status{min-height:1.5em;color:#bce4dc;overflow-wrap:anywhere}.entry{border-top:1px solid #365269;padding:16px 0;overflow-wrap:anywhere}.entry:first-child{border:0}.entry p{white-space:pre-wrap;margin:8px 0}.entry h3{margin:4px 0}details{margin:12px 0}summary{cursor:pointer;line-height:1.5}.amendment{border-left:2px solid #7295b1;padding-left:12px;margin:14px 0}.tools{display:flex;flex-wrap:wrap;align-items:center}.danger{color:#ffd1b9}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:3px solid #71d8c9;outline-offset:3px}[hidden]{display:none!important}@media(max-width:720px){.layout{grid-template-columns:1fr}header,main{padding:14px}.card{padding:14px}.row{grid-template-columns:1fr}header{flex-wrap:wrap}}
+</style><link rel="stylesheet" href="amalgam-theme.css"></head><body>
+<header><strong>◉ AMALGAM / MY DECISIONS</strong><a href="ring-engine-lab.html">Back to the rings</a><a href="scoreboard.html">Scoreboard</a><button id="ambientMotion" type="button" aria-pressed="false">Pause glow</button></header>
+<main><div class="eyebrow">LOCAL PROTOTYPE · NO ACCOUNT CONNECTION</div><h1>Keep the reason.<br>Record what changed.</h1><p>A record of your decisions and your own rules. Completing a checklist does not establish a trading edge.</p>
+<p class="notice">Saved only in this browser for this site address. Browser clearing, private browsing or changing the address can make records unavailable. Export a backup. Dates and history are editable outside this app; they are not verified proof of a pre-trade plan.</p>
+<div id="status" role="status" aria-live="polite"></div>
+<section id="legacyPanel" class="card" hidden aria-labelledby="legacyTitle">
+<h2 id="legacyTitle">Older journal on this device</h2>
+<p id="legacyNotice" class="notice" role="status" aria-live="polite"></p>
+<p class="muted">Close older journal tabs before copying. Unchanged cards are skipped on repeat copies. An edited older card is added as a separate retrospective version; it does not update or replace the earlier copy. Original data stays untouched. Original notes and dates are not verified pre-trade evidence.</p>
+<button id="copyLegacy" type="button">Copy older cards into My decisions</button>
+<a class="button" href="journal.html">Export or recover the older journal</a>
+</section>
+<div class="layout"><section class="card"><h2>New decision</h2><p class="muted">Use Unknown for details you cannot establish. Never enter account numbers, credentials or API keys.</p>
+<form id="decisionForm">
+<p id="draftNotice" class="notice" hidden>Unsaved draft from the rings. Historical evidence has been copied below; add your own reason. This is not a recommendation or a new trade.</p>
+<div class="row"><div><label for="ticker">Ticker</label><input id="ticker" name="ticker" required maxlength="20" autocomplete="off"></div><div><label for="recordType">Record type</label><select id="recordType" name="recordType"><option>Retrospective</option><option>Plan recorded now</option></select></div></div>
+<label for="outcome">Decision status</label><select id="outcome" name="outcome"><option>Closed</option><option>Decided against trading</option><option>Considering</option><option>Open (self-reported)</option></select>
+<label for="reason">One-line reason</label><textarea id="reason" name="reason" maxlength="4000" required></textarea>
+<label for="evidence">Evidence considered / source links</label><textarea id="evidence" name="evidence" maxlength="4000"></textarea>
+<label for="checklist">My checklist</label><textarea id="checklist" name="checklist" maxlength="4000" placeholder="Your own conditions, answers and uncertainties"></textarea>
+<label for="entryRule">My limit-entry rule</label><textarea id="entryRule" name="entryRule" maxlength="4000"></textarea>
+<label for="size">Intended quantity / size</label><input id="size" name="size" maxlength="4000" placeholder="Unknown if not established">
+<label for="exitRule">My original exit rule</label><textarea id="exitRule" name="exitRule" maxlength="4000"></textarea>
+<details><summary>Execution and review (optional)</summary>
+<label for="execution">Actual fills and dates</label><textarea id="execution" name="execution" maxlength="4000" placeholder="Unknown; fill from your own records later"></textarea>
+<label for="exitReason">Reason for actual exit / no trade</label><textarea id="exitReason" name="exitReason" maxlength="4000"></textarea>
+<label for="adherence">Did I follow my original rule?</label><select id="adherence" name="adherence"><option>Unresolved</option><option>Yes (self-reported)</option><option>No (self-reported)</option><option>Not applicable</option></select>
+<label for="lesson">What would this record have helped me notice?</label><textarea id="lesson" name="lesson" maxlength="4000"></textarea></details>
+<button class="primary" type="submit">Save original card</button><p class="muted">After saving, add dated amendments rather than overwriting the original.</p></form></section>
+<section><div class="card"><h2>My records <span id="count" class="muted"></span></h2><div id="records"><p>No cards yet. A decision against trading counts as a decision.</p></div></div>
+<div class="card"><h2>Backup and privacy</h2><p class="muted">JSON keeps the original cards and amendments for restore. CSV is for reading elsewhere. Exported files contain your private notes.</p><div class="tools"><button id="backup">Export backup (JSON)</button><button id="csv">Export CSV</button></div><div id="exportPanel" hidden><label for="exportText">Export text — copy this if your browser blocks the download</label><textarea id="exportText" readonly rows="8" aria-label="Export text"></textarea><button id="selectExport" type="button">Select export text</button></div><label for="restore">Restore JSON backup (adds missing cards)</label><input id="restore" type="file" accept=".json,application/json"><p class="muted">Matching records are skipped; conflicting versions are rejected. Nothing is silently overwritten.</p><button id="deleteAll" class="danger">Delete My decisions cards</button></div></section></div></main>
+<script src="journal-core.js"></script>
+<script src="journal-legacy.js"></script>
+<script>
+'use strict';
+const glowPreference=matchMedia('(prefers-reduced-motion: reduce)');
+let glowRunning=!glowPreference.matches;
+function updateGlow(){document.body.classList.toggle('motion-paused',!glowRunning);document.getElementById('ambientMotion').textContent=glowRunning?'Pause glow':'Resume glow';document.getElementById('ambientMotion').setAttribute('aria-pressed',String(!glowRunning));}
+document.getElementById('ambientMotion').onclick=()=>{glowRunning=!glowRunning;updateGlow();};
+glowPreference.addEventListener('change',e=>{if(e.matches){glowRunning=false;updateGlow();}});updateGlow();
+if(!window.AmalgamJournal){
+ document.getElementById('status').textContent='Journal unavailable: its record validator did not load. Existing browser records have not been changed. Reload to try again.';
+ document.querySelectorAll('main input,main textarea,main select,main button').forEach(e=>e.disabled=true);
+}else{
+const {schema:SCHEMA,fields,types,outcomes,adherences,validTime,exactKeys,validate,backupText,mergeCards,csvText,maxBackupBytes}=window.AmalgamJournal;
+const KEY=SCHEMA;
+let cards=[], writable=true, lastRaw=null;
+const $=id=>document.getElementById(id),status=message=>$('status').textContent=message;
+async function withStorageLock(action){
+ if(navigator.locks&&navigator.locks.request)return navigator.locks.request(KEY,action);
+ throw Error('Safe saving is unavailable in this browser. Copy your notes and use a current browser over HTTPS or localhost.');
+}
+async function persist(next,legacyRaw){
+ if(!writable){status('Existing storage could not be read. Export recovery data or delete local records before saving.');return false;}
+ const expectedRaw=lastRaw;
+ try{return await withStorageLock(()=>{
+  if(localStorage.getItem(KEY)!==expectedRaw)throw Error('Records changed in another tab. Copy your unsaved notes and reload before saving.');
+  if(legacyRaw!==undefined&&localStorage.getItem('amalgam.journal.v1')!==legacyRaw)throw Error('The older journal changed while copying. Close older tabs and copy again.');
+  next=validate({schema:SCHEMA,cards:next});backupText(next);
+  const raw=JSON.stringify({schema:SCHEMA,cards:next});localStorage.setItem(KEY,raw);lastRaw=raw;cards=next;render();return true;
+ });}catch(e){status('Not saved: '+e.message+' Your current form is still here.');return false;}
+}
+function el(tag,text){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;return n;}
+function line(parent,label,value){const p=el('p');p.append(el('strong',label+': '),document.createTextNode(value||'Unknown'));parent.append(p);}
+function render(){
+ $('count').textContent='('+cards.length+')';$('records').replaceChildren();
+ if(!cards.length){$('records').append(el('p','No cards yet. A decision against trading counts as a decision.'));return;}
+ for(const c of [...cards].reverse()){
+  const box=el('article');box.className='entry';box.append(el('h3',c.ticker+' · '+c.outcome));
+  box.append(el('small',c.recordType+' · Saved '+new Date(c.savedAt).toLocaleString()+' (browser clock)'));
+  line(box,'Reason',c.reason);
+  const current=c.amendments.length?c.amendments[c.amendments.length-1].adherence:c.adherence;
+  line(box,'Latest self-reported adherence',current);
+  const detail=el('details');detail.append(el('summary','Original card and amendments'));
+  for(const [key,label] of Object.entries({evidence:'Evidence considered',checklist:'My checklist',entryRule:'Original limit-entry rule',size:'Intended size',exitRule:'Original exit rule',execution:'Actual fills and dates',exitReason:'Exit / no-trade reason',adherence:'Original self-reported adherence',lesson:'What this would have helped me notice'}))line(detail,label,c[key]);
+  for(const a of c.amendments){const block=el('div');block.className='amendment';line(block,'Amendment saved',new Date(a.savedAt).toLocaleString()+' (browser clock)');line(block,'What changed',a.change);line(block,'Why',a.reason);line(block,'Allowed by the original plan?',a.planned);line(block,'Self-reported adherence',a.adherence);detail.append(block);}
+  box.append(detail);
+  const amend=el('details');amend.append(el('summary','Add an amendment / missing execution details'));
+  const form=el('form');
+  for(const [key,label] of [['change','What changed or became known?'],['reason','Why / source of the correction']]){const id=c.id+'-'+key;const l=el('label',label);l.htmlFor=id;const input=el('textarea');input.name=key;input.id=id;input.required=true;input.maxLength=4000;form.append(l,input);}
+  for(const [key,label,options] of [['planned','Was this allowed by the original plan?',['Unknown','Yes','No']],['adherence','Updated self-reported adherence',adherences]]){const id=c.id+'-'+key;const l=el('label',label);l.htmlFor=id;const input=el('select');input.id=id;input.name=key;for(const text of options){const o=el('option',text);o.value=text;input.append(o);}form.append(l,input);}
+  const save=el('button','Save amendment');save.type='submit';form.append(save);
+  form.onsubmit=async e=>{e.preventDefault();const d=new FormData(form),a={savedAt:new Date().toISOString(),change:d.get('change').trim(),reason:d.get('reason').trim(),planned:d.get('planned'),adherence:d.get('adherence')};const next=cards.map(x=>x.id===c.id?{...x,amendments:[...x.amendments,a]}:x);if(await persist(next))status('Amendment saved. Original card preserved.');};
+  amend.append(form);box.append(amend);$('records').append(box);
+ }
+}
+$('decisionForm').onsubmit=async e=>{
+ e.preventDefault();const form=e.target;if(form.dataset.saving==='true')return;
+ form.dataset.saving='true';const saveButton=form.querySelector('button[type=submit]');saveButton.disabled=true;
+ try{
+  const d=new FormData(form),c={id:crypto.randomUUID(),savedAt:new Date().toISOString()};for(const f of fields)c[f]=d.get(f).trim();c.amendments=[];
+  if(await persist([...cards,c])){
+   const current=new FormData(form),unchanged=fields.every(f=>current.get(f)===d.get(f));
+   if(unchanged){form.reset();$('draftNotice').hidden=true;}
+   if(location.hash==='#evidence-draft'){try{sessionStorage.removeItem('amalgam.evidence-draft.v1');history.replaceState(null,'',location.pathname+location.search);}catch(error){/* Card saved; cleanup cannot undo it. */}}
+   status('Original card saved in this browser. '+(unchanged?'Export a backup to keep a separate copy.':'Newer edits remain in the form and are not saved.'));
+  }
+ }catch(error){status('Not saved: '+error.message+' Your current form is still here.');}
+ finally{delete form.dataset.saving;saveButton.disabled=false;}
+};
+function download(name,text,type){$('exportPanel').hidden=false;$('exportText').value=text;status('Export prepared. If the download is blocked, select and copy the export text below.');const url=URL.createObjectURL(new Blob([text],{type}));const a=el('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);}
+$('selectExport').onclick=()=>{$('exportText').focus();$('exportText').select();};
+function exportRecords(kind){
+ if(!writable){status('Export unavailable until existing storage can be read. Use raw storage recovery instead.');return;}
+ try{download(kind==='json'?'amalgam-decisions.json':'amalgam-decisions.csv',kind==='json'?backupText(cards):csvText(cards),kind==='json'?'application/json':'text/csv;charset=utf-8');}
+ catch(error){status('Export failed: '+error.message);}
+}
+$('backup').onclick=()=>exportRecords('json');
+$('csv').onclick=()=>exportRecords('csv');
+$('restore').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{
+ if(file.size>maxBackupBytes)throw Error('Backup is larger than 5 MB.');
+ const imported=validate(JSON.parse(await file.text())),merged=mergeCards(cards,imported);
+ if(await persist(merged.cards))status('Backup restored: '+merged.added+' cards added. Matching cards skipped.');
+}catch(error){status('Restore rejected: '+error.message);}finally{e.target.value='';}};
+$('deleteAll').onclick=async()=>{
+ if(!confirm('Delete all decision cards saved for this site in this browser? The older journal and exported files will remain.'))return;
+ const expectedRaw=lastRaw;
+ try{await withStorageLock(()=>{
+  if(localStorage.getItem(KEY)!==expectedRaw)throw Error('Records changed in another tab. Reload and review them before deleting.');
+  localStorage.removeItem(KEY);lastRaw=null;cards=[];writable=true;render();status('All local cards deleted. Exported files are unchanged.');
+ });}catch(e){status('Could not delete: '+e.message);}
+};
+try{lastRaw=localStorage.getItem(KEY);if(lastRaw!==null)cards=validate(JSON.parse(lastRaw));render();}catch(e){writable=false;status('Existing storage could not be read. It has not been overwritten. Use the recovery download below before deleting.');const b=el('button','Download raw storage for recovery');b.onclick=()=>{try{download('amalgam-recovery.txt',localStorage.getItem(KEY)||'','text/plain');}catch(error){status('Recovery unavailable: '+error.message);}};$('records').replaceChildren(b);}
+let legacyCopying=false;
+function showLegacy(changed=false){
+ try{
+  const raw=localStorage.getItem('amalgam.journal.v1');$('legacyPanel').hidden=raw===null;
+  if(raw===null)return;
+  if(!window.AmalgamLegacyJournal){$('legacyNotice').textContent='Older records were found, but copying is unavailable. Use the recovery link to export them.';$('copyLegacy').disabled=true;return;}
+  try{
+   const count=window.AmalgamLegacyJournal.read(raw).length;
+   $('legacyNotice').textContent=(changed?'The older journal changed in another tab. ':'')+count+' older card(s) found. They are stored separately from My decisions. Original data is still available even after copying.';
+   $('copyLegacy').disabled=!writable||legacyCopying;
+  }catch(e){$('legacyNotice').textContent=e.message;$('copyLegacy').disabled=true;}
+ }catch(e){$('legacyPanel').hidden=false;$('legacyNotice').textContent='Older journal storage could not be checked. Use the recovery link.';$('copyLegacy').disabled=true;}
+}
+$('copyLegacy').onclick=async()=>{
+ if(legacyCopying)return;legacyCopying=true;
+ const button=$('copyLegacy');button.disabled=true;
+ try{
+  if(!writable)throw Error('Current records need recovery before copying.');
+  const raw=localStorage.getItem('amalgam.journal.v1');
+  if(raw===null)throw Error('No older journal was found.');
+  const incoming=await window.AmalgamLegacyJournal.convert(raw),merged=window.AmalgamLegacyJournal.mergeCopies(cards,incoming);
+  if(await persist(merged.cards,raw)){
+   const changed=localStorage.getItem('amalgam.journal.v1')!==raw;
+   status('Copied '+merged.added+' older card(s). Unchanged copies skipped. Edited older cards are separate versions, not updates to earlier copies. Original data was kept.'+(changed?' The older journal changed during the copy; close older tabs and copy again.':' Close older tabs; any later changes there need another copy.'));
+  }
+ }catch(e){status('Older cards were not copied: '+e.message);}
+ finally{legacyCopying=false;showLegacy();}
+};
+window.addEventListener('storage',e=>{if(e.key===null||e.key==='amalgam.journal.v1')showLegacy(true);});
+window.addEventListener('focus',()=>showLegacy());showLegacy();
+if(location.hash==='#evidence-draft'){
+ try{
+  const raw=sessionStorage.getItem('amalgam.evidence-draft.v1');if(!raw||raw.length>15000)throw Error('No valid evidence draft is available in this tab.');
+  const d=JSON.parse(raw);
+  const hasIntent=d&&typeof d==='object'&&Object.prototype.hasOwnProperty.call(d,'intent');
+  if(!exactKeys(d,hasIntent?['schema','ticker','capturedAt','evidence','intent']:['schema','ticker','capturedAt','evidence'])||(hasIntent&&d.intent!=='consider'&&d.intent!=='no-trade')||d.schema!=='amalgam.evidence-draft.v1'||typeof d.ticker!=='string'||!d.ticker.trim()||d.ticker.length>20||!validTime(d.capturedAt)||typeof d.evidence!=='string'||!d.evidence.trim()||d.evidence.length>4000)throw Error('The evidence draft is invalid.');
+  $('ticker').value=d.ticker;$('evidence').value=d.evidence;$('recordType').value='Plan recorded now';$('outcome').value=d.intent==='no-trade'?'Decided against trading':'Considering';$('draftNotice').hidden=false;
+  if(writable)status(d.intent==='no-trade'?'Evidence copied into an unsaved no-trade draft. Add your own reason before saving; existing records are unchanged.':'Evidence copied into an unsaved draft. Add your own reason; existing records are unchanged.');
+ }catch(error){if(writable)status('Evidence draft not loaded: '+error.message+' Existing cards are unchanged.');}
+}
+}
+</script></body></html>

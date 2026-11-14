@@ -1,0 +1,103 @@
+/* Product-only issuer evidence; historical research bundle stays separate. */
+window.AMALGAM_DELTA_COMPANY = {
+  "schema": "amalgam.delta-company-evidence.v1",
+  "symbol": "DAL",
+  "basis": "consolidated_GAAP",
+  "unit": "USD_millions",
+  "metric_definitions": {
+    "revenue": "Total operating revenue",
+    "operatingIncome": "Operating income",
+    "fuelExpense": "Aircraft fuel and related taxes"
+  },
+  "reviewed_utc": "2026-11-13T02:44:19.769163+00:00",
+  "review_max_age_days": 7,
+  "input_mode": "reviewed_issuer_release_transcription",
+  "publication_time_verified": false,
+  "predictive_advantage": "not_established",
+  "sources": {
+    "2026Q1": {
+      "url": "https://ir.delta.com/news/news-details/2026/Delta-Air-Lines-Announces-March-Quarter-2026-Financial-Results/default.aspx",
+      "reported_period": "2026Q1",
+      "published_date": "2026-04-08",
+      "retrieved_utc": "2026-11-13T02:43:24.105301+00:00",
+      "raw_sha256": "895e51432906aae13590d894e00334e9e53ea03da3f78ed22d1b002e53426e0a",
+      "publication_time_verified": false,
+      "verified_statement_lines": [
+        "Total operating revenue",
+        "Operating income",
+        "Aircraft fuel and related taxes"
+      ]
+    },
+    "2026Q2": {
+      "url": "https://ir.delta.com/news/news-details/2026/Delta-Air-Lines-Announces-June-Quarter-2026-Financial-Results/default.aspx",
+      "reported_period": "2026Q2",
+      "published_date": "2026-07-10",
+      "retrieved_utc": "2026-11-13T02:43:24.400518+00:00",
+      "raw_sha256": "61884a91f0e59a7ea87a0e578f4d2d42970fe43bfcccda6217c9f7591614ed80",
+      "publication_time_verified": false,
+      "verified_statement_lines": [
+        "Total operating revenue",
+        "Operating income",
+        "Aircraft fuel and related taxes"
+      ]
+    },
+    "2026Q3": {
+      "url": "https://ir.delta.com/news/news-details/2026/Delta-Air-Lines-Announces-September-Quarter-2026-Financial-Results/default.aspx",
+      "reported_period": "2026Q3",
+      "published_date": "2026-10-09",
+      "retrieved_utc": "2026-11-13T02:43:24.703228+00:00",
+      "raw_sha256": "b100857c9565dda5edc46aea3dbb99d02e7fd0e6e09c762d90fed364beae38d7",
+      "publication_time_verified": false,
+      "verified_statement_lines": [
+        "Total operating revenue",
+        "Operating income",
+        "Aircraft fuel and related taxes"
+      ]
+    }
+  },
+  "observations": [
+    {
+      "period": "2025Q1",
+      "revenue": 14040,
+      "operatingIncome": 569,
+      "fuelExpense": 2410,
+      "source": "2026Q1"
+    },
+    {
+      "period": "2025Q2",
+      "revenue": 16648,
+      "operatingIncome": 2102,
+      "fuelExpense": 2458,
+      "source": "2026Q2"
+    },
+    {
+      "period": "2025Q3",
+      "revenue": 16673,
+      "operatingIncome": 1684,
+      "fuelExpense": 2570,
+      "source": "2026Q3"
+    },
+    {
+      "period": "2026Q1",
+      "revenue": 15854,
+      "operatingIncome": 501,
+      "fuelExpense": 2742,
+      "source": "2026Q1"
+    },
+    {
+      "period": "2026Q2",
+      "revenue": 19757,
+      "operatingIncome": 1864,
+      "fuelExpense": 4109,
+      "source": "2026Q2"
+    },
+    {
+      "period": "2026Q3",
+      "revenue": 20186,
+      "operatingIncome": 1454,
+      "fuelExpense": 4351,
+      "source": "2026Q3"
+    }
+  ],
+  "warning": "Product company evidence only. Publication dates are source dates, not independently verified first availability. Crude oil is not aircraft fuel expense. Research inputs and the preserved historical case are separate."
+};

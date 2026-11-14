@@ -1,0 +1,68 @@
+name: intelligence-foundation-checks
+on:
+  push:
+    branches: [amalgam-event-foundation]
+    paths:
+      - 'intelligence/**'
+      - 'tests/test_intelligence.py'
+      - 'tests/test_ingest.py'
+      - 'tests/test_freshness.py'
+      - 'tests/test_research_view.py'
+      - 'tests/test_feed_audit.py'
+      - 'tests/test_historical_panel.py'
+      - 'tests/test_eia_history.py'
+      - 'tests/test_audit_validation.py'
+      - 'tests/test_verify_bundle.py'
+      - 'tests/test_coverage_audit.py'
+      - 'tests/test_decision_schedule.py'
+      - 'tests/test_descriptive_history.py'
+      - 'convergence-research.html'
+      - 'tests/test_research_viewer.cjs'
+      - '.github/workflows/intelligence-checks.yml'
+  workflow_dispatch: {}
+permissions:
+  contents: read
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run intelligence unit tests
+        run: python -m unittest discover -s tests -p 'test_intelligence.py' -v && python -m unittest discover -s tests -p 'test_ingest.py' -v && python -m unittest discover -s tests -p 'test_freshness.py' -v && python -m unittest discover -s tests -p 'test_research_view.py' -v && python -m unittest discover -s tests -p 'test_feed_audit.py' -v && python -m unittest discover -s tests -p 'test_historical_panel.py' -v && python -m unittest discover -s tests -p 'test_eia_history.py' -v
+      - name: Verify independent historical audit consistency tests
+        run: python -m unittest tests.test_audit_validation tests.test_verify_bundle tests.test_coverage_audit tests.test_decision_schedule tests.test_descriptive_history -v
+      - name: Verify browser viewer JavaScript import behavior
+        run: node tests/test_research_viewer.cjs
+      - name: Check snapshot normalization
+        run: |
+          python - <<'PY'
+          import json
+          from intelligence.ingest import existing_observations
+          with open("data.json", encoding="utf-8") as f:
+              snapshot = json.load(f)
+          events, excluded = existing_observations(snapshot)
+          print("Normalized:", len(events), "Excluded:", len(excluded))
+          assert events, "No observations normalized"
+          for e in events:
+              assert e["source"]["url"] and e["observed_at"]
+          PY
+  noaa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Probe live NOAA active-alert feed
+        run: |
+          python - <<'PY'
+          from intelligence.noaa import fetch_active_alerts
+          observations, excluded = fetch_active_alerts()
+          print("NOAA normalized:", len(observations), "Excluded:", len(excluded))
+          assert observations or excluded, "No NOAA alert features received"
+          PY

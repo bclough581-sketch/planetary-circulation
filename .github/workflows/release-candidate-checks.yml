@@ -1,0 +1,53 @@
+name: Release Candidate Checks
+on:
+  push:
+    branches: [prep/main-reconciliation]
+  workflow_dispatch: {}
+permissions:
+  contents: read
+jobs:
+  candidate-python:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install cryptography==46.0.3
+      - run: python -m unittest discover -s tests -p 'test_*.py'
+      - run: python check_data.py
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node tests/test_delta_context.cjs
+      - run: node tests/test_journal_core.cjs
+      - run: node tests/test_journal_regression.cjs
+      - run: node tests/test_journal_migration.cjs
+      - run: node tests/test_ring_engine.cjs
+      - run: node tests/test_scoreboard.js
+  candidate-browser:
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.56.1-noble
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save --no-package-lock playwright@1.56.1
+      - run: apt-get update -qq && apt-get install -y -qq python3
+      - run: PYTHONPATH=. python3 tests/generate_evidence_fixture.py > tests/generated-evidence-fixture.json
+      - run: PYTHONPATH=. python3 scripts/export_ring_snapshot.py data.json tests/generated-ring-snapshot.json
+      - run: node tests/test_delta_workflow_browser.cjs
+      - run: node tests/test_journal_browser.cjs
+      - run: node tests/test_journal_regression_browser.cjs
+      - run: node tests/test_journal_migration_browser.cjs
+      - run: node tests/test_offline_entry.cjs
+      - run: node tests/test_nav_smoke.cjs
+      - run: node tests/test_evidence_handoff.cjs
+      - run: node tests/test_ring_browser.cjs
+      - run: node tests/test_ring_comparisons.cjs
+      - run: node tests/test_ring_galaxy.cjs
+      - run: node tests/test_ring_theme.cjs

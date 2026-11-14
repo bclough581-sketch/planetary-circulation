@@ -1,0 +1,42 @@
+name: intelligence-historical-treasury-research
+on:
+  push:
+    branches: [amalgam-event-foundation]
+    paths:
+      - '.github/workflows/historical-treasury-research.yml'
+      - 'intelligence/treasury_history.py'
+      - 'tests/test_treasury_history.py'
+  workflow_dispatch: {}
+permissions:
+  contents: read
+jobs:
+  treasury-history:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: amalgam-event-foundation
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate Treasury parser
+        run: python -m unittest tests.test_treasury_history -v
+      - name: Fetch real 2025 Treasury ten-year yields
+        run: |
+          python -m intelligence.treasury_history --year 2025 --output treasury-history-research.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          result = json.loads(Path("treasury-history-research.json").read_text())
+          print("Treasury yield rows:", len(result["observations"]))
+          print("Coverage:", result["observations"][0]["date"], result["observations"][-1]["date"])
+          assert len(result["observations"]) >= 150, "Insufficient Treasury history"
+          assert result["predictive_advantage"] == "not_established"
+          PY
+      - name: Upload historical Treasury research only
+        uses: actions/upload-artifact@v4
+        with:
+          name: amalgam-treasury-history-${{ github.run_id }}
+          path: treasury-history-research.json
+          retention-days: 30

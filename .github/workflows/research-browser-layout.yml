@@ -1,0 +1,25 @@
+name: research-browser-layout
+on:
+  push:
+    branches: [amalgam-event-foundation]
+    paths: ['convergence-research.html', 'tests/test_research_browser.cjs', '.github/workflows/research-browser-layout.yml']
+  workflow_dispatch: {}
+permissions:
+  contents: read
+jobs:
+  chromium:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright@1.56.1
+      - run: node tests/test_research_browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: research-browser-layout
+          path: browser-layout/
+          retention-days: 30
