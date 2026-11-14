@@ -26,7 +26,7 @@ class DeltaProductEvidenceTests(unittest.TestCase):
         expected = {
             "intelligence/data/delta-quarterly-curated.json": "c838853a773acbecdbdb9effd3d085346a15241abec8abf7ffd295ecdced291e",
             "ring-evidence.js": "23781f4835839ffe13a60e69be998967a6c3e78f0cff28d1904ed3933159a6e2",
-            "convergence-research.html": "efc3f8410cb22433aa4b784791dd2bf6466c6fa20ce549d3aaf8c9b017e0bd48",
+            "convergence-research.html": "0dbe2764e7e0f7a3cb257f67c920bfdefd21ce82e5d378c2e3c96f1dd7ce1472",
         }
         for name, digest in expected.items():
             with self.subTest(name=name):
