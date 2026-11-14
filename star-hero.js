@@ -52,13 +52,13 @@
   var dust = []; for (var i = 0; i < 170; i++) dust.push({ x: Math.random(), y: Math.random(), s: Math.random() * 1.3 + 0.25, p: Math.random() * TAU, d: Math.random() * 0.6 + 0.2 });
 
   var tiltX = 0.12, tiltY = 0, tgtX = 0.12, tgtY = 0, kick = 0;
-  var ang = [0, 0, 0], w = [0, 0, 0], hot = [0, 0, 0], held = [0, 0, 0], tiltHeld = 0, rimHot = 0;   /* per layer: spun angle, spin speed (rad/s, + is clockwise), grab glow, fingers holding it */
+  var ang = [0, 0, 0], vis = [0, 0, 0], w = [0, 0, 0], hot = [0, 0, 0], held = [0, 0, 0], tiltHeld = 0, rimHot = 0;   /* per layer: spun angle, spin speed (rad/s, + is clockwise), grab glow, fingers holding it */
   var MAXW = 30, FRICTION = 0.45, FLICK = 1.3;
   var pulses = [], touched = false, born = 0, clock = 0, last = 0, visible = true, running = false;
 
   function size() {
     var b = host.getBoundingClientRect();
-    DPR = Math.min(window.devicePixelRatio || 1, 2);
+    DPR = Math.min(window.devicePixelRatio || 1, 1.75);
     W = Math.max(1, Math.round(b.width * DPR)); H = Math.max(1, Math.round(b.height * DPR));
     cv.width = W; cv.height = H;
     R = Math.min(W, H) * 0.34; CX = W / 2; CY = H * 0.45;
@@ -82,14 +82,19 @@
   var A = [0, 0], B = [0, 0];
   function drawLayer(L, t, life, idx) {
     var grow = ease((life - L.delay) / 1.9); if (grow <= 0) return;
-    var rot = L.rot + L.spin * t + ang[idx] - Math.PI / 2;
+    var rot = L.rot + L.spin * t + vis[idx] - Math.PI / 2;
     var tips = [];
+    /* decorative flex: each star breathes on its own beat and a ripple travels around its four points;
+       it swells when the star is spun or held. Motion only, it carries no data. */
+    var sp = Math.min(1, Math.abs(w[idx]) / 12), e = 0.03 + 0.11 * sp + 0.09 * hot[idx];
+    var beat = Math.sin(t * (1.5 + idx * 0.55) + idx * 2.1), breath = 1 + e * beat;
     for (var k = 0; k < 4; k++) {
-      var a = rot + k * Math.PI / 2;
-      var len = L.r * (1 + 0.045 * Math.sin(t * 0.55 + k * 1.7 + L.rot * 3)) * (0.35 + 0.65 * grow);
-      tips.push({ x: Math.cos(a) * len, y: Math.sin(a) * len, z: L.z + L.warp * Math.sin(t * 0.42 + k * Math.PI / 2 + L.rot * 5) * (k % 2 ? 1 : -1) * 0.5 });
+      var a = rot + k * Math.PI / 2, ph = k * Math.PI / 2;
+      var ripple = Math.sin(t * 2.4 - ph * (idx % 2 ? -1 : 1) + idx);
+      var len = L.r * (1 + 0.045 * Math.sin(t * 0.55 + k * 1.7 + L.rot * 3)) * breath * (1 + e * 0.7 * ripple) * (0.35 + 0.65 * grow);
+      tips.push({ x: Math.cos(a) * len, y: Math.sin(a) * len, z: L.z + L.warp * Math.sin(t * 0.42 + ph + L.rot * 5) * (k % 2 ? 1 : -1) * 0.5 + e * 1.5 * Math.sin(t * 2.4 - ph + idx * 1.3) });
     }
-    var buckets = L.north ? 5 : 1, shown = Math.round(N * grow), glow = 1 + kick * 0.9 + hot[idx] * 0.9 + Math.min(0.6, Math.abs(w[idx]) * 0.025);
+    var buckets = L.north ? 5 : 1, shown = Math.round(N * grow), glow = (1 + kick * 0.9 + hot[idx] * 0.9 + Math.min(0.6, Math.abs(w[idx]) * 0.025)) * (1 + 0.28 * e * 4 * beat);
     for (var pass = 0; pass < 2; pass++) {
       ctx.lineWidth = (pass ? 0.8 : 4) * DPR;
       for (var b = 0; b < buckets; b++) {
@@ -183,6 +188,7 @@
     tiltX += (tgtX - tiltX) * tk; tiltY += (tgtY - tiltY) * tk; rimHot += ((tiltHeld ? 1 : 0) - rimHot) * Math.min(1, dt * 8);
     for (var l = 0; l < 3; l++) {                       /* a layer coasts and slows like a real spinner; a held layer follows the finger */
       if (!held[l]) { ang[l] += w[l] * dt; w[l] *= Math.exp(-FRICTION * dt); if (Math.abs(w[l]) < 0.05) w[l] = 0; }
+      vis[l] += (ang[l] - vis[l]) * Math.min(1, dt * 30);   /* drawn angle chases the true one a hair behind: hides touch jitter */
       hot[l] += ((held[l] ? 1 : 0) - hot[l]) * Math.min(1, dt * 8);
     }
     kick *= Math.pow(0.08, dt);
@@ -204,7 +210,7 @@
     return { a: Math.atan2(dy, dx), d: Math.hypot(dx, dy) / (R / DPR) };
   }
   pad.addEventListener('pointerdown', function (e) {
-    var p = polar(e), i = p.d >= 1.0 ? -1 : p.d < 0.5 ? 2 : p.d < 0.83 ? 1 : 0;   /* -1 = the rim: tilts the whole star */
+    var p = polar(e), i = p.d >= 1.0 ? -1 : p.d < 0.52 ? 2 : p.d < 0.80 ? 1 : 0;   /* -1 = the rim: tilts the whole star */
     grabs[e.pointerId] = { i: i, a: p.a, x0: e.clientX, y0: e.clientY, tx: e.clientX, ty: e.clientY, t0: performance.now(), moved: false, s: [] };
     if (i < 0) tiltHeld++; else { held[i]++; w[i] = 0; }
     wake(); host.classList.add('dragging');
@@ -213,19 +219,24 @@
   });
   pad.addEventListener('pointermove', function (e) {
     var g = grabs[e.pointerId]; if (!g) return;
-    if (g.i < 0) {                                       /* rim: move the whole star on its axis; layer spin is untouched */
-      if (Math.hypot(e.clientX - g.x0, e.clientY - g.y0) > 8) g.moved = true;
-      tgtY = Math.max(-1.1, Math.min(1.1, tgtY + (e.clientX - g.tx) * 0.011));
-      tgtX = Math.max(-1.1, Math.min(1.1, tgtX - (e.clientY - g.ty) * 0.011));
-      g.tx = e.clientX; g.ty = e.clientY; wake(); if (reduce) draw(clock); return;
+    var evs = e.getCoalescedEvents ? e.getCoalescedEvents() : null; if (!evs || !evs.length) evs = [e];   /* every sample the phone reported, not one per frame */
+    for (var k = 0; k < evs.length; k++) {
+      var ev = evs[k];
+      if (g.i < 0) {                                     /* rim: move the whole star on its axis; layer spin is untouched */
+        if (Math.hypot(ev.clientX - g.x0, ev.clientY - g.y0) > 8) g.moved = true;
+        tgtY = Math.max(-1.1, Math.min(1.1, tgtY + (ev.clientX - g.tx) * 0.011));
+        tgtX = Math.max(-1.1, Math.min(1.1, tgtX - (ev.clientY - g.ty) * 0.011));
+        g.tx = ev.clientX; g.ty = ev.clientY; continue;
+      }
+      var p = polar(ev), da = p.a - g.a;
+      if (p.d < 0.12) continue;                          /* dead centre: the angle is meaningless there */
+      g.a = p.a;
+      if (da > Math.PI) da -= TAU; else if (da < -Math.PI) da += TAU;
+      if (Math.hypot(ev.clientX - g.x0, ev.clientY - g.y0) > 8) g.moved = true;
+      ang[g.i] += da; var now = performance.now(); g.s.push([now, da]);
+      while (g.s.length && now - g.s[0][0] > 100) g.s.shift();
     }
-    var p = polar(e), da = p.a - g.a; g.a = p.a;
-    if (da > Math.PI) da -= TAU; else if (da < -Math.PI) da += TAU;
-    if (Math.hypot(e.clientX - g.x0, e.clientY - g.y0) > 8) g.moved = true;
-    if (p.d < 0.06) return;                              /* dead centre: the angle is meaningless there */
-    ang[g.i] += da; var now = performance.now(); g.s.push([now, da]);
-    while (g.s.length && now - g.s[0][0] > 100) g.s.shift();
-    wake(); if (reduce) draw(clock);
+    wake(); if (reduce) { vis = ang.slice(); draw(clock); }
   });
   function release(e, cancelled) {
     var g = grabs[e.pointerId]; if (!g) return;
