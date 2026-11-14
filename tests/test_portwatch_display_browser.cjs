@@ -10,6 +10,7 @@ const fs=require('node:fs/promises'),path=require('node:path'),http=require('nod
  const base='http://127.0.0.1:'+server.address().port+'/',browser=await chromium.launch({headless:true,channel:process.env.PLAYWRIGHT_CHANNEL||undefined});
  try{
   const fixture=JSON.parse(await fs.readFile(path.join(root,'data.json'),'utf8'));
+  fixture.generated_utc=new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
   fixture.chokepoints=[{id:'MAL',name:'SHIPPING_SENTINEL_8901234',latest:8901234,avg7:8901234,base:8901234,ratio:.123456,asof:new Date().toISOString().slice(0,10),lat:2,lon:102}];
   const ctx=await browser.newContext({serviceWorkers:'block'}),page=await ctx.newPage(),errors=[],external=[];
   page.on('pageerror',e=>errors.push(e.message));
