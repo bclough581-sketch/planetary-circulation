@@ -100,7 +100,22 @@ try{
   for(let i=1;i<=12;i++){await touch('touchMove',[{id:1,x,y:520-i*14}]);await page.waitForTimeout(16);}
   await touch('touchEnd',[]);await page.waitForTimeout(200);
   assert.ok(await page.evaluate(()=>scrollY)>y0+20,'vertical swipe beside the dial scrolls the page');
+  // 9. The whole star turns without limit, keeps coasting after release, and Reset brings everything home.
+  await page.evaluate(()=>scrollTo(0,0));await page.waitForTimeout(300);
+  const s9=await st(),r0=pt(s9,1.25,90,1),u0=s9.u.slice();
+  await touch('touchStart',[r0]);
+  for(let i=1;i<=7;i++){await touch('touchMove',[{id:1,x:r0.x-i*40,y:r0.y}]);await page.waitForTimeout(8);}
+  const m1=await st();
+  await touch('touchEnd',[]);
+  assert.ok(Math.abs(m1.u[1]-u0[1])>Math.PI,'turned further than half a turn: '+(m1.u[1]-u0[1]));
+  await page.waitForTimeout(250);
+  const m2=await st();
+  assert.ok(Math.abs(m2.u[1]-m1.u[1])>0.05,'keeps turning after release');
+  await page.waitForFunction(()=>document.querySelector('.star-reset').classList.contains('on'));
+  await page.click('.star-reset');
+  await page.waitForFunction(()=>{const s=window.__amalgamStarSpin();return !s.resetting&&Math.abs(s.u[0])<0.01&&Math.abs(s.u[1])<0.01&&s.ang.every(a=>Math.abs(a)<0.01)},null,{timeout:6000});
+  await page.waitForFunction(()=>!document.querySelector('.star-reset').classList.contains('on'));
   assert.deepEqual(errors,[]);
-  console.log('PASS: star spinner: layers spin independently both ways, coast and slow, tilting the whole star while it spins, two fingers at once, a tap brakes instead of spinning, page scrolls beside the dial.');
+  console.log('PASS: star spinner: layers spin independently both ways, coast and slow, turning the whole star any amount with Reset to bring it home, two fingers at once, a tap brakes instead of spinning, page scrolls beside the dial.');
 }finally{await browser.close();await preview.close();}
 })().catch(e=>{console.error(e);process.exit(1)});
