@@ -51,6 +51,8 @@ def check(data, tic, now=None, max_age_hours=36):
                     bad.append("%s history has an implausible value" % h)
         except Exception as e:
             bad.append("hub %s malformed (%s)" % (h, e))
+    if data.get("chokepoints"):
+        bad.append("PortWatch redistribution paused: chokepoints must be empty")
     for c in data.get("chokepoints", []):
         try:
             r = c.get("ratio")
