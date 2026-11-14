@@ -7,6 +7,7 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');const path=require('node:path');
 const shots=process.env.SHOT_DIR||null;
 const real=JSON.parse(fs.readFileSync(path.resolve(__dirname,'..','data.json'),'utf8'));
+const retained=JSON.parse(fs.readFileSync(path.resolve(__dirname,'..','product-data/retained-context-2026-11-04.json'),'utf8'));
 const company=JSON.parse(fs.readFileSync(path.resolve(__dirname,'..','product-data/delta-company-evidence.json'),'utf8'));
 const fixedNow=Date.parse(company.reviewed_utc)+3600000;
 const today=new Date(fixedNow).toISOString().slice(0,10),nowIso=new Date(fixedNow).toISOString();
@@ -31,8 +32,8 @@ async function open(ctx,route,clock=fixedNow){
  return page;
 }
 try{
- /* 1. real branch data.json: dated 2026-11-04, so on a later day every series must read stale */
- let ctx=await browser.newContext({serviceWorkers:'block'}),page=await open(ctx);
+ /* 1. fixed retained November-4 context must read stale at the review clock */
+ let ctx=await browser.newContext({serviceWorkers:'block'}),page=await open(ctx,rt=>rt.fulfill(json(retained)));
  for(const id of ['deltaWorkflow','wfExposure','wfQuarter','wfContext','starterCase','wfDecision'])assert.equal(await page.locator('#'+id).isVisible(),true,id+' visible');
  assert.match(await page.locator('#starterCase').innerText(),/Preserved · does not refresh/);
  assert.match(await page.locator('#wfTitle').innerText(),/Delta Air Lines/);
@@ -46,11 +47,21 @@ try{
  assert.ok(await page.locator('#wfQSources a').count()>=1);
  assert.match(await page.locator('#wfQChip').innerText(),/Fresh/);
  let r=await rows(page);assert.equal(r.length,5);
- if(real.hubs.HOU.asof<today){for(const x of r)assert.match(x.text,/Stale/);assert.match(await page.locator('#wfCChip').innerText(),/Stale/)}
+ for(const x of r)assert.match(x.text,/Stale/);assert.match(await page.locator('#wfCChip').innerText(),/Stale/);
  assert.ok(r.every(x=>/eia\.gov|treasury\.gov|ecb\.europa\.eu/.test(x.text)||true));
  assert.equal(await page.locator('#wfCRows a[href^="https://"]').count(),5,'every row links its source');
  assert.doesNotMatch(await page.locator('#deltaWorkflow').innerText(),/PortWatch|chokepoint/i);
  if(shots)await page.screenshot({path:path.join(shots,'01_stale_desktop.png'),fullPage:false});
+ await ctx.close();
+
+ /* The actual deployment snapshot remains wired to current context, not the retained fixture. */
+ ctx=await browser.newContext({serviceWorkers:'block'});
+ page=await open(ctx,null,Math.max(fixedNow,Date.parse(real.generated_utc)+3600000));
+ r=await rows(page);assert.equal(r.length,5);
+ for(const [i,id] of ['HOU','DXB','NYC','FRA','LON'].entries()){
+  assert.ok(r[i].text.includes(real.hubs[id].asof),'actual snapshot observation date for '+id);
+ }
+ assert.doesNotMatch(await page.locator('#deltaWorkflow').innerText(),/PortWatch|chokepoint/i);
  await ctx.close();
 
  /* 2. fresh refresh */

@@ -28,7 +28,7 @@ local history over the remote branch.
 
 ## Integration fixes discovered by validation
 
-Preserving current main data exposed two old couplings:
+Preserving current main data exposed three old couplings:
 
 1. scripts/build_ring_evidence.py rebuilt a historical starter from advancing
    data.json. It now reads an explicit retained November-4 context fixture.
@@ -36,6 +36,11 @@ Preserving current main data exposed two old couplings:
 2. tests/test_delta_context.cjs assumed the deployment's data.json was permanently
    November 4. Fixed stale/fresh boundary cases now use that retained fixture.
    Current data.json is still checked directly by check_data.py and browser tests.
+3. The first browser CI run (43537999641) exposed the same assumption in the Delta
+   browser test: it treated any observation before today as stale, even within its
+   allowed age. Stale-state UI assertions now use the fixed retained fixture;
+   a separate browser case loads the actual deployment snapshot and verifies its
+   observation dates appear. Product freshness rules are unchanged.
 
 product-data/retained-context-2026-11-04.json copies existing retained hub/history
 values and source status from Delta data blob
