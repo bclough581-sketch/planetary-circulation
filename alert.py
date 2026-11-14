@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Phone alert via ntfy. Quiet by default: sends only when something broke or a source first goes stale.
 Needs the repo secret NTFY_TOPIC (your private ntfy topic name). Without it, this prints and exits 0.
-Env: NTFY_TOPIC, TESTS, FETCH, CHECK = outcome of those steps (success, failure, skipped)."""
+Env: NTFY_TOPIC, TESTS, FETCH, CHECK, COMMIT = outcome of those steps (success, failure, skipped)."""
 import json, os, sys, urllib.request
 from datetime import datetime, timezone
 
@@ -13,7 +13,7 @@ TIC_STALE_DAYS = 75
 def problems(data, tic, env, now=None):
     now = now or datetime.now(timezone.utc)
     out = []
-    for step, label in (("TESTS", "unit tests"), ("FETCH", "data fetch"), ("CHECK", "self-check")):
+    for step, label in (("TESTS", "unit tests"), ("FETCH", "data fetch"), ("CHECK", "self-check"), ("COMMIT", "data commit/push")):
         if env.get(step) == "failure":
             out.append("%s failed" % label)
     for name, limit in STALE_DAYS.items():
