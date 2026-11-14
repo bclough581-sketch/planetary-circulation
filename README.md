@@ -1,4 +1,4 @@
-# Amalgam (formerly Tributary, Planetary Circulation)
+# Amalgam™ (formerly Tributary, Planetary Circulation)
 
 A free, installable, open-data HUD of global market readings. Information only; not investment advice.
 

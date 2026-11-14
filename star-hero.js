@@ -28,10 +28,10 @@
 
   var host = document.createElement('section');
   host.className = 'star-hero';
-  host.setAttribute('aria-label', 'Amalgam compass star. Decorative; it shows no data.');
+  host.setAttribute('aria-label', 'Amalgam\u2122 compass star. Decorative; it shows no data.');
   var cv = document.createElement('canvas'); cv.setAttribute('aria-hidden', 'true');
   var hint = document.createElement('p'); hint.className = 'star-hint';
-  hint.textContent = 'Flick a star to spin it. Each layer turns on its own.';
+  hint.textContent = 'Flick a star to spin it. Drag the rim to tilt it.';
   var pad = document.createElement('div'); pad.className = 'star-pad'; pad.setAttribute('aria-hidden', 'true');
   host.appendChild(cv); host.appendChild(pad); host.appendChild(hint);
   main.parentNode.insertBefore(host, main);
@@ -52,7 +52,7 @@
   var dust = []; for (var i = 0; i < 170; i++) dust.push({ x: Math.random(), y: Math.random(), s: Math.random() * 1.3 + 0.25, p: Math.random() * TAU, d: Math.random() * 0.6 + 0.2 });
 
   var tiltX = 0.12, tiltY = 0, tgtX = 0.12, tgtY = 0, kick = 0;
-  var ang = [0, 0, 0], w = [0, 0, 0], hot = [0, 0, 0], held = [0, 0, 0];   /* per layer: spun angle, spin speed (rad/s, + is clockwise), grab glow, fingers holding it */
+  var ang = [0, 0, 0], w = [0, 0, 0], hot = [0, 0, 0], held = [0, 0, 0], tiltHeld = 0, rimHot = 0;   /* per layer: spun angle, spin speed (rad/s, + is clockwise), grab glow, fingers holding it */
   var MAXW = 30, FRICTION = 0.45, FLICK = 1.3;
   var pulses = [], touched = false, born = 0, clock = 0, last = 0, visible = true, running = false;
 
@@ -61,8 +61,8 @@
     DPR = Math.min(window.devicePixelRatio || 1, 2);
     W = Math.max(1, Math.round(b.width * DPR)); H = Math.max(1, Math.round(b.height * DPR));
     cv.width = W; cv.height = H;
-    R = Math.min(W, H) * 0.36; CX = W / 2; CY = H * 0.45;
-    var pd = 2 * 1.13 * R / DPR;                       /* touch pad = the dial, so only the star captures touches */
+    R = Math.min(W, H) * 0.34; CX = W / 2; CY = H * 0.45;
+    var pd = 2 * 1.3 * R / DPR;                        /* touch pad = the dial plus its outer rim, so only the star captures touches */
     pad.style.width = pad.style.height = pd + 'px';
     pad.style.left = (CX / DPR - pd / 2) + 'px'; pad.style.top = (CY / DPR - pd / 2) + 'px';
     if (!running) draw(clock);
@@ -114,7 +114,7 @@
   function drawRing(t, life) {
     var g = ease((life - 0.6) / 1.6); if (g <= 0) return;
     var rr = 1.13, turn = t * 0.008;
-    ctx.lineWidth = 1 * DPR; ctx.strokeStyle = 'rgba(190,214,245,' + (0.30 * g).toFixed(3) + ')';
+    ctx.lineWidth = (1 + rimHot) * DPR; ctx.strokeStyle = 'rgba(190,214,245,' + ((0.30 + 0.5 * rimHot) * g).toFixed(3) + ')';
     ctx.beginPath();
     for (var i = 0; i <= 120 * g; i++) { var a = turn + i / 120 * TAU - Math.PI / 2; proj(Math.cos(a) * rr, Math.sin(a) * rr, -0.05, A); if (i) ctx.lineTo(A[0], A[1]); else ctx.moveTo(A[0], A[1]); }
     ctx.stroke();
@@ -179,7 +179,8 @@
     var now = ms / 1000, dt = Math.min(0.05, now - (last || now)); last = now;
     if (!document.body.classList.contains('motion-paused')) clock += dt;
     if (!touched) { tgtX = 0.12 + 0.10 * Math.sin(clock * 0.21); tgtY = 0.16 * Math.sin(clock * 0.17); }
-    tiltX += (tgtX - tiltX) * Math.min(1, dt * 3.5); tiltY += (tgtY - tiltY) * Math.min(1, dt * 3.5);
+    var tk = Math.min(1, dt * (tiltHeld ? 18 : touched ? 3.5 : 1.5));   /* follows a finger on the rim closely, eases back slowly on its own */
+    tiltX += (tgtX - tiltX) * tk; tiltY += (tgtY - tiltY) * tk; rimHot += ((tiltHeld ? 1 : 0) - rimHot) * Math.min(1, dt * 8);
     for (var l = 0; l < 3; l++) {                       /* a layer coasts and slows like a real spinner; a held layer follows the finger */
       if (!held[l]) { ang[l] += w[l] * dt; w[l] *= Math.exp(-FRICTION * dt); if (Math.abs(w[l]) < 0.05) w[l] = 0; }
       hot[l] += ((held[l] ? 1 : 0) - hot[l]) * Math.min(1, dt * 8);
@@ -193,7 +194,8 @@
 
   /* input. Grab the star where you touch it: outer, middle or inner layer. The layer follows the finger
      around the centre (clockwise finger = clockwise star) and keeps spinning when you let go.
-     Several fingers can hold several layers. A quick tap sends a pulse. Vertical swipes outside the dial still scroll. */
+     Grab the thin rim outside the star instead and the whole thing tilts on its axis while the layers keep spinning.
+     Several fingers can do several of these at once. A quick tap sends a pulse. Vertical swipes outside the dial still scroll. */
   var grabs = {}, idleTimer = 0;
   function wake() { touched = true; hint.classList.remove('on'); clearTimeout(idleTimer); idleTimer = setTimeout(function () { touched = false; }, 3500); }
   function aim(e) { var b = host.getBoundingClientRect(); tgtY = ((e.clientX - b.left) / b.width - 0.5) * 0.9; tgtX = ((e.clientY - b.top) / b.height - 0.5) * 0.8; }
@@ -202,14 +204,21 @@
     return { a: Math.atan2(dy, dx), d: Math.hypot(dx, dy) / (R / DPR) };
   }
   pad.addEventListener('pointerdown', function (e) {
-    var p = polar(e), i = p.d < 0.5 ? 2 : p.d < 0.83 ? 1 : 0;
-    grabs[e.pointerId] = { i: i, a: p.a, x0: e.clientX, y0: e.clientY, t0: performance.now(), moved: false, s: [] };
-    held[i]++; w[i] = 0; wake(); host.classList.add('dragging');
+    var p = polar(e), i = p.d >= 1.0 ? -1 : p.d < 0.5 ? 2 : p.d < 0.83 ? 1 : 0;   /* -1 = the rim: tilts the whole star */
+    grabs[e.pointerId] = { i: i, a: p.a, x0: e.clientX, y0: e.clientY, tx: e.clientX, ty: e.clientY, t0: performance.now(), moved: false, s: [] };
+    if (i < 0) tiltHeld++; else { held[i]++; w[i] = 0; }
+    wake(); host.classList.add('dragging');
     try { pad.setPointerCapture(e.pointerId); } catch (_) {}
     if (e.pointerType === 'mouse') e.preventDefault();
   });
   pad.addEventListener('pointermove', function (e) {
     var g = grabs[e.pointerId]; if (!g) return;
+    if (g.i < 0) {                                       /* rim: move the whole star on its axis; layer spin is untouched */
+      if (Math.hypot(e.clientX - g.x0, e.clientY - g.y0) > 8) g.moved = true;
+      tgtY = Math.max(-1.1, Math.min(1.1, tgtY + (e.clientX - g.tx) * 0.011));
+      tgtX = Math.max(-1.1, Math.min(1.1, tgtX - (e.clientY - g.ty) * 0.011));
+      g.tx = e.clientX; g.ty = e.clientY; wake(); if (reduce) draw(clock); return;
+    }
     var p = polar(e), da = p.a - g.a; g.a = p.a;
     if (da > Math.PI) da -= TAU; else if (da < -Math.PI) da += TAU;
     if (Math.hypot(e.clientX - g.x0, e.clientY - g.y0) > 8) g.moved = true;
@@ -220,8 +229,10 @@
   });
   function release(e, cancelled) {
     var g = grabs[e.pointerId]; if (!g) return;
-    delete grabs[e.pointerId]; held[g.i] = Math.max(0, held[g.i] - 1);
-    if (!held[0] && !held[1] && !held[2]) host.classList.remove('dragging');
+    delete grabs[e.pointerId];
+    if (g.i < 0) tiltHeld = Math.max(0, tiltHeld - 1); else held[g.i] = Math.max(0, held[g.i] - 1);
+    if (!held[0] && !held[1] && !held[2] && !tiltHeld) host.classList.remove('dragging');
+    if (g.i < 0) return;
     var now = performance.now(), n = g.s.length, sum = 0, first = now;
     for (var k = 0; k < n; k++) if (now - g.s[k][0] <= 100) { sum += g.s[k][1]; if (g.s[k][0] < first) first = g.s[k][0]; }
     var fresh = n && now - g.s[n - 1][0] < 90;           /* finger still moving when it lifted */
@@ -231,7 +242,7 @@
   pad.addEventListener('pointerup', function (e) { release(e, false); });
   pad.addEventListener('pointercancel', function (e) { release(e, true); });
   host.addEventListener('pointermove', function (e) { if (e.pointerType === 'mouse' && e.buttons === 0) { wake(); aim(e); } });
-  window.__amalgamStarSpin = function () { return { ang: ang.slice(), w: w.slice(), held: held.slice(), pad: pad.getBoundingClientRect().toJSON(), r: R / DPR }; };
+  window.__amalgamStarSpin = function () { return { ang: ang.slice(), w: w.slice(), held: held.slice(), tilt: [tiltX, tiltY], tiltHeld: tiltHeld, pad: pad.getBoundingClientRect().toJSON(), r: R / DPR }; };
   window.addEventListener('deviceorientation', function (e) {
     if (touched || e.gamma == null || e.beta == null) return;
     tgtY = Math.max(-0.45, Math.min(0.45, e.gamma / 60)); tgtX = Math.max(-0.35, Math.min(0.5, (e.beta - 45) / 70));

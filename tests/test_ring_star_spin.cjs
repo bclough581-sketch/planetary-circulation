@@ -21,7 +21,7 @@ try{
   const pt=(s,frac,deg,id)=>{const cx=s.pad.x+s.pad.width/2,cy=s.pad.y+s.pad.height/2,a=deg*Math.PI/180;return{id,x:cx+Math.cos(a)*frac*s.r,y:cy+Math.sin(a)*frac*s.r};};
   // Pad is the dial: it sits inside the phone width and leaves margins to scroll from.
   let s=await st();
-  assert.ok(s.pad.width>200&&s.pad.width<=390-20,'dial is sized to the phone with scroll margins: '+s.pad.width);
+  assert.ok(s.pad.width>200&&s.pad.width<=390-30,'dial is sized to the phone with scroll margins: '+s.pad.width);
   assert.deepEqual(s.ang,[0,0,0],'nothing spun yet');
   // 1. Outer layer, clockwise swipe (screen angle increasing = clockwise).
   await touch('touchStart',[pt(s,.92,-90,1)]);
@@ -62,7 +62,38 @@ try{
   await page.waitForTimeout(300);
   const t2=await st();
   assert.ok(Math.abs(t2.ang[0]-t1.ang[0])<0.01,'and it stays stopped');
-  // 6. The page still scrolls from the margin beside the dial.
+  // 6. Move the whole star on its axis from the rim while a layer keeps spinning.
+  await touch('touchStart',[pt(s,.5,-90,1)]);               // inner... grab and flick the middle layer first
+  await touch('touchEnd',[]);
+  await touch('touchStart',[pt(s,.70,200,1)]);
+  for(let i=1;i<=8;i++){await touch('touchMove',[pt(s,.70,200+i*22,1)]);await page.waitForTimeout(16);}
+  await touch('touchEnd',[]);
+  const sp0=await st();
+  assert.ok(Math.abs(sp0.w[1])>2,'middle layer is spinning before the tilt: '+sp0.w[1]);
+  const rim=pt(s,1.12,0,1);
+  await touch('touchStart',[rim]);
+  for(let i=1;i<=8;i++){await touch('touchMove',[{id:1,x:rim.x-i*5,y:rim.y+i*12}]);await page.waitForTimeout(16);}
+  const tl=await st();
+  assert.equal(tl.tiltHeld,1,'rim is held');
+  assert.ok(Math.abs(tl.ang[1]-sp0.ang[1])>0.02,'layer keeps spinning while the star is being tilted');
+  await page.waitForTimeout(250);
+  const tl2=await st();
+  await touch('touchEnd',[]);
+  assert.ok(Math.abs(tl2.tilt[0]-sp0.tilt[0])>0.25||Math.abs(tl2.tilt[1]-sp0.tilt[1])>0.25,'whole star tilted: '+JSON.stringify([sp0.tilt,tl2.tilt]));
+  assert.ok(Math.abs(tl2.ang[1]-tl.ang[1])>0.1&&Math.sign(tl2.w[1])===Math.sign(sp0.w[1]),'same direction of spin, still going');
+  assert.deepEqual([tl2.held,tl2.tiltHeld],[[0,0,0],1],'no layer held while tilting');
+  // 7. Tilt with one finger on the rim and spin a layer with another, at the same moment.
+  await page.waitForTimeout(400);
+  const c0=await st();
+  await touch('touchStart',[{...pt(s,1.12,180,1)},{...pt(s,.28,0,2)}]);
+  for(let i=1;i<=8;i++){await touch('touchMove',[{id:1,x:pt(s,1.12,180,1).x+i*6,y:pt(s,1.12,180,1).y+i*10},pt(s,.28,0-i*22,2)]);await page.waitForTimeout(16);}
+  const c1=await st();
+  assert.deepEqual([c1.tiltHeld,c1.held[2]],[1,1],'rim and inner layer held by two fingers');
+  await touch('touchEnd',[]);
+  const c2=await st();
+  assert.ok(Math.abs(c2.tilt[0]-c0.tilt[0])>0.2||Math.abs(c2.tilt[1]-c0.tilt[1])>0.2,'tilted');
+  assert.ok(c2.ang[2]-c0.ang[2]<-0.8,'inner layer spun counter-clockwise at the same time');
+  // 8. The page still scrolls from the margin beside the dial.
   const y0=await page.evaluate(()=>scrollY);
   const x=Math.max(8,s.pad.x/2);
   await touch('touchStart',[{id:1,x,y:520}]);
@@ -70,6 +101,6 @@ try{
   await touch('touchEnd',[]);await page.waitForTimeout(200);
   assert.ok(await page.evaluate(()=>scrollY)>y0+20,'vertical swipe beside the dial scrolls the page');
   assert.deepEqual(errors,[]);
-  console.log('PASS: star spinner: layers spin independently both ways, coast and slow, two fingers at once, a tap brakes instead of spinning, page scrolls beside the dial.');
+  console.log('PASS: star spinner: layers spin independently both ways, coast and slow, tilting the whole star while it spins, two fingers at once, a tap brakes instead of spinning, page scrolls beside the dial.');
 }finally{await browser.close();await preview.close();}
 })().catch(e=>{console.error(e);process.exit(1)});
