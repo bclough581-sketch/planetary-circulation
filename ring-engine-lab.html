@@ -253,12 +253,14 @@ document.getElementById("openCase").onclick=()=>document.getElementById("deltaWo
 document.querySelectorAll("[data-case-layer]").forEach(button=>button.onclick=()=>select(button.dataset.caseLayer));
 
 const reducedMotion=matchMedia("(prefers-reduced-motion: reduce)");
-let tilt=66,yaw=0,roll=-22,drag=null;
+let tilt=66,yaw=0,roll=-22,drag=null,vYaw=0,vTilt=0,coast=0;
+function cancelCoast(){cancelAnimationFrame(coast);coast=0;vYaw=vTilt=0;stage.classList.remove("coasting")}
+function startCoast(){cancelAnimationFrame(coast);stage.classList.add("coasting");let last=performance.now();const step=t=>{const dt=Math.min(40,t-last);last=t;yaw=Math.max(-70,Math.min(70,yaw+vYaw*dt));tilt=Math.max(12,Math.min(88,tilt+vTilt*dt));const k=Math.pow(.03,dt/1000);vYaw*=k;vTilt*=k;assembly.style.transition="none";orient();if(Math.hypot(vYaw,vTilt)>.004)coast=requestAnimationFrame(step);else{cancelCoast();assembly.style.transition=""}};coast=requestAnimationFrame(step)}
 function orient(){assembly.style.transform="rotateX("+tilt+"deg) rotateY("+yaw+"deg) rotateZ("+roll+"deg)"}
 let mode="spin",motionPreset="drift",running=!reducedMotion.matches;
 document.body.dataset.motion=motionPreset;
 function motion(){document.querySelectorAll(".motion-presets [data-motion]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.motion===(running?motionPreset:"still"))));document.body.classList.toggle("motion-paused",!running);assembly.classList.toggle("paused",!running);document.getElementById("spin").textContent=running?"Pause motion":"Resume motion";document.getElementById("spin").setAttribute("aria-pressed",String(running))}
-function view(v){mode=v;[tilt,yaw,roll]=v==="depth"?[57,-23,-24]:v==="settle"?[78,0,0]:[66,0,-22];orient()}
+function view(v){cancelCoast();mode=v;[tilt,yaw,roll]=v==="depth"?[57,-23,-24]:v==="settle"?[78,0,0]:[66,0,-22];orient()}
 function select(id){const x=layers[id];if(!x)return;document.querySelectorAll(".ring").forEach(e=>{e.classList.toggle("selected",e.dataset.id===id);e.setAttribute("aria-pressed",String(e.dataset.id===id));});document.querySelectorAll("[data-layer-choice]").forEach(e=>e.setAttribute("aria-pressed",String(e.dataset.layerChoice===id)));document.querySelectorAll("[data-case-layer]").forEach(e=>e.setAttribute("aria-pressed",String(e.dataset.caseLayer===id)));document.getElementById("layerTitle").textContent=x.name;document.getElementById("sceneLayer").textContent=x.name+" evidence";document.getElementById("layerDetail").textContent=x.detail;document.getElementById("layerCaveat").textContent=x.caveat;evidenceView(id)}
 const buttons=document.getElementById("layerButtons");Object.entries(layers).forEach(([id,v])=>{const b=document.createElement("button");b.textContent=v.name;b.dataset.layerChoice=id;b.setAttribute("aria-pressed","false");b.onclick=()=>select(id);buttons.append(b)});
 document.querySelectorAll(".ring").forEach(e=>e.onclick=()=>select(e.dataset.id));
@@ -279,7 +281,8 @@ document.getElementById("clearEvidence").onclick=()=>{imported=null;starterActiv
 // Pointer capture allows dragging directly on ring surfaces, not only empty background.
 stage.addEventListener("pointerdown",e=>{
  if(e.button!==0||drag)return;
- drag={id:e.pointerId,x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY,moved:false};
+ cancelCoast();
+ drag={id:e.pointerId,x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY,moved:false,t:0};
 });
 stage.addEventListener("pointermove",e=>{
  if(!drag||e.pointerId!==drag.id)return;
@@ -287,8 +290,11 @@ stage.addEventListener("pointermove",e=>{
  if(!drag.moved&&Math.hypot(e.clientX-drag.startX,e.clientY-drag.startY)<7)return;
  if(!drag.moved)stage.setPointerCapture(e.pointerId);
  drag.moved=true;drag.x=e.clientX;drag.y=e.clientY;
- yaw=Math.max(-70,Math.min(70,yaw+dx*.35));
- tilt=Math.max(12,Math.min(88,tilt-dy*.35));
+ const gain=e.pointerType==="touch"?.4:.35,now=performance.now();
+ yaw=Math.max(-70,Math.min(70,yaw+dx*gain));
+ tilt=Math.max(12,Math.min(88,tilt-dy*gain));
+ if(drag.t){const dt=Math.max(1,now-drag.t);vYaw=.7*vYaw+.3*(dx*gain/dt);vTilt=.7*vTilt+.3*(-dy*gain/dt)}
+ drag.t=now;stage.classList.add("dragging");
  assembly.style.transition="none";orient();
 });
 stage.addEventListener("pointerleave",()=>{if(drag&&!drag.moved)drag=null;});
@@ -297,10 +303,12 @@ stage.addEventListener("click",e=>{if(!suppressClick)return;e.preventDefault();e
 function endDrag(e){
  if(!drag||e.pointerId!==drag.id)return;
  suppressClick=drag.moved;
- drag=null;assembly.style.transition="";
+ const fresh=drag.moved&&drag.t&&performance.now()-drag.t<90;
+ drag=null;assembly.style.transition="";stage.classList.remove("dragging");
+ if(fresh&&!reducedMotion.matches&&Math.hypot(vYaw,vTilt)>.02)startCoast();else{vYaw=vTilt=0}
 }
 stage.addEventListener("pointerup",endDrag);stage.addEventListener("pointercancel",endDrag);
-stage.addEventListener("lostpointercapture",()=>{drag=null;assembly.style.transition=""});
+stage.addEventListener("lostpointercapture",e=>{if(e.target!==stage)return;drag=null;assembly.style.transition="";stage.classList.remove("dragging")});
 reducedMotion.addEventListener("change",e=>{if(e.matches){running=false;motion()}});
 
 if('serviceWorker' in navigator&&location.protocol.startsWith('http')){navigator.serviceWorker.register('sw.js').catch(()=>{});}

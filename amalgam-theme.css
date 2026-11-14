@@ -503,3 +503,6 @@ h1,.hero h1 {background-image:linear-gradient(115deg,#fff 8%,#ccdef5 30%,#fff 44
   button.primary, button[aria-pressed="true"]:not(.ring) {border: 2px solid ButtonText;}
   .ring {forced-color-adjust: auto;}
 }
+/* smoother touch drag: own compositor layer, and rings hold still while the finger or glide is moving the view */
+.assembly {will-change: transform;}
+.stage.dragging .ring, .stage.coasting .ring {animation-play-state: paused;}
