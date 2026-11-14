@@ -84,12 +84,17 @@
     var grow = ease((life - L.delay) / 1.9); if (grow <= 0) return;
     var rot = L.rot + L.spin * t + vis[idx] - Math.PI / 2;
     var tips = [];
+    /* decorative flex: each star breathes on its own beat and a ripple travels around its four points;
+       it swells when the star is spun or held. Motion only, it carries no data. */
+    var sp = Math.min(1, Math.abs(w[idx]) / 12), e = 0.03 + 0.11 * sp + 0.09 * hot[idx];
+    var beat = Math.sin(t * (1.5 + idx * 0.55) + idx * 2.1), breath = 1 + e * beat;
     for (var k = 0; k < 4; k++) {
-      var a = rot + k * Math.PI / 2;
-      var len = L.r * (1 + 0.045 * Math.sin(t * 0.55 + k * 1.7 + L.rot * 3)) * (0.35 + 0.65 * grow);
-      tips.push({ x: Math.cos(a) * len, y: Math.sin(a) * len, z: L.z + L.warp * Math.sin(t * 0.42 + k * Math.PI / 2 + L.rot * 5) * (k % 2 ? 1 : -1) * 0.5 });
+      var a = rot + k * Math.PI / 2, ph = k * Math.PI / 2;
+      var ripple = Math.sin(t * 2.4 - ph * (idx % 2 ? -1 : 1) + idx);
+      var len = L.r * (1 + 0.045 * Math.sin(t * 0.55 + k * 1.7 + L.rot * 3)) * breath * (1 + e * 0.7 * ripple) * (0.35 + 0.65 * grow);
+      tips.push({ x: Math.cos(a) * len, y: Math.sin(a) * len, z: L.z + L.warp * Math.sin(t * 0.42 + ph + L.rot * 5) * (k % 2 ? 1 : -1) * 0.5 + e * 1.5 * Math.sin(t * 2.4 - ph + idx * 1.3) });
     }
-    var buckets = L.north ? 5 : 1, shown = Math.round(N * grow), glow = 1 + kick * 0.9 + hot[idx] * 0.9 + Math.min(0.6, Math.abs(w[idx]) * 0.025);
+    var buckets = L.north ? 5 : 1, shown = Math.round(N * grow), glow = (1 + kick * 0.9 + hot[idx] * 0.9 + Math.min(0.6, Math.abs(w[idx]) * 0.025)) * (1 + 0.28 * e * 4 * beat);
     for (var pass = 0; pass < 2; pass++) {
       ctx.lineWidth = (pass ? 0.8 : 4) * DPR;
       for (var b = 0; b < buckets; b++) {
