@@ -1,5 +1,8 @@
 /* AMALGAM star opening. Decorative only: the star, its motion and its colours
    carry no data and no evidence strength. It is the app icon, alive.
+   It is also a fidget spinner: grab the outer, middle or inner star and spin it
+   either way; each layer keeps its own speed and direction, and several fingers
+   can spin several layers at once.
    Self-contained: injects one section above <main>, no libraries, no network. */
 (function () {
   'use strict';
@@ -13,8 +16,9 @@
     'radial-gradient(ellipse 80% 60% at 12% 92%,#0f3f8a77,transparent 70%),' +
     'radial-gradient(ellipse at 50% 45%,#0a1838,#030712 78%);' +
     '-webkit-mask-image:linear-gradient(#000 88%,transparent);mask-image:linear-gradient(#000 88%,transparent);' +
-    'touch-action:pan-y;cursor:grab;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}' +
-    '.star-hero.dragging{cursor:grabbing}' +
+    'touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}' +
+    '.star-pad{position:absolute;z-index:2;border-radius:50%;touch-action:none;cursor:grab;-webkit-user-select:none;user-select:none}' +
+    '.star-hero.dragging .star-pad{cursor:grabbing}' +
     '.star-hero canvas{position:absolute;inset:0;width:100%;height:100%;display:block}' +
     '.star-hero .star-hint{position:absolute;left:0;right:0;bottom:11%;margin:0;text-align:center;font-size:.82rem;' +
     'letter-spacing:.02em;color:#bcd3ee;opacity:0;transition:opacity 1.2s ease;pointer-events:none;text-shadow:0 0 12px #030712}' +
@@ -24,11 +28,12 @@
 
   var host = document.createElement('section');
   host.className = 'star-hero';
-  host.setAttribute('aria-label', 'Amalgam compass star. Decorative; it shows no data.');
+  host.setAttribute('aria-label', 'Amalgam\u2122 compass star. Decorative; it shows no data.');
   var cv = document.createElement('canvas'); cv.setAttribute('aria-hidden', 'true');
   var hint = document.createElement('p'); hint.className = 'star-hint';
-  hint.textContent = 'Drag to turn it. Tap to send a pulse.';
-  host.appendChild(cv); host.appendChild(hint);
+  hint.textContent = 'Flick a star to spin it. Drag the rim to tilt it.';
+  var pad = document.createElement('div'); pad.className = 'star-pad'; pad.setAttribute('aria-hidden', 'true');
+  host.appendChild(cv); host.appendChild(pad); host.appendChild(hint);
   main.parentNode.insertBefore(host, main);
 
   var ctx = cv.getContext('2d'); if (!ctx) { host.remove(); return; }
@@ -46,7 +51,9 @@
 
   var dust = []; for (var i = 0; i < 170; i++) dust.push({ x: Math.random(), y: Math.random(), s: Math.random() * 1.3 + 0.25, p: Math.random() * TAU, d: Math.random() * 0.6 + 0.2 });
 
-  var tiltX = 0.12, tiltY = 0, tgtX = 0.12, tgtY = 0, spinBoost = 0, extraRot = 0, kick = 0;
+  var tiltX = 0.12, tiltY = 0, tgtX = 0.12, tgtY = 0, kick = 0;
+  var ang = [0, 0, 0], w = [0, 0, 0], hot = [0, 0, 0], held = [0, 0, 0], tiltHeld = 0, rimHot = 0;   /* per layer: spun angle, spin speed (rad/s, + is clockwise), grab glow, fingers holding it */
+  var MAXW = 30, FRICTION = 0.45, FLICK = 1.3;
   var pulses = [], touched = false, born = 0, clock = 0, last = 0, visible = true, running = false;
 
   function size() {
@@ -54,7 +61,10 @@
     DPR = Math.min(window.devicePixelRatio || 1, 2);
     W = Math.max(1, Math.round(b.width * DPR)); H = Math.max(1, Math.round(b.height * DPR));
     cv.width = W; cv.height = H;
-    R = Math.min(W, H) * 0.36; CX = W / 2; CY = H * 0.45;
+    R = Math.min(W, H) * 0.34; CX = W / 2; CY = H * 0.45;
+    var pd = 2 * 1.3 * R / DPR;                        /* touch pad = the dial plus its outer rim, so only the star captures touches */
+    pad.style.width = pad.style.height = pd + 'px';
+    pad.style.left = (CX / DPR - pd / 2) + 'px'; pad.style.top = (CY / DPR - pd / 2) + 'px';
     if (!running) draw(clock);
   }
 
@@ -70,16 +80,16 @@
   function mix(a, b, t) { return [Math.round(a[0] + (b[0] - a[0]) * t), Math.round(a[1] + (b[1] - a[1]) * t), Math.round(a[2] + (b[2] - a[2]) * t)]; }
 
   var A = [0, 0], B = [0, 0];
-  function drawLayer(L, t, life) {
+  function drawLayer(L, t, life, idx) {
     var grow = ease((life - L.delay) / 1.9); if (grow <= 0) return;
-    var rot = L.rot + L.spin * t + extraRot * (0.6 + L.z * 2.2) - Math.PI / 2;
+    var rot = L.rot + L.spin * t + ang[idx] - Math.PI / 2;
     var tips = [];
     for (var k = 0; k < 4; k++) {
       var a = rot + k * Math.PI / 2;
       var len = L.r * (1 + 0.045 * Math.sin(t * 0.55 + k * 1.7 + L.rot * 3)) * (0.35 + 0.65 * grow);
       tips.push({ x: Math.cos(a) * len, y: Math.sin(a) * len, z: L.z + L.warp * Math.sin(t * 0.42 + k * Math.PI / 2 + L.rot * 5) * (k % 2 ? 1 : -1) * 0.5 });
     }
-    var buckets = L.north ? 5 : 1, shown = Math.round(N * grow), glow = 1 + kick * 0.9;
+    var buckets = L.north ? 5 : 1, shown = Math.round(N * grow), glow = 1 + kick * 0.9 + hot[idx] * 0.9 + Math.min(0.6, Math.abs(w[idx]) * 0.025);
     for (var pass = 0; pass < 2; pass++) {
       ctx.lineWidth = (pass ? 0.8 : 4) * DPR;
       for (var b = 0; b < buckets; b++) {
@@ -104,7 +114,7 @@
   function drawRing(t, life) {
     var g = ease((life - 0.6) / 1.6); if (g <= 0) return;
     var rr = 1.13, turn = t * 0.008;
-    ctx.lineWidth = 1 * DPR; ctx.strokeStyle = 'rgba(190,214,245,' + (0.30 * g).toFixed(3) + ')';
+    ctx.lineWidth = (1 + rimHot) * DPR; ctx.strokeStyle = 'rgba(190,214,245,' + ((0.30 + 0.5 * rimHot) * g).toFixed(3) + ')';
     ctx.beginPath();
     for (var i = 0; i <= 120 * g; i++) { var a = turn + i / 120 * TAU - Math.PI / 2; proj(Math.cos(a) * rr, Math.sin(a) * rr, -0.05, A); if (i) ctx.lineTo(A[0], A[1]); else ctx.moveTo(A[0], A[1]); }
     ctx.stroke();
@@ -153,7 +163,7 @@
       ctx.fillRect(((d.x + tiltY * 0.03 * d.s) % 1) * W, d.y * H, d.s * DPR, d.s * DPR);
     }
     drawRing(t, life);
-    for (var l = 0; l < LAYERS.length; l++) drawLayer(LAYERS[l], t, life);
+    for (var l = 0; l < LAYERS.length; l++) drawLayer(LAYERS[l], t, life, l);
     drawCore(t, life);
     for (var p = pulses.length - 1; p >= 0; p--) {
       var age = t - pulses[p]; if (age > 1.8) { pulses.splice(p, 1); continue; }
@@ -169,32 +179,70 @@
     var now = ms / 1000, dt = Math.min(0.05, now - (last || now)); last = now;
     if (!document.body.classList.contains('motion-paused')) clock += dt;
     if (!touched) { tgtX = 0.12 + 0.10 * Math.sin(clock * 0.21); tgtY = 0.16 * Math.sin(clock * 0.17); }
-    tiltX += (tgtX - tiltX) * Math.min(1, dt * 3.5); tiltY += (tgtY - tiltY) * Math.min(1, dt * 3.5);
-    extraRot += spinBoost * dt; spinBoost *= Math.pow(0.25, dt); kick *= Math.pow(0.08, dt);
+    var tk = Math.min(1, dt * (tiltHeld ? 18 : touched ? 3.5 : 1.5));   /* follows a finger on the rim closely, eases back slowly on its own */
+    tiltX += (tgtX - tiltX) * tk; tiltY += (tgtY - tiltY) * tk; rimHot += ((tiltHeld ? 1 : 0) - rimHot) * Math.min(1, dt * 8);
+    for (var l = 0; l < 3; l++) {                       /* a layer coasts and slows like a real spinner; a held layer follows the finger */
+      if (!held[l]) { ang[l] += w[l] * dt; w[l] *= Math.exp(-FRICTION * dt); if (Math.abs(w[l]) < 0.05) w[l] = 0; }
+      hot[l] += ((held[l] ? 1 : 0) - hot[l]) * Math.min(1, dt * 8);
+    }
+    kick *= Math.pow(0.08, dt);
     draw(clock);
     requestAnimationFrame(frame);
   }
   function start() { if (running || reduce || !visible || document.hidden) return; running = true; last = 0; requestAnimationFrame(frame); }
   function stop() { running = false; }
 
-  /* input: hover or drag tilts, sideways drag spins, tap pulses. Vertical swipes still scroll the page. */
-  var down = null, idleTimer = 0;
+  /* input. Grab the star where you touch it: outer, middle or inner layer. The layer follows the finger
+     around the centre (clockwise finger = clockwise star) and keeps spinning when you let go.
+     Grab the thin rim outside the star instead and the whole thing tilts on its axis while the layers keep spinning.
+     Several fingers can do several of these at once. A quick tap sends a pulse. Vertical swipes outside the dial still scroll. */
+  var grabs = {}, idleTimer = 0;
   function wake() { touched = true; hint.classList.remove('on'); clearTimeout(idleTimer); idleTimer = setTimeout(function () { touched = false; }, 3500); }
   function aim(e) { var b = host.getBoundingClientRect(); tgtY = ((e.clientX - b.left) / b.width - 0.5) * 0.9; tgtX = ((e.clientY - b.top) / b.height - 0.5) * 0.8; }
-  host.addEventListener('pointerdown', function (e) { down = { x: e.clientX, y: e.clientY, lx: e.clientX, moved: false, t: performance.now() }; });
-  host.addEventListener('pointermove', function (e) {
-    if (e.pointerType === 'mouse' && !down) { wake(); aim(e); return; }
-    if (!down) return;
-    var dx = e.clientX - down.lx; down.lx = e.clientX;
-    if (Math.abs(e.clientX - down.x) > 8) { down.moved = true; host.classList.add('dragging'); }
-    if (down.moved) { wake(); spinBoost += dx * 0.012; aim(e); }
-  });
-  function up(e) {
-    if (down && !down.moved && Math.abs(e.clientY - down.y) < 8 && performance.now() - down.t < 500) { wake(); pulses.push(clock); kick = 1; if (reduce) draw(clock); }
-    down = null; host.classList.remove('dragging');
+  function polar(e) {
+    var b = pad.getBoundingClientRect(), dx = e.clientX - (b.left + b.width / 2), dy = e.clientY - (b.top + b.height / 2);
+    return { a: Math.atan2(dy, dx), d: Math.hypot(dx, dy) / (R / DPR) };
   }
-  host.addEventListener('pointerup', up); host.addEventListener('pointercancel', function () { down = null; host.classList.remove('dragging'); });
-  host.addEventListener('pointerleave', function (e) { if (e.pointerType === 'mouse') down = null; });
+  pad.addEventListener('pointerdown', function (e) {
+    var p = polar(e), i = p.d >= 1.0 ? -1 : p.d < 0.5 ? 2 : p.d < 0.83 ? 1 : 0;   /* -1 = the rim: tilts the whole star */
+    grabs[e.pointerId] = { i: i, a: p.a, x0: e.clientX, y0: e.clientY, tx: e.clientX, ty: e.clientY, t0: performance.now(), moved: false, s: [] };
+    if (i < 0) tiltHeld++; else { held[i]++; w[i] = 0; }
+    wake(); host.classList.add('dragging');
+    try { pad.setPointerCapture(e.pointerId); } catch (_) {}
+    if (e.pointerType === 'mouse') e.preventDefault();
+  });
+  pad.addEventListener('pointermove', function (e) {
+    var g = grabs[e.pointerId]; if (!g) return;
+    if (g.i < 0) {                                       /* rim: move the whole star on its axis; layer spin is untouched */
+      if (Math.hypot(e.clientX - g.x0, e.clientY - g.y0) > 8) g.moved = true;
+      tgtY = Math.max(-1.1, Math.min(1.1, tgtY + (e.clientX - g.tx) * 0.011));
+      tgtX = Math.max(-1.1, Math.min(1.1, tgtX - (e.clientY - g.ty) * 0.011));
+      g.tx = e.clientX; g.ty = e.clientY; wake(); if (reduce) draw(clock); return;
+    }
+    var p = polar(e), da = p.a - g.a; g.a = p.a;
+    if (da > Math.PI) da -= TAU; else if (da < -Math.PI) da += TAU;
+    if (Math.hypot(e.clientX - g.x0, e.clientY - g.y0) > 8) g.moved = true;
+    if (p.d < 0.06) return;                              /* dead centre: the angle is meaningless there */
+    ang[g.i] += da; var now = performance.now(); g.s.push([now, da]);
+    while (g.s.length && now - g.s[0][0] > 100) g.s.shift();
+    wake(); if (reduce) draw(clock);
+  });
+  function release(e, cancelled) {
+    var g = grabs[e.pointerId]; if (!g) return;
+    delete grabs[e.pointerId];
+    if (g.i < 0) tiltHeld = Math.max(0, tiltHeld - 1); else held[g.i] = Math.max(0, held[g.i] - 1);
+    if (!held[0] && !held[1] && !held[2] && !tiltHeld) host.classList.remove('dragging');
+    if (g.i < 0) return;
+    var now = performance.now(), n = g.s.length, sum = 0, first = now;
+    for (var k = 0; k < n; k++) if (now - g.s[k][0] <= 100) { sum += g.s[k][1]; if (g.s[k][0] < first) first = g.s[k][0]; }
+    var fresh = n && now - g.s[n - 1][0] < 90;           /* finger still moving when it lifted */
+    if (g.moved && fresh && !reduce) w[g.i] = Math.max(-MAXW, Math.min(MAXW, FLICK * sum / Math.max(0.03, (now - first) / 1000)));
+    else if (!g.moved && !cancelled && now - g.t0 < 500) { pulses.push(clock); kick = 1; if (reduce) draw(clock); }
+  }
+  pad.addEventListener('pointerup', function (e) { release(e, false); });
+  pad.addEventListener('pointercancel', function (e) { release(e, true); });
+  host.addEventListener('pointermove', function (e) { if (e.pointerType === 'mouse' && e.buttons === 0) { wake(); aim(e); } });
+  window.__amalgamStarSpin = function () { return { ang: ang.slice(), w: w.slice(), held: held.slice(), tilt: [tiltX, tiltY], tiltHeld: tiltHeld, pad: pad.getBoundingClientRect().toJSON(), r: R / DPR }; };
   window.addEventListener('deviceorientation', function (e) {
     if (touched || e.gamma == null || e.beta == null) return;
     tgtY = Math.max(-0.45, Math.min(0.45, e.gamma / 60)); tgtX = Math.max(-0.35, Math.min(0.5, (e.beta - 45) / 70));

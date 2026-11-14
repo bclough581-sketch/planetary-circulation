@@ -4,6 +4,7 @@ on:
     branches: [amalgam-event-foundation, integration-draft-1, delta-what-changed, main]
     paths:
       - 'ring-engine-lab.html'
+      - 'star-hero.js'
       - 'index.html'
       - 'map.html'
       - 'sw.js'
@@ -44,6 +45,7 @@ on:
     branches: [amalgam-event-foundation]
     paths:
       - 'ring-engine-lab.html'
+      - 'star-hero.js'
       - 'index.html'
       - 'map.html'
       - 'sw.js'
@@ -133,3 +135,4 @@ jobs:
       - run: node tests/test_ring_comparisons.cjs
       - run: node tests/test_ring_galaxy.cjs
       - run: node tests/test_ring_theme.cjs
+      - run: node tests/test_ring_star_spin.cjs
