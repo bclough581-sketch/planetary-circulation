@@ -23,6 +23,9 @@
     '.star-hero .star-hint{position:absolute;left:0;right:0;bottom:11%;margin:0;text-align:center;font-size:.82rem;' +
     'letter-spacing:.02em;color:#bcd3ee;opacity:0;transition:opacity 1.2s ease;pointer-events:none;text-shadow:0 0 12px #030712}' +
     '.star-hero .star-hint.on{opacity:.85}' +
+    '.star-hero .star-reset{position:absolute;z-index:3;left:50%;bottom:3%;transform:translateX(-50%);min-height:44px;padding:0 22px;border-radius:22px;' +
+    'border:1px solid #8fb4e688;background:#050b1acc;color:#d6e6ff;font:inherit;font-size:.85rem;letter-spacing:.03em;opacity:0;pointer-events:none;transition:opacity .5s ease;-webkit-tap-highlight-color:transparent}' +
+    '.star-hero .star-reset.on{opacity:1;pointer-events:auto}' +
     '@media(max-width:700px){.star-hero{height:clamp(380px,68vh,640px);height:clamp(380px,68svh,640px)}}';
   document.head.appendChild(css);
 
@@ -31,9 +34,10 @@
   host.setAttribute('aria-label', 'Amalgam\u2122 compass star. Decorative; it shows no data.');
   var cv = document.createElement('canvas'); cv.setAttribute('aria-hidden', 'true');
   var hint = document.createElement('p'); hint.className = 'star-hint';
-  hint.textContent = 'Flick a star to spin it. Drag the rim to tilt it.';
+  hint.textContent = 'Flick a star to spin it. Drag outside the star to turn the whole thing any way.';
+  var rbtn = document.createElement('button'); rbtn.type = 'button'; rbtn.className = 'star-reset'; rbtn.textContent = 'Recenter';
   var pad = document.createElement('div'); pad.className = 'star-pad'; pad.setAttribute('aria-hidden', 'true');
-  host.appendChild(cv); host.appendChild(pad); host.appendChild(hint);
+  host.appendChild(cv); host.appendChild(pad); host.appendChild(hint); host.appendChild(rbtn);
   main.parentNode.insertBefore(host, main);
 
   var ctx = cv.getContext('2d'); if (!ctx) { host.remove(); return; }
@@ -52,6 +56,7 @@
   var dust = []; for (var i = 0; i < 170; i++) dust.push({ x: Math.random(), y: Math.random(), s: Math.random() * 1.3 + 0.25, p: Math.random() * TAU, d: Math.random() * 0.6 + 0.2 });
 
   var tiltX = 0.12, tiltY = 0, tgtX = 0.12, tgtY = 0, kick = 0;
+  var uX = 0, uY = 0, uvX = 0, uvY = 0, resetting = false, rOn = false;   /* the turn you give the whole star: unlimited range, keeps coasting, stays where you leave it */
   var ang = [0, 0, 0], vis = [0, 0, 0], w = [0, 0, 0], hot = [0, 0, 0], held = [0, 0, 0], tiltHeld = 0, rimHot = 0;   /* per layer: spun angle, spin speed (rad/s, + is clockwise), grab glow, fingers holding it */
   var MAXW = 30, FRICTION = 0.45, FLICK = 1.3;
   var pulses = [], touched = false, born = 0, clock = 0, last = 0, visible = true, running = false;
@@ -61,8 +66,8 @@
     DPR = Math.min(window.devicePixelRatio || 1, 1.75);
     W = Math.max(1, Math.round(b.width * DPR)); H = Math.max(1, Math.round(b.height * DPR));
     cv.width = W; cv.height = H;
-    R = Math.min(W, H) * 0.34; CX = W / 2; CY = H * 0.45;
-    var pd = 2 * 1.3 * R / DPR;                        /* touch pad = the dial plus its outer rim, so only the star captures touches */
+    R = Math.min(W, H) * 0.31; CX = W / 2; CY = H * 0.45;
+    var pd = 2 * 1.45 * R / DPR;                        /* touch pad = the dial plus its outer rim, so only the star captures touches */
     pad.style.width = pad.style.height = pd + 'px';
     pad.style.left = (CX / DPR - pd / 2) + 'px'; pad.style.top = (CY / DPR - pd / 2) + 'px';
     if (!running) draw(clock);
@@ -86,14 +91,16 @@
     var tips = [];
     /* decorative flex: each star breathes on its own beat and a ripple travels around its four points;
        it swells when the star is spun or held. Motion only, it carries no data. */
-    var sp = Math.min(1, Math.abs(w[idx]) / 12), e = 0.03 + 0.11 * sp + 0.09 * hot[idx];
+    var sp = Math.min(1, Math.abs(w[idx]) / 12), e = 0.07 + 0.2 * sp + 0.14 * hot[idx];
     var beat = Math.sin(t * (1.5 + idx * 0.55) + idx * 2.1), breath = 1 + e * beat;
     for (var k = 0; k < 4; k++) {
       var a = rot + k * Math.PI / 2, ph = k * Math.PI / 2;
       var ripple = Math.sin(t * 2.4 - ph * (idx % 2 ? -1 : 1) + idx);
       var len = L.r * (1 + 0.045 * Math.sin(t * 0.55 + k * 1.7 + L.rot * 3)) * breath * (1 + e * 0.7 * ripple) * (0.35 + 0.65 * grow);
-      tips.push({ x: Math.cos(a) * len, y: Math.sin(a) * len, z: L.z + L.warp * Math.sin(t * 0.42 + ph + L.rot * 5) * (k % 2 ? 1 : -1) * 0.5 + e * 1.5 * Math.sin(t * 2.4 - ph + idx * 1.3) });
+      tips.push({ x: Math.cos(a) * len, y: Math.sin(a) * len, z: L.z + L.warp * Math.sin(t * 0.42 + ph + L.rot * 5) * (k % 2 ? 1 : -1) * 0.5 + e * 2.4 * Math.sin(t * 2.4 - ph + idx * 1.3) });
     }
+    var tw = 0.16 + 1.3 * e, wv = [];                    /* strings twist in a wave that travels from tip to tip */
+    for (var tq = 0; tq < 4; tq++) { var row = new Array(N + 1); for (var ti = 0; ti <= N; ti++) { var uu = ti / N; row[ti] = tw * Math.sin(uu * 4.4 - t * 2.1 + tq * 1.4 + idx * 0.9) * Math.sin(uu * Math.PI); } wv.push(row); }
     var buckets = L.north ? 5 : 1, shown = Math.round(N * grow), glow = (1 + kick * 0.9 + hot[idx] * 0.9 + Math.min(0.6, Math.abs(w[idx]) * 0.025)) * (1 + 0.28 * e * 4 * beat);
     for (var pass = 0; pass < 2; pass++) {
       ctx.lineWidth = (pass ? 0.8 : 4) * DPR;
@@ -104,8 +111,9 @@
           for (var i = 0; i <= shown; i++) {
             var u = i / N, red = 0;
             if (L.north) { red = q === 3 ? (1 - u) * (1 - u) : q === 0 ? u * u : 0; if (Math.min(4, Math.floor(red * 5)) !== b) continue; }
-            proj(P.x * u, P.y * u, L.z + (P.z - L.z) * u, A);
-            proj(Q.x * (1 - u), Q.y * (1 - u), L.z + (Q.z - L.z) * (1 - u), B);
+            var psA = wv[q][i], psB = wv[(q + 1) % 4][N - i], cA = Math.cos(psA), sA = Math.sin(psA), cB = Math.cos(psB), sB = Math.sin(psB);
+            proj((P.x * cA - P.y * sA) * u, (P.x * sA + P.y * cA) * u, L.z + (P.z - L.z) * u, A);
+            proj((Q.x * cB - Q.y * sB) * (1 - u), (Q.x * sB + Q.y * cB) * (1 - u), L.z + (Q.z - L.z) * (1 - u), B);
             ctx.moveTo(A[0], A[1]); ctx.lineTo(B[0], B[1]);
           }
         }
@@ -158,14 +166,15 @@
 
   function draw(t) {
     var life = reduce ? 9 : t - born;
-    cX = Math.cos(tiltX); sX = Math.sin(tiltX); cY = Math.cos(tiltY); sY = Math.sin(tiltY);
+    var tx = tiltX + uX, ty = tiltY + uY;
+    cX = Math.cos(tx); sX = Math.sin(tx); cY = Math.cos(ty); sY = Math.sin(ty);
     scaleNow = (1 + 0.035 * Math.sin(t * 0.33)) * (1 + kick * 0.07);   /* slow approach and retreat */
     ctx.globalCompositeOperation = 'source-over'; ctx.clearRect(0, 0, W, H);
     ctx.globalCompositeOperation = 'lighter';
     for (var i = 0; i < dust.length; i++) {
       var d = dust[i], a = d.d * (0.55 + 0.45 * Math.sin(t * 0.8 + d.p));
       ctx.fillStyle = 'rgba(200,222,255,' + a.toFixed(3) + ')';
-      ctx.fillRect(((d.x + tiltY * 0.03 * d.s) % 1) * W, d.y * H, d.s * DPR, d.s * DPR);
+      ctx.fillRect(((((d.x + ty * 0.03 * d.s) % 1) + 1) % 1) * W, d.y * H, d.s * DPR, d.s * DPR);
     }
     drawRing(t, life);
     for (var l = 0; l < LAYERS.length; l++) drawLayer(LAYERS[l], t, life, l);
@@ -191,6 +200,19 @@
       vis[l] += (ang[l] - vis[l]) * Math.min(1, dt * 30);   /* drawn angle chases the true one a hair behind: hides touch jitter */
       hot[l] += ((held[l] ? 1 : 0) - hot[l]) * Math.min(1, dt * 8);
     }
+    if (resetting) {                                     /* Reset: every turn eases back to the start by the shortest way round */
+      var rk = Math.min(1, dt * 4.5), done = true; uvX = uvY = 0;
+      var ox = Math.round(uX / TAU), oy = Math.round(uY / TAU); uX += (ox * TAU - uX) * rk; uY += (oy * TAU - uY) * rk;
+      if (Math.abs(uX - ox * TAU) > 0.003 || Math.abs(uY - oy * TAU) > 0.003) done = false;
+      for (var rl = 0; rl < 3; rl++) { w[rl] = 0; var oa = Math.round(ang[rl] / TAU); ang[rl] += (oa * TAU - ang[rl]) * rk; if (Math.abs(ang[rl] - oa * TAU) > 0.003) done = false; }
+      if (done) { resetting = false; uX = uY = 0; for (var rd = 0; rd < 3; rd++) { var o2 = Math.round(ang[rd] / TAU) * TAU; ang[rd] = 0; vis[rd] -= o2; } }
+    } else if (!tiltHeld) {
+      uX += uvX * dt; uY += uvY * dt; var uf = Math.exp(-1.1 * dt); uvX *= uf; uvY *= uf;
+      if (Math.abs(uvX) < 0.01) uvX = 0; if (Math.abs(uvY) < 0.01) uvY = 0;
+    }
+    var off = resetting || Math.abs(uX - Math.round(uX / TAU) * TAU) > 0.06 || Math.abs(uY - Math.round(uY / TAU) * TAU) > 0.06;
+    for (var rc = 0; rc < 3 && !off; rc++) off = Math.abs(w[rc]) > 0.05 || Math.abs(ang[rc] - Math.round(ang[rc] / TAU) * TAU) > 0.06;
+    if (off !== rOn) { rOn = off; rbtn.classList.toggle('on', off); }
     kick *= Math.pow(0.08, dt);
     draw(clock);
     requestAnimationFrame(frame);
@@ -211,7 +233,8 @@
   }
   pad.addEventListener('pointerdown', function (e) {
     var p = polar(e), i = p.d >= 1.0 ? -1 : p.d < 0.52 ? 2 : p.d < 0.80 ? 1 : 0;   /* -1 = the rim: tilts the whole star */
-    grabs[e.pointerId] = { i: i, a: p.a, x0: e.clientX, y0: e.clientY, tx: e.clientX, ty: e.clientY, t0: performance.now(), moved: false, s: [] };
+    grabs[e.pointerId] = { i: i, a: p.a, x0: e.clientX, y0: e.clientY, tx: e.clientX, ty: e.clientY, t0: performance.now(), moved: false, s: [], v: [] };
+    resetting = false; if (i < 0) { uvX = uvY = 0; }
     if (i < 0) tiltHeld++; else { held[i]++; w[i] = 0; }
     wake(); host.classList.add('dragging');
     try { pad.setPointerCapture(e.pointerId); } catch (_) {}
@@ -224,8 +247,9 @@
       var ev = evs[k];
       if (g.i < 0) {                                     /* rim: move the whole star on its axis; layer spin is untouched */
         if (Math.hypot(ev.clientX - g.x0, ev.clientY - g.y0) > 8) g.moved = true;
-        tgtY = Math.max(-1.1, Math.min(1.1, tgtY + (ev.clientX - g.tx) * 0.011));
-        tgtX = Math.max(-1.1, Math.min(1.1, tgtX - (ev.clientY - g.ty) * 0.011));
+        var ddx = (ev.clientX - g.tx) * 0.016, ddy = (ev.clientY - g.ty) * 0.016, tnow = performance.now();   /* a finger-width of travel turns it about a degree; no limit */
+        uY += ddx; uX -= ddy; g.v.push([tnow, ddx, ddy]);
+        while (g.v.length && tnow - g.v[0][0] > 100) g.v.shift();
         g.tx = ev.clientX; g.ty = ev.clientY; continue;
       }
       var p = polar(ev), da = p.a - g.a;
@@ -243,17 +267,28 @@
     delete grabs[e.pointerId];
     if (g.i < 0) tiltHeld = Math.max(0, tiltHeld - 1); else held[g.i] = Math.max(0, held[g.i] - 1);
     if (!held[0] && !held[1] && !held[2] && !tiltHeld) host.classList.remove('dragging');
-    if (g.i < 0) return;
+    if (g.i < 0) {                                       /* let go of the rim while still moving: the star keeps turning and slows */
+      var tn = performance.now(), sx = 0, sy = 0, f0 = tn, nv = g.v.length;
+      for (var kv = 0; kv < nv; kv++) { sx += g.v[kv][1]; sy += g.v[kv][2]; if (g.v[kv][0] < f0) f0 = g.v[kv][0]; }
+      if (g.moved && nv && tn - g.v[nv - 1][0] < 90 && !cancelled && !reduce) { var dtv = Math.max(0.03, (tn - f0) / 1000); uvY = Math.max(-14, Math.min(14, sx / dtv)); uvX = Math.max(-14, Math.min(14, -sy / dtv)); }
+      return;
+    }
     var now = performance.now(), n = g.s.length, sum = 0, first = now;
     for (var k = 0; k < n; k++) if (now - g.s[k][0] <= 100) { sum += g.s[k][1]; if (g.s[k][0] < first) first = g.s[k][0]; }
     var fresh = n && now - g.s[n - 1][0] < 90;           /* finger still moving when it lifted */
     if (g.moved && fresh && !reduce) w[g.i] = Math.max(-MAXW, Math.min(MAXW, FLICK * sum / Math.max(0.03, (now - first) / 1000)));
     else if (!g.moved && !cancelled && now - g.t0 < 500) { pulses.push(clock); kick = 1; if (reduce) draw(clock); }
   }
+  rbtn.addEventListener('pointerdown', function (e) { e.stopPropagation(); });
+  rbtn.addEventListener('click', function () {
+    uvX = uvY = 0; wake();
+    if (reduce) { uX = uY = 0; for (var q = 0; q < 3; q++) { ang[q] = 0; vis[q] = 0; w[q] = 0; } draw(0); return; }
+    resetting = true;
+  });
   pad.addEventListener('pointerup', function (e) { release(e, false); });
   pad.addEventListener('pointercancel', function (e) { release(e, true); });
   host.addEventListener('pointermove', function (e) { if (e.pointerType === 'mouse' && e.buttons === 0) { wake(); aim(e); } });
-  window.__amalgamStarSpin = function () { return { ang: ang.slice(), w: w.slice(), held: held.slice(), tilt: [tiltX, tiltY], tiltHeld: tiltHeld, pad: pad.getBoundingClientRect().toJSON(), r: R / DPR }; };
+  window.__amalgamStarSpin = function () { return { ang: ang.slice(), w: w.slice(), held: held.slice(), tilt: [tiltX + uX, tiltY + uY], u: [uX, uY], resetting: resetting, tiltHeld: tiltHeld, pad: pad.getBoundingClientRect().toJSON(), r: R / DPR }; };
   window.addEventListener('deviceorientation', function (e) {
     if (touched || e.gamma == null || e.beta == null) return;
     tgtY = Math.max(-0.45, Math.min(0.45, e.gamma / 60)); tgtX = Math.max(-0.35, Math.min(0.5, (e.beta - 45) / 70));
