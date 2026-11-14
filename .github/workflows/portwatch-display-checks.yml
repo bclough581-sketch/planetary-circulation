@@ -1,0 +1,39 @@
+name: PortWatch Display Checks
+on:
+  push:
+    branches: [fix/candidate-portwatch-display-off]
+  pull_request:
+    branches: [prep/main-reconciliation]
+    paths: [map.html, tests/test_portwatch_display_browser.cjs, .github/workflows/portwatch-display-checks.yml]
+permissions:
+  contents: read
+jobs:
+  display-browser:
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.56.1-noble
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save --no-package-lock playwright@1.56.1
+      - run: node tests/test_portwatch_display_browser.cjs
+        env:
+          PORTWATCH_TEST_PAGE: map.html
+
+      - run: apt-get update -qq && apt-get install -y -qq python3
+      - run: PYTHONPATH=. python3 tests/generate_evidence_fixture.py > tests/generated-evidence-fixture.json
+      - run: PYTHONPATH=. python3 scripts/export_ring_snapshot.py data.json tests/generated-ring-snapshot.json
+      - run: node tests/test_delta_workflow_browser.cjs
+      - run: node tests/test_journal_browser.cjs
+      - run: node tests/test_journal_regression_browser.cjs
+      - run: node tests/test_journal_migration_browser.cjs
+      - run: node tests/test_offline_entry.cjs
+      - run: node tests/test_nav_smoke.cjs
+      - run: node tests/test_evidence_handoff.cjs
+      - run: node tests/test_ring_browser.cjs
+      - run: node tests/test_ring_comparisons.cjs
+      - run: node tests/test_ring_galaxy.cjs
+      - run: node tests/test_ring_theme.cjs
