@@ -112,7 +112,7 @@ try{
   const m2=await st();
   assert.ok(Math.abs(m2.u[1]-m1.u[1])>0.05,'keeps turning after release');
   await page.waitForFunction(()=>document.querySelector('.star-reset').classList.contains('on'));
-  await page.click('.star-reset');
+  await page.tap('.star-reset');
   await page.waitForFunction(()=>{const s=window.__amalgamStarSpin();return !s.resetting&&Math.abs(s.u[0])<0.01&&Math.abs(s.u[1])<0.01&&s.ang.every(a=>Math.abs(a)<0.01)},null,{timeout:6000});
   await page.waitForFunction(()=>!document.querySelector('.star-reset').classList.contains('on'));
   assert.deepEqual(errors,[]);
