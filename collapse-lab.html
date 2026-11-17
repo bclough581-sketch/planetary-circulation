@@ -14,10 +14,10 @@ main{max-width:560px;margin:0 auto;padding:14px 14px 40px}
 h1{font-size:1.35rem;margin:6px 0 2px;letter-spacing:-.02em}
 .eyebrow{font:600 .68rem ui-monospace,Consolas,monospace;letter-spacing:.14em;color:#8fc4ff;text-transform:uppercase}
 .sample{border:1px solid var(--line);border-radius:10px;padding:9px 11px;margin:10px 0;color:var(--mute);font-size:.84rem;background:var(--panel)}
-.stage{position:relative;border:1px solid #6fa6e6;border-radius:14px;background:radial-gradient(ellipse at 50% 55%,#13407f 0,#07204a 55%,#04122b 100%);overflow:hidden;contain:layout paint;touch-action:none}
-canvas{display:block;width:100%;height:auto;aspect-ratio:1/1}
-.readout{display:flex;justify-content:space-between;gap:8px;font:600 .72rem ui-monospace,Consolas,monospace;letter-spacing:.06em;color:#cfe3ff;padding:9px 12px;border-top:1px solid #1d3d68;background:#06173a}
-.readout b{color:#fff}
+.stage{position:relative;border:1px solid #6fa6e6;border-radius:14px;background:radial-gradient(ellipse at 50% 55%,#13407f 0,#07204a 55%,#04122b 100%);overflow:hidden;contain:layout paint;touch-action:none;position:sticky;top:0;z-index:5;margin-bottom:12px}
+canvas{display:block;width:100%;height:auto;aspect-ratio:1/.78}
+.readout{display:flex;justify-content:space-between;align-items:center;gap:8px;font:600 .72rem ui-monospace,Consolas,monospace;letter-spacing:.06em;color:#cfe3ff;padding:9px 12px;border-top:1px solid #1d3d68;background:#06173a}
+.readout b{color:#fff}.readout .btns{display:flex;gap:6px}.readout button{padding:6px 10px;font-size:.72rem;margin:0}
 .row{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:9px 0;background:var(--panel)}
 .row .top{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
 .row .name{font-weight:650}
@@ -43,10 +43,8 @@ footer{color:#8fb2da;font-size:.78rem;margin-top:18px}
 
 <div class="stage" id="stage">
   <canvas id="cv" aria-label="Five rings. Each ring flattens as its rule gets closer to being met. A gap always remains."></canvas>
-  <div class="readout"><span>RULES MET <b id="metN">0</b> / 5</span><span>OUTCOME <b>UNKNOWN</b></span></div>
+  <div class="readout"><span>RULES MET <b id="metN">0</b> / 5</span><span class="btns"><button id="drift" aria-pressed="false">Drift</button><button id="reset">Reset</button></span></div>
 </div>
-
-<div class="bar"><button id="drift" aria-pressed="false">Drift the data</button><button id="reset">Reset</button></div>
 
 <div id="rows"></div>
 
@@ -126,7 +124,7 @@ update();
 var cv=document.getElementById('cv'),ctx=cv.getContext('2d');
 var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
 var W=0,DPR=1;
-function size(){DPR=Math.min(window.devicePixelRatio||1,1.75);W=cv.clientWidth||360;cv.width=Math.round(W*DPR);cv.height=Math.round(W*DPR);}
+function size(){DPR=Math.min(window.devicePixelRatio||1,1.75);W=cv.clientWidth||360;cv.width=Math.round(W*DPR);cv.height=Math.round(W*.78*DPR);}
 size();addEventListener('resize',size);
 
 var RAD=[.94,.77,.61,.46,.32];     // outer -> inner, fraction of half-width
@@ -138,7 +136,7 @@ var N=96,CH=22;
 function pt(cx,cy,R,th,z){return [cx+Math.cos(th)*R, cy+Math.sin(th)*R*TILT - z];}
 
 function ring(i,t){
-  var p=cur[i],cx=W*DPR/2,cy=W*DPR*.56,R=RAD[i]*W*DPR/2;
+  var p=cur[i],cx=W*DPR/2,cy=W*DPR*.48,R=RAD[i]*W*DPR/2;
   var open=1-p;                                   // 1 = fully lifted, 0 = rule met
   var floor=.035;                                 // never fully flat
   var lift=(floor+open*(1-floor))*HMAX*W*DPR*(1-i*.11);
@@ -182,14 +180,11 @@ function ring(i,t){
 }
 
 function center(t){
-  var cx=W*DPR/2,y=W*DPR*.9;
+  var cx=W*DPR/2,y=W*DPR*.745;
   ctx.textAlign='center';
-  ctx.font='700 '+Math.round(W*DPR*.03)+'px ui-monospace,Consolas,monospace';
-  ctx.fillStyle='rgba(225,240,255,.95)';
-  ctx.fillText('AMALGAM\u2122',cx,y);
-  ctx.font='600 '+Math.round(W*DPR*.024)+'px ui-monospace,Consolas,monospace';
-  ctx.fillStyle='rgba(170,205,250,.9)';
-  ctx.fillText('THE GAP NEVER CLOSES',cx,y+W*DPR*.04);
+  ctx.font='600 '+Math.round(W*DPR*.026)+'px ui-monospace,Consolas,monospace';
+  ctx.fillStyle='rgba(200,225,255,.92)';
+  ctx.fillText('OUTCOME UNKNOWN \u00b7 THE GAP NEVER CLOSES',cx,y);
 }
 
 var last=0,t=0,visible=true,raf=0;
@@ -218,9 +213,9 @@ function stepDrift(dt){
   });
   update();
 }
-dBtn.onclick=function(){drifting=!drifting;dBtn.setAttribute('aria-pressed',String(drifting));dBtn.textContent=drifting?'Stop drifting':'Drift the data';};
+dBtn.onclick=function(){drifting=!drifting;dBtn.setAttribute('aria-pressed',String(drifting));dBtn.textContent=drifting?'Stop':'Drift';};
 document.getElementById('reset').onclick=function(){
-  drifting=false;dBtn.setAttribute('aria-pressed','false');dBtn.textContent='Drift the data';
+  drifting=false;dBtn.setAttribute('aria-pressed','false');dBtn.textContent='Drift';
   G.forEach(function(g){if(g.kind==='seg'){val[g.id]=g.start;}else{setSlider(g.id,g.start);}});
   [].forEach.call(document.querySelectorAll('.seg button'),function(b){b.setAttribute('aria-pressed',String(b.textContent==='unknown'))});
   update();
