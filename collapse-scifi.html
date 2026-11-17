@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#03060e">
+<title>Amalgam · Collapse lab (sample numbers)</title>
+<style>
+:root{color-scheme:dark;--ink:#eaf3ff;--mute:#a9c1de;--line:#2b4a74;--panel:#0a1d3b}
+*{box-sizing:border-box}
+html,body{margin:0;background:#050d1f;color:var(--ink);font:16px/1.45 system-ui,sans-serif}
+main{max-width:560px;margin:0 auto;padding:14px 14px 40px}
+h1{font-size:1.35rem;margin:6px 0 2px;letter-spacing:-.02em}
+.eyebrow{font:600 .68rem ui-monospace,Consolas,monospace;letter-spacing:.14em;color:#8fc4ff;text-transform:uppercase}
+.sample{border:1px solid var(--line);border-radius:10px;padding:9px 11px;margin:10px 0;color:var(--mute);font-size:.84rem;background:var(--panel)}
+.stage{position:relative;border:1px solid #6fa6e6;border-radius:14px;background:radial-gradient(ellipse at 50% 55%,#13407f 0,#07204a 55%,#04122b 100%);overflow:hidden;contain:layout paint;touch-action:none;position:sticky;top:0;z-index:5;margin-bottom:12px}
+canvas{display:block;width:100%;height:auto;aspect-ratio:1/.84}
+.readout{display:flex;justify-content:space-between;align-items:center;gap:8px;font:600 .72rem ui-monospace,Consolas,monospace;letter-spacing:.06em;color:#cfe3ff;padding:9px 12px;border-top:1px solid #1d3d68;background:#06173a}
+.readout b{color:#fff}.readout .btns{display:flex;gap:6px}.readout button{padding:6px 10px;font-size:.72rem;margin:0}
+.row{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:9px 0;background:var(--panel)}
+.row .top{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.row .name{font-weight:650}
+.row .note{font-size:.7rem;color:#8fb2da;font-weight:500;margin-left:6px}
+.row .val{font:600 .95rem ui-monospace,Consolas,monospace;white-space:nowrap}
+.row .rule{font-size:.8rem;color:var(--mute);margin:2px 0 4px}
+.row .state{font:600 .72rem ui-monospace,Consolas,monospace;letter-spacing:.08em;text-transform:uppercase;color:#bcd9ff}
+input[type=range]{width:100%;height:34px;accent-color:#8fc4ff}
+.seg{display:flex;gap:6px;margin-top:4px}
+button{background:#14376a;color:#eaf3ff;border:1px solid #5d8fd0;border-radius:9px;padding:11px 13px;font:inherit;font-size:.9rem}
+button[aria-pressed=true]{background:#2a6bd0;border-color:#cfe6ff}
+.seg button{flex:1;padding:9px 6px}
+.bar{display:flex;gap:8px;margin:12px 0}
+.bar button{flex:1}
+button.fxb{padding:7px 12px;font-size:.78rem;margin-right:6px}.fx{margin:0 0 6px;color:var(--mute);font-size:.78rem}
+footer{color:#8fb2da;font-size:.78rem;margin-top:18px}
+</style>
+</head>
+<body>
+<main>
+<div class="eyebrow">Amalgam · sandbox</div>
+<h1>Collapse lab</h1>
+<div class="sample">Sample numbers on a made-up ticker. Not a real stock, not advice. Each ring has lock plates that clamp down one by one as its rule gets closer to being met, and release as the number moves away. As a rule nears, its ring slows and dials toward a notch at the top. When every ring sits on its notch, a beam runs through the sockets, and it never reaches the end. One socket on every ring never engages, because rules being met says nothing about what happens next.</div>
+
+<div class="stage" id="stage">
+  <canvas id="cv" aria-label="Five rings. Each ring flattens as its rule gets closer to being met. A gap always remains."></canvas>
+  <div class="readout"><span>RULES MET <b id="metN">0</b> / 5</span><span class="btns"><button id="drift" aria-pressed="false">Drift</button><button id="reset">Reset</button></span></div>
+</div>
+
+<div class="fx"><button class="fxb" id="hap" aria-pressed="false">Haptics</button><button class="fxb" id="snd" aria-pressed="false">Sound</button> a tick and a clunk each time a plate locks</div>
+<div id="rows"></div>
+
+<footer><a href="collapse-lab.html" style="color:#8fc4ff">Back to the classic rings</a><br><br>Rules describe what already happened. They have not been shown to predict winners. Catalyst and book correlation are notes outside the verdict, drawn here only so you can see all five. Ring height is a drawing aid, not a score.</footer>
+</main>
+
+<script src="gates.js"></script>
+<script>
+(function(){
+'use strict';
+var T=(window.GATES&&window.GATES.T)||{rangeFail:.85,rangeWarn:.70,rsiPassLo:40,rsiPassHi:65,rsiFail:70,volMult:1.5,corrFail:.70,corrFlag:.50};
+var clamp=function(x,a,b){return Math.max(a,Math.min(b,x))};
+var pct=function(x){return Math.round(x*100)+'%'};
+
+/* Each gate: input, how far it is from its stated rule (0..1, 1 = rule met), and plain-English state. */
+var G=[
+ {id:'g1',name:'G1 · Range position',note:'',min:0,max:1,step:.01,start:.92,
+  fmt:function(v){return pct(v)+' of 6-month range'},
+  rule:'Rule: under '+pct(T.rangeWarn)+' of its 6-month range',
+  prog:function(v){return v<=T.rangeWarn?1:clamp((1-v)/(1-T.rangeWarn),0,1)},
+  state:function(v){return v<T.rangeWarn?'rule met':v<T.rangeFail?'near the rule':'rule not met'}},
+ {id:'g2',name:'G2 · RSI (14)',note:'',min:10,max:90,step:1,start:78,
+  fmt:function(v){return String(Math.round(v))},
+  rule:'Rule: between '+T.rsiPassLo+' and '+T.rsiPassHi,
+  prog:function(v){return v>=T.rsiPassLo&&v<=T.rsiPassHi?1:v<T.rsiPassLo?clamp((v-20)/(T.rsiPassLo-20),0,1):clamp((85-v)/(85-T.rsiPassHi),0,1)},
+  state:function(v){return v>=T.rsiPassLo&&v<=T.rsiPassHi?'rule met':v>T.rsiFail?'rule not met':'near the rule'}},
+ {id:'g3',name:'G3 · Up-day volume',note:'',min:0,max:3,step:.05,start:.7,
+  fmt:function(v){return v.toFixed(2)+'× 20-day avg'},
+  rule:'Rule: up day on at least '+T.volMult+'× average volume',
+  prog:function(v){return clamp(v/T.volMult,0,1)},
+  state:function(v){return v>=T.volMult?'rule met':v>=T.volMult*.7?'near the rule':'rule not met'}},
+ {id:'g4',name:'G4 · Catalyst',note:'note · outside the verdict',kind:'seg',start:'unknown',opts:['no','unknown','yes'],
+  fmt:function(v){return v},
+  rule:'You mark this by hand: is there a known reason for the move?',
+  prog:function(v){return v==='yes'?1:v==='unknown'?.45:.1},
+  state:function(v){return v==='yes'?'marked yes':v==='no'?'marked no':'not marked'}},
+ {id:'g5',name:'G5 · Overlap with your book',note:'note · outside the verdict',min:0,max:1,step:.01,start:.78,
+  fmt:function(v){return 'r '+v.toFixed(2)},
+  rule:'Note: under '+T.corrFlag.toFixed(2)+' correlation with your closest holding',
+  prog:function(v){return v<=T.corrFlag?1:clamp((.95-v)/(.95-T.corrFlag),0,1)},
+  state:function(v){return v<T.corrFlag?'rule met':v<T.corrFail?'near the rule':'rule not met'}}
+];
+var val={},tgt=[0,0,0,0,0],cur=[0,0,0,0,0],els={};
+
+var rows=document.getElementById('rows');
+G.forEach(function(g,i){
+  val[g.id]=g.start;
+  var d=document.createElement('div');d.className='row';
+  d.innerHTML='<div class="top"><span class="name">'+g.name+(g.note?'<span class="note">'+g.note+'</span>':'')+'</span><span class="val" id="v_'+g.id+'"></span></div>'+
+   '<div class="rule">'+g.rule+'</div><div class="state" id="s_'+g.id+'"></div>';
+  if(g.kind==='seg'){
+    var sg=document.createElement('div');sg.className='seg';
+    g.opts.forEach(function(o){var b=document.createElement('button');b.textContent=o;b.setAttribute('aria-pressed',String(o===g.start));
+      b.onclick=function(){val[g.id]=o;[].forEach.call(sg.children,function(c){c.setAttribute('aria-pressed',String(c===b))});setActive(i);update();};sg.appendChild(b);});
+    d.appendChild(sg);
+  }else{
+    var r=document.createElement('input');r.type='range';r.min=g.min;r.max=g.max;r.step=g.step;r.value=g.start;r.id='r_'+g.id;
+    r.setAttribute('aria-label',g.name);r.oninput=function(){val[g.id]=parseFloat(r.value);setActive(i);update();};
+    d.appendChild(r);els[g.id]=r;
+  }
+  rows.appendChild(d);
+});
+
+function update(){
+  var met=0;
+  G.forEach(function(g,i){
+    var v=val[g.id],p=g.prog(v);tgt[i]=p;
+    if(p>=1)met++;
+    document.getElementById('v_'+g.id).textContent=g.fmt(v);
+    document.getElementById('s_'+g.id).textContent=g.state(v);
+  });
+  document.getElementById('metN').textContent=met;
+}
+update();
+
+/* ---- drawing: one 2D canvas, no shadows or filters (glow is layered strokes) ---- */
+var cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+var W=0,DPR=1,HF=.84;
+function size(){DPR=Math.min(window.devicePixelRatio||1,1.75);W=cv.clientWidth||360;cv.width=Math.round(W*DPR);cv.height=Math.round(W*HF*DPR);}
+size();addEventListener('resize',size);
+
+var RAD=[.87,.715,.57,.43,.30];
+var GAP=.14,TILT=.40,HMAX=.15,N=96,CH=18,TAU=Math.PI*2,HOME=-Math.PI/2,CYF=.47;
+var NAMES=['G1 RANGE','G2 RSI','G3 VOLUME','G4 CATALYST','G5 OVERLAP'];
+var DASH=[[2,3,7,2,1,4,3,3],[5,2,1,3,2,6],[1,4,4,2,8,2],[3,3,2,5,1,3,6,2],[2,2,2,6,4,3]];
+var lk=[],vl=[],fl=[],eff=[];
+for(var q=0;q<5;q++){lk.push(new Array(CH).fill(0));vl.push(new Array(CH).fill(0));fl.push(new Array(CH).fill(0));eff.push(new Array(CH).fill(0));}
+var ang=[.3,2.1,4.0,5.2,1.1],clos=[0,0,0,0,0],SOCK=[[0,0],[0,0],[0,0],[0,0],[0,0]];
+var shock=0,aligned=false,alignAmt=0,started=false;
+var STARS=[];for(var s0=0;s0<70;s0++)STARS.push([Math.random(),Math.random()*HF,Math.random()*1.3+.4,Math.random()*6.28]);
+var active=-1,activeT=0;
+function setActive(i){active=i;activeT=1.6;}
+var wrap=function(a){a=(a+Math.PI)%TAU;if(a<0)a+=TAU;return a-Math.PI;};
+
+/* feel: optional haptic tick and synthesized clunk on each lock / release, rising chord on alignment */
+var hapticOn=false,soundOn=false,AC=null,lastFx=0;
+function tone(f0,f1,t0,dur,gain,type){
+  var o=AC.createOscillator(),g=AC.createGain();o.type=type||'triangle';
+  o.frequency.setValueAtTime(f0,t0);o.frequency.exponentialRampToValueAtTime(f1,t0+dur*.7);
+  g.gain.setValueAtTime(gain,t0);g.gain.exponentialRampToValueAtTime(.001,t0+dur);
+  o.connect(g);g.connect(AC.destination);o.start(t0);o.stop(t0+dur+.02);
+}
+function fx(kind){
+  var now=performance.now();
+  if(kind!=='align'){if(now-lastFx<55)return;lastFx=now;}
+  if(hapticOn&&navigator.vibrate)navigator.vibrate(kind==='lock'?9:kind==='align'?[12,45,12,45,22]:4);
+  if(soundOn){try{
+    AC=AC||new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();
+    var t0=AC.currentTime;
+    if(kind==='lock')tone(190,55,t0,.13,.18);
+    else if(kind==='release')tone(420,300,t0,.1,.05);
+    else{tone(330,330,t0,.5,.07,'sine');tone(495,495,t0+.09,.5,.07,'sine');tone(660,660,t0+.18,.7,.07,'sine');tone(90,45,t0,.25,.16);}
+  }catch(e){}}
+}
+var hapB=document.getElementById('hap'),sndB=document.getElementById('snd');
+if(!navigator.vibrate)hapB.style.display='none';
+hapB.onclick=function(){hapticOn=!hapticOn;hapB.setAttribute('aria-pressed',String(hapticOn));if(hapticOn&&navigator.vibrate)navigator.vibrate(12);};
+sndB.onclick=function(){soundOn=!soundOn;sndB.setAttribute('aria-pressed',String(soundOn));if(soundOn)fx('lock');};
+
+function P(cx,cy,th,r,u,z){return [cx+Math.cos(th)*r-Math.sin(th)*u, cy+(Math.sin(th)*r+Math.cos(th)*u)*TILT-z];}
+function arcPath(cx,cy,R,t0,t1,z,steps){
+  ctx.beginPath();
+  for(var k=0;k<=steps;k++){var th=t0+(t1-t0)*k/steps,q=P(cx,cy,th,R,0,z);k?ctx.lineTo(q[0],q[1]):ctx.moveTo(q[0],q[1]);}
+}
+
+function plate(cx,cy,th,R,z,Hl,open,l,f){
+  var ar=R*.045,b=R*.10,tk=R*.034,w=Math.min(R*.075,R*TAU*(1-GAP)/CH*.36);
+  var zf=z+Hl*.25*open, za=z+Hl*open;
+  var F1o=P(cx,cy,th,R+ar,-w,zf),Ao=P(cx,cy,th,R-b,0,za),F2o=P(cx,cy,th,R+ar,w,zf);
+  var F2i=P(cx,cy,th,R+ar+tk,w,zf),Ai=P(cx,cy,th,R-b+tk*1.1,0,za),F1i=P(cx,cy,th,R+ar+tk,-w,zf);
+  ctx.beginPath();ctx.moveTo(F1o[0],F1o[1]);ctx.lineTo(Ao[0],Ao[1]);ctx.lineTo(F2o[0],F2o[1]);
+  ctx.lineTo(F2i[0],F2i[1]);ctx.lineTo(Ai[0],Ai[1]);ctx.lineTo(F1i[0],F1i[1]);ctx.closePath();
+  ctx.fillStyle='rgba('+(14+40*l|0)+','+(40+60*l|0)+','+(82+85*l|0)+','+(.8+.2*l)+')';ctx.fill();
+  ctx.lineJoin='round';ctx.lineWidth=(1+.7*l)*DPR;
+  ctx.strokeStyle='rgba(200,228,255,'+Math.min(1,.38+.5*l+.4*f)+')';ctx.stroke();
+  if(l>.35){                                         // second, smaller chevron slides in as the plate seats
+    var i1=P(cx,cy,th,R+ar*.5,-w*.5,zf),i2=P(cx,cy,th,R-b*.38,0,za),i3=P(cx,cy,th,R+ar*.5,w*.5,zf);
+    ctx.beginPath();ctx.moveTo(i1[0],i1[1]);ctx.lineTo(i2[0],i2[1]);ctx.lineTo(i3[0],i3[1]);
+    ctx.lineWidth=1*DPR;ctx.strokeStyle='rgba(190,230,255,'+(l*.6)+')';ctx.stroke();
+  }
+  if(l>.04||f>0){                                    // glowing core line, brighter once seated
+    var m1=P(cx,cy,th,R+ar+tk*.5,-w*.82,zf),m2=P(cx,cy,th,R-b+tk*.62,0,za),m3=P(cx,cy,th,R+ar+tk*.5,w*.82,zf);
+    ctx.beginPath();ctx.moveTo(m1[0],m1[1]);ctx.lineTo(m2[0],m2[1]);ctx.lineTo(m3[0],m3[1]);
+    ctx.lineWidth=(1.2+1.8*f)*DPR;ctx.strokeStyle='rgba(255,255,255,'+Math.min(1,.15+.75*l+f)+')';ctx.stroke();
+  }
+  if(l>.3||f>0){                                     // apex lamp (additive)
+    ctx.save();ctx.globalCompositeOperation='lighter';
+    ctx.fillStyle='rgba(120,215,255,'+(.10*l+.25*f)+')';ctx.beginPath();ctx.arc(Ao[0],Ao[1],(5+9*f)*DPR,0,TAU);ctx.fill();
+    ctx.fillStyle='rgba(235,250,255,'+Math.min(1,.55*l+.6*f)+')';ctx.beginPath();ctx.arc(Ao[0],Ao[1],(1.2+2*f)*DPR,0,TAU);ctx.fill();
+    ctx.restore();
+  }
+  if(f>.03&&!reduce){                                // lock burst
+    ctx.lineWidth=1.3*DPR;ctx.strokeStyle='rgba(235,246,255,'+(f*.85)+')';
+    for(var k=-2;k<=2;k++){var an=-Math.PI/2+k*.55,ln=(6+18*(1-f))*DPR;
+      ctx.beginPath();ctx.moveTo(Ao[0]+Math.cos(an)*3*DPR,Ao[1]+Math.sin(an)*3*DPR);
+      ctx.lineTo(Ao[0]+Math.cos(an)*ln,Ao[1]+Math.sin(an)*ln);ctx.stroke();}
+  }
+}
+
+function ring(i,t){
+  var p=cur[i],cx=W*DPR/2,cy=W*DPR*CYF,R=RAD[i]*W*DPR/2;
+  var open=1-p,floor=.035;
+  var lift=(floor+open*(1-floor))*HMAX*W*DPR*(1-i*.11);
+  var und=reduce?0:Math.sin(t*1.3+i*1.1)*(.01+open*.025)*W*DPR;
+  var z=lift+und,th0=ang[i];
+  var isA=(i===active),half=GAP*Math.PI,a0=th0+half,a1=th0+TAU-half,Hl=R*.2;
+
+  ctx.lineWidth=1*DPR;ctx.strokeStyle='rgba(140,190,255,'+(.10+.10*open)+')';
+  ctx.beginPath();ctx.ellipse(cx,cy,R,R*TILT,0,0,TAU);ctx.stroke();
+
+  /* home notch on the plane: where this ring's socket must come to rest */
+  var hn1=P(cx,cy,HOME,R*.965,0,0),hn2=P(cx,cy,HOME,R*1.035,0,0);
+  ctx.lineWidth=1.4*DPR;ctx.strokeStyle='rgba(215,238,255,'+(.25+.5*clos[i])+')';
+  ctx.beginPath();ctx.moveTo(hn1[0],hn1[1]);ctx.lineTo(hn2[0],hn2[1]);ctx.stroke();
+
+  /* ring body: dim steel, then the charged arc (additive) up to the locked share */
+  ctx.lineCap='round';ctx.lineWidth=(2.4+(isA?1.4:0))*DPR;
+  ctx.strokeStyle='rgba(125,165,225,'+(.42+(isA?.2:0))+')';
+  arcPath(cx,cy,R,a0,a1,z,N);ctx.stroke();
+  if(p>.004){
+    var aE=a0+(a1-a0)*p,st=Math.max(4,Math.round(N*p));
+    ctx.save();ctx.globalCompositeOperation='lighter';
+    ctx.lineWidth=(7+(isA?3:0))*DPR;ctx.strokeStyle='rgba(70,185,255,'+(.08+.12*p)+')';arcPath(cx,cy,R,a0,aE,z,st);ctx.stroke();
+    ctx.lineWidth=2.4*DPR;ctx.strokeStyle='rgba(205,243,255,'+(.55+.4*p)+')';arcPath(cx,cy,R,a0,aE,z,st);ctx.stroke();
+    if(!reduce)for(var bd=0;bd<2;bd++){                 // energy beads running the charged arc
+      var u=((t*(.16+.34*p)+bd*.5+i*.31)%1)*p,tb=a0+(a1-a0)*u,qb=P(cx,cy,tb,R,0,z);
+      ctx.fillStyle='rgba(110,210,255,.18)';ctx.beginPath();ctx.arc(qb[0],qb[1],6*DPR,0,TAU);ctx.fill();
+      ctx.fillStyle='rgba(255,255,255,.95)';ctx.beginPath();ctx.arc(qb[0],qb[1],2.1*DPR,0,TAU);ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  /* engraved mark band, turning against the ring */
+  ctx.save();ctx.setLineDash(DASH[i].map(function(d){return d*DPR*.9;}));
+  ctx.lineDashOffset=reduce?0:-t*DPR*(6+i*2)*(i%2?1:-1)*(1-.7*p);
+  ctx.lineWidth=1.6*DPR;ctx.strokeStyle='rgba(215,236,255,'+(.26+.3*p)+')';
+  arcPath(cx,cy,R*.9,a0,a1,z*.96,N);ctx.stroke();ctx.restore();
+
+  /* lock plates, back to front */
+  var order=[],c;
+  for(c=0;c<CH;c++){var tc=a0+(a1-a0)*(c+.5)/CH;order.push([c,tc,Math.sin(tc)]);}
+  order.sort(function(A,B){return A[2]-B[2];});
+  for(var o=0;o<CH;o++){
+    c=order[o][0];var l=lk[i][c],f=fl[i][c],op=1-Math.max(-.12,Math.min(1,l));
+    plate(cx,cy,order[o][1],R,z,Hl,op,Math.max(0,Math.min(1,l)),f);
+  }
+
+  /* the socket that never engages: hollow, unlit, breathing; its apex anchors the beam */
+  var pulse=reduce?.5:(.5+.5*Math.sin(t*2+i));
+  var ar=R*.045,b=R*.10,tk=R*.034,w=R*.075,zz=z+Hl*.6;
+  var s1=P(cx,cy,th0,R+ar+tk,-w,z+Hl*.15),s2=P(cx,cy,th0,R-b,0,zz),s3=P(cx,cy,th0,R+ar+tk,w,z+Hl*.15);
+  SOCK[i]=[s2[0],s2[1]];
+  ctx.save();ctx.setLineDash([3*DPR,3*DPR]);ctx.lineWidth=1.2*DPR;
+  ctx.strokeStyle='rgba(205,228,255,'+(.3+.35*pulse+.3*clos[i])+')';
+  ctx.beginPath();ctx.moveTo(s1[0],s1[1]);ctx.lineTo(s2[0],s2[1]);ctx.lineTo(s3[0],s3[1]);ctx.stroke();ctx.restore();
+
+  if(isA){
+    var lp=P(cx,cy,Math.PI/2,R,0,z);
+    ctx.font='700 '+Math.round(W*DPR*.026)+'px ui-monospace,Consolas,monospace';ctx.textAlign='center';
+    ctx.lineWidth=3*DPR;ctx.strokeStyle='rgba(4,14,38,.9)';ctx.strokeText(NAMES[i],lp[0],lp[1]+13*DPR);
+    ctx.fillStyle='#fff';ctx.fillText(NAMES[i],lp[0],lp[1]+13*DPR);
+  }
+}
+
+/* alignment beam: each stretch between neighbouring sockets lights as both rings near home;
+   above the outer socket it only ever dashes and ends in an empty diamond. It never completes. */
+function beam(t){
+  var cx=W*DPR/2,i,pulse=reduce?.6:(.5+.5*Math.sin(t*3)),cAll=Math.min.apply(null,clos);
+  ctx.save();ctx.globalCompositeOperation='lighter';ctx.lineCap='round';
+  for(i=0;i<4;i++){
+    var c=Math.min(clos[i],clos[i+1]);if(c<.03)continue;
+    ctx.lineWidth=(8+6*c)*DPR;ctx.strokeStyle='rgba(80,195,255,'+(.10*c)+')';
+    ctx.beginPath();ctx.moveTo(SOCK[i][0],SOCK[i][1]);ctx.lineTo(SOCK[i+1][0],SOCK[i+1][1]);ctx.stroke();
+    ctx.lineWidth=(1.4+1.8*c)*DPR;ctx.strokeStyle='rgba(228,249,255,'+(.2+.75*c)+')';
+    ctx.beginPath();ctx.moveTo(SOCK[i][0],SOCK[i][1]);ctx.lineTo(SOCK[i+1][0],SOCK[i+1][1]);ctx.stroke();
+  }
+  var tx=SOCK[0][0],ty=SOCK[0][1]-W*DPR*.17;
+  ctx.setLineDash([4*DPR,5*DPR]);ctx.lineWidth=1.4*DPR;
+  ctx.strokeStyle='rgba(200,235,255,'+(.12+.55*cAll*(.6+.4*pulse))+')';
+  ctx.beginPath();ctx.moveTo(SOCK[0][0],SOCK[0][1]);ctx.lineTo(tx,ty);ctx.stroke();ctx.setLineDash([]);
+  var d=6*DPR;ctx.lineWidth=1.3*DPR;ctx.strokeStyle='rgba(215,240,255,'+(.25+.6*cAll*pulse)+')';
+  ctx.beginPath();ctx.moveTo(tx,ty-d);ctx.lineTo(tx+d,ty);ctx.lineTo(tx,ty+d);ctx.lineTo(tx-d,ty);ctx.closePath();ctx.stroke();
+  if(alignAmt>.02&&!reduce){                           // motes rising toward the empty cap
+    for(var k=0;k<14;k++){
+      var u=((t*.32+k/14)%1),yy=SOCK[4][1]+(ty-SOCK[4][1])*u,xx=tx+Math.sin(t*2+k*1.7)*3.5*DPR;
+      ctx.fillStyle='rgba(225,247,255,'+((1-u)*.8*alignAmt)+')';ctx.beginPath();ctx.arc(xx,yy,1.5*DPR,0,TAU);ctx.fill();
+    }
+  }
+  if(shock>0){                                         // one-time shockwave on the plane
+    var cy=W*DPR*CYF,R0=RAD[0]*W*DPR/2,rr=R0*(1+.55*(1-shock));
+    ctx.lineWidth=(2.5+3*shock)*DPR;ctx.strokeStyle='rgba(150,225,255,'+(shock*.5)+')';
+    ctx.beginPath();ctx.ellipse(cx,cy,rr,rr*TILT,0,0,TAU);ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function backdrop(t){
+  var cx=W*DPR/2,cy=W*DPR*CYF,R0=RAD[0]*W*DPR/2,Wd=W*DPR,Ht=W*HF*DPR;
+  for(var k=0;k<STARS.length;k++){var st=STARS[k];                     // faint static starfield
+    var a=.18+.25*(reduce?.5:(.5+.5*Math.sin(t*.8+st[3])));
+    ctx.fillStyle='rgba(190,222,255,'+a+')';ctx.fillRect(st[0]*Wd,st[1]*Wd,st[2]*DPR*.8,st[2]*DPR*.8);}
+  var ph=reduce?0:t*.55;
+  ctx.fillStyle='rgba(120,180,255,.07)';ctx.beginPath();ctx.moveTo(cx,cy);
+  ctx.ellipse(cx,cy,R0*1.04,R0*1.04*TILT,0,ph-.6,ph);ctx.closePath();ctx.fill();
+  ctx.strokeStyle='rgba(190,225,255,.22)';ctx.lineWidth=1*DPR;ctx.beginPath();ctx.moveTo(cx,cy);
+  ctx.lineTo(cx+Math.cos(ph)*R0*1.04,cy+Math.sin(ph)*R0*1.04*TILT);ctx.stroke();
+  var m=12*DPR,L=20*DPR;
+  ctx.strokeStyle='rgba(180,215,255,.55)';ctx.lineWidth=1.4*DPR;ctx.beginPath();
+  ctx.moveTo(m,m+L);ctx.lineTo(m,m);ctx.lineTo(m+L,m);
+  ctx.moveTo(Wd-m-L,m);ctx.lineTo(Wd-m,m);ctx.lineTo(Wd-m,m+L);
+  ctx.moveTo(m,Ht-m-L);ctx.lineTo(m,Ht-m);ctx.lineTo(m+L,Ht-m);
+  ctx.moveTo(Wd-m-L,Ht-m);ctx.lineTo(Wd-m,Ht-m);ctx.lineTo(Wd-m,Ht-m-L);ctx.stroke();
+}
+
+/* bottom strip: how far each ring is from its own rule (a drawing aid, not a score) */
+function hud(t){
+  var Wd=W*DPR,x0=44*DPR,x1=Wd-44*DPR,gp=7*DPR,sw=(x1-x0-4*gp)/5,y=W*DPR*.795,h=5*DPR;
+  ctx.textAlign='center';ctx.font='600 '+Math.round(W*DPR*.02)+'px ui-monospace,Consolas,monospace';
+  for(var i=0;i<5;i++){
+    var x=x0+i*(sw+gp),p=cur[i],full=p>=.995;
+    ctx.fillStyle='rgba(120,170,235,.16)';ctx.fillRect(x,y,sw,h);
+    ctx.fillStyle=full?'rgba(235,250,255,.95)':'rgba(130,200,255,.85)';ctx.fillRect(x,y,sw*p,h);
+    if(full){ctx.save();ctx.globalCompositeOperation='lighter';ctx.fillStyle='rgba(110,205,255,.25)';ctx.fillRect(x-1*DPR,y-2*DPR,sw+2*DPR,h+4*DPR);ctx.restore();}
+    ctx.fillStyle=i===active?'#fff':'rgba(175,205,245,.85)';ctx.fillText(NAMES[i],x+sw/2,y-5*DPR);
+  }
+  ctx.font='600 '+Math.round(W*DPR*.026)+'px ui-monospace,Consolas,monospace';
+  ctx.fillStyle=aligned?'rgba(235,250,255,.98)':'rgba(200,225,255,.92)';
+  ctx.fillText(aligned?'ALIGNED ON RULES · OUTCOME STILL UNKNOWN':'OUTCOME UNKNOWN · THE GAP NEVER CLOSES',Wd/2,W*DPR*.715);
+}
+
+var last=0,t=0,visible=true,raf=0;
+function physics(dt){
+  var steps=Math.max(1,Math.ceil(dt/.016)),h=dt/steps,allA=true;
+  for(var i=0;i<5;i++){
+    var p=cur[i];
+    for(var c=0;c<CH;c++){
+      var want=p>=(c+1)/CH-.001?1:0;
+      if(want!==eff[i][c]){eff[i][c]=want;if(!reduce&&started){if(want){fl[i][c]=1;fx('lock');}else fx('release');}}
+      if(reduce){lk[i][c]=want;vl[i][c]=0;fl[i][c]=0;continue;}
+      for(var s=0;s<steps;s++){var a=260*(eff[i][c]-lk[i][c])-17*vl[i][c];vl[i][c]+=a*h;lk[i][c]+=vl[i][c]*h;}
+      if(fl[i][c]>0)fl[i][c]=Math.max(0,fl[i][c]-dt*3.4);
+    }
+    if(reduce)ang[i]=HOME;                           // dial: the ring slows, then is drawn home as its rule is met
+    else{ang[i]+=(.05+i*.012)*(i%2?-1:1)*Math.pow(1-p,2)*dt;ang[i]+=wrap(HOME-ang[i])*Math.min(1,dt*8*Math.pow(p,10));}
+    var e=Math.abs(wrap(HOME-ang[i]));
+    clos[i]=Math.pow(Math.max(0,p),3)*Math.pow(1-e/Math.PI,6);
+    if(!(p>=.995&&e<.08))allA=false;
+  }
+  if(allA&&!aligned&&started&&!reduce){shock=1;fx('align');}
+  aligned=allA;alignAmt+=((aligned?1:0)-alignAmt)*Math.min(1,dt*3);
+  if(shock>0)shock=Math.max(0,shock-dt*.9);
+}
+function frame(ts){
+  raf=0;
+  var dt=last?Math.min((ts-last)/1000,.05):.016;last=ts;t+=dt;
+  for(var i=0;i<5;i++){cur[i]=reduce?tgt[i]:cur[i]+(tgt[i]-cur[i])*Math.min(1,dt*3.2);}
+  if(drifting)stepDrift(dt);
+  if(activeT>0){activeT-=dt;if(activeT<=0)active=-1;}
+  physics(dt);
+  ctx.clearRect(0,0,cv.width,cv.height);
+  backdrop(t);
+  for(var j=0;j<5;j++)ring(j,t);
+  beam(t);hud(t);
+  if(visible&&!document.hidden)raf=requestAnimationFrame(frame);
+}
+function go(){if(!raf&&visible&&!document.hidden){last=0;raf=requestAnimationFrame(frame);}}
+if('IntersectionObserver'in window)new IntersectionObserver(function(e){visible=e[0].isIntersecting;go();}).observe(document.getElementById('stage'));
+document.addEventListener('visibilitychange',go);
+
+/* ---- drift: a slow random walk so you can watch rings fall and rise on their own ---- */
+var drifting=false,dBtn=document.getElementById('drift'),vel={};
+function setSlider(id,v){var g=G.filter(function(x){return x.id===id})[0];v=clamp(v,g.min,g.max);val[id]=v;els[id].value=v;}
+function stepDrift(dt){
+  G.forEach(function(g){
+    if(g.kind==='seg')return;
+    var span=g.max-g.min;vel[g.id]=(vel[g.id]||0)*.96+(Math.random()-.5)*span*.9*dt;
+    setSlider(g.id,val[g.id]+vel[g.id]*dt*4);
+  });
+  update();
+}
+dBtn.onclick=function(){drifting=!drifting;dBtn.setAttribute('aria-pressed',String(drifting));dBtn.textContent=drifting?'Stop':'Drift';};
+document.getElementById('reset').onclick=function(){
+  drifting=false;dBtn.setAttribute('aria-pressed','false');dBtn.textContent='Drift';
+  G.forEach(function(g){if(g.kind==='seg'){val[g.id]=g.start;}else{setSlider(g.id,g.start);}});
+  [].forEach.call(document.querySelectorAll('.seg button'),function(b){b.setAttribute('aria-pressed',String(b.textContent==='unknown'))});
+  update();
+};
+for(var i=0;i<5;i++){cur[i]=tgt[i];for(var c=0;c<CH;c++){var w0=cur[i]>=(c+1)/CH-.001?1:0;eff[i][c]=w0;lk[i][c]=w0;}}
+go();setTimeout(function(){started=true;},400);
+})();
+</script>
+</body>
+</html>
