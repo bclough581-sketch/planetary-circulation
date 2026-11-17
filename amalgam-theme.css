@@ -506,3 +506,21 @@ h1,.hero h1 {background-image:linear-gradient(115deg,#fff 8%,#ccdef5 30%,#fff 44
 /* smoother touch drag: own compositor layer, and rings hold still while the finger or glide is moving the view */
 .assembly {will-change: transform;}
 .stage.dragging .ring, .stage.coasting .ring {animation-play-state: paused;}
+
+/* Mobile GPU-memory guard. Android Chrome drops raster tiles when too many large
+   composited layers are alive at once (flat bands, vanishing buttons, soft patches).
+   Fewer animated full-screen layers and lighter shadows keep every tile alive.
+   Look is unchanged on desktop; on phones only the cheapest decorative glow is trimmed. */
+.stage {contain: layout paint; isolation: isolate;}
+@media (max-width: 700px), (pointer: coarse) {
+  body::before, .stage::before {animation: none; opacity: .5;}
+  body::after {display: none;}
+  .stage {box-shadow: inset 0 1px #f2f9ffcc, inset 0 0 40px #02081388, 0 3px #010611, 0 5px #426fa8, 0 8px 14px #0009;}
+  .ring {box-shadow: 0 0 0 1px #ebf6ff, 0 0 6px #3276ff88, inset 0 0 0 1px #b0d4ff, 0 5px 0 #020b1d, 0 7px 0 #4774ae;}
+  .ring.selected {box-shadow: 0 0 0 2px #f3faff, 0 0 10px #347affcc, inset 0 0 0 1px #e4f1ff, 0 5px 0 #07142c, 0 7px 0 #87b7f5;}
+  .center {box-shadow: inset 0 2px #ffffffcc, 0 0 8px #b7e6ffaa;}
+  .water-ribbons {filter: none;}
+}
+/* Rings and ambient glow sleep while the view is scrolling or the stage is off screen. */
+body.is-scrolling::before, body.is-scrolling .stage::before, body.stage-off::before, body.stage-off .stage::before {animation-play-state: paused;}
+body.stage-off .ring {animation-play-state: paused;}

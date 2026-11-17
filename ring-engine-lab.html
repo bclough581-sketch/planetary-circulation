@@ -363,6 +363,7 @@ async function refreshContext(){
 $("wfRefresh").onclick=refreshContext;
 setInterval(refreshContext,15*60*1000);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)refreshContext()});
+(function(){let t;addEventListener("scroll",()=>{document.body.classList.add("is-scrolling");clearTimeout(t);t=setTimeout(()=>document.body.classList.remove("is-scrolling"),160)},{passive:true});const st=document.getElementById("stage");if(st&&"IntersectionObserver"in window)new IntersectionObserver(e=>document.body.classList.toggle("stage-off",!e[0].isIntersecting)).observe(st)})();
 motion();restoreStarter();
 refreshContext();
 </script><script src="star-hero.js" defer></script></body></html>
