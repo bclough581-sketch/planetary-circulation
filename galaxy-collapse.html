@@ -46,8 +46,9 @@ main{padding-top:8px}
 .fxc{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2}
 .oil{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:3;opacity:1;border-radius:inherit}.oil.off{display:none}
 .bloom{position:absolute;inset:0;pointer-events:none;z-index:0;opacity:.12;background:radial-gradient(ellipse at 50% 58%,#8fd6ff77,#2f8bff33 38%,transparent 68%)}
-.ring.seated{box-shadow:0 0 0 1px #fff,0 0 10px #d6f0ff,0 0 26px #4aa8ffcc,inset 0 0 0 1px #e4f1ff,inset 0 0 14px #7fc8ff88,0 5px 0 #020b1d,0 7px 0 #7fb4ee}
-@media(max-width:700px){.ring.seated{box-shadow:0 0 0 1px #fff,0 0 12px #6bbcffcc,inset 0 0 0 1px #e4f1ff,0 5px 0 #020b1d,0 7px 0 #7fb4ee}}
+.ring .glow{position:absolute;inset:calc(-1 * var(--thick));border-radius:50%;pointer-events:none;opacity:0;transition:opacity .35s ease-out;will-change:opacity;box-shadow:0 0 0 1px #fff,0 0 10px #d6f0ff,0 0 26px #4aa8ffcc,inset 0 0 0 1px #e4f1ff,inset 0 0 14px #7fc8ff88,0 5px 0 #020b1d,0 7px 0 #7fb4ee}
+.ring.seated .glow{opacity:1}
+@media(max-width:700px){.ring .glow{box-shadow:0 0 0 1px #fff,0 0 12px #6bbcffcc,inset 0 0 0 1px #e4f1ff,0 5px 0 #020b1d,0 7px 0 #7fb4ee}}
 .pin.aligned .stage{box-shadow:inset 0 3px 8px #000a,0 0 0 1px #dff0ff,0 0 24px #5fb4ff99}
 </style>
 </head><body>
@@ -143,6 +144,7 @@ var G=[
 ];
 var rings=[].slice.call(document.querySelectorAll('.ring'));   // outer -> inner = G1 -> G5
 var zlast=[],olast=[];
+rings.forEach(function(r){var g=document.createElement('i');g.className='glow';g.setAttribute('aria-hidden','true');r.appendChild(g);});
 var val={},tgt=[0,0,0,0,0],cur=[0,0,0,0,0],zc=[],zv=[],met=[0,0,0,0,0],els={},started=false,aligned=false;
 var FLOOR=function(i){return 6+7*i},LIFT=function(i){return 62+11*i};   // never coplanar; open stack stays on screen
 function selectRing(i){rings.forEach(function(r,k){r.classList.toggle('selected',k===i)});}
@@ -300,7 +302,7 @@ function frame(ts){
     var zq=Math.round(zc[i]*10)/10;if(zq!==zlast[i]){zlast[i]=zq;rings[i].style.translate='0 0 '+zq+'px';}
     var oq=(.55+.45*cur[i]).toFixed(2);if(oq!==olast[i]){olast[i]=oq;rings[i].style.opacity=oq;}
     var m=cur[i]>=.995?1:0;
-    if(m!==met[i]){met[i]=m;if(!drifting)rings[i].classList.toggle('seated',!!m);if(started&&!drifting){fx(m?'lock':'release');if(m)spawnSeat(i);}}
+    if(m!==met[i]){met[i]=m;rings[i].classList.toggle('seated',!!m);if(started&&!drifting){fx(m?'lock':'release');if(m)spawnSeat(i);}}
     if(!m)allMet=false;
   }
   if(allMet&&!aligned&&started&&!drifting){fx('align');if(!reducedMotion.matches)shocks.push({i:0,t:0,big:true});}
