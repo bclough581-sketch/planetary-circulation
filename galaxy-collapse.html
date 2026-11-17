@@ -30,7 +30,7 @@ main{padding-top:8px}
 .pin .assembly{margin-top:44px}
 @media(max-width:700px){.pin .stage{min-height:340px}.pin .assembly{width:240px;height:240px}}
 .readout{display:flex;justify-content:space-between;align-items:center;gap:8px;font:600 .72rem ui-monospace,Consolas,monospace;letter-spacing:.06em;color:#cfe3ff;padding:8px 12px;border:1px solid #6fa6e6;border-top:0;border-radius:0 0 14px 14px;background:#06173a;margin-top:-6px}
-.readout b{color:#fff}.readout button{padding:6px 10px;font-size:.72rem;margin:0}
+.readout b{color:#fff}.readout button{padding:6px 10px;font-size:.72rem;margin:0;min-width:64px;touch-action:manipulation}
 .readout{flex-wrap:wrap}.cap{flex-basis:100%;text-align:center;font-size:.64rem;letter-spacing:.1em;color:#d4e8ff;border-top:1px solid #1d3d68;padding-top:7px}
 .srow{border:1px solid #2b4a74;border-radius:12px;padding:10px 12px;margin:9px 0;background:#0a1d3b}
 .srow .top{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
@@ -166,8 +166,8 @@ G.forEach(function(g,i){
 function update(){
   var n=0;
   G.forEach(function(g,i){var v=val[g.id],p=g.prog(v);tgt[i]=p;if(p>=1)n++;
-    document.getElementById('v_'+g.id).textContent=g.fmt(v);document.getElementById('s_'+g.id).textContent=g.state(v);});
-  document.getElementById('metN').textContent=n;
+    var ve=g._v||(g._v=document.getElementById('v_'+g.id)),se=g._s||(g._s=document.getElementById('s_'+g.id)),vt=g.fmt(v),st=g.state(v);if(ve._t!==vt){ve._t=vt;ve.textContent=vt;}if(se._t!==st){se._t=st;se.textContent=st;}});
+  var mn=document.getElementById('metN');if(mn._t!==n){mn._t=n;mn.textContent=n;}
 }
 update();for(var q=0;q<5;q++){cur[q]=tgt[q];zc[q]=FLOOR(q)+(1-cur[q])*LIFT(q);zlast[q]=Math.round(zc[q]*10)/10;rings[q].style.translate='0 0 '+zlast[q]+'px';}
 
@@ -269,10 +269,10 @@ function frame(ts){
     var zq=Math.round(zc[i]*10)/10;if(zq!==zlast[i]){zlast[i]=zq;rings[i].style.translate='0 0 '+zq+'px';}
     var oq=(.55+.45*cur[i]).toFixed(2);if(oq!==olast[i]){olast[i]=oq;rings[i].style.opacity=oq;}
     var m=cur[i]>=.995?1:0;
-    if(m!==met[i]){met[i]=m;rings[i].classList.toggle('seated',!!m);if(started){fx(m?'lock':'release');if(m)spawnSeat(i);}}
+    if(m!==met[i]){met[i]=m;rings[i].classList.toggle('seated',!!m);if(started&&!drifting){fx(m?'lock':'release');if(m)spawnSeat(i);}}
     if(!m)allMet=false;
   }
-  if(allMet&&!aligned&&started){fx('align');if(!reducedMotion.matches)shocks.push({i:0,t:0,big:true});}
+  if(allMet&&!aligned&&started&&!drifting){fx('align');if(!reducedMotion.matches)shocks.push({i:0,t:0,big:true});}
   if(allMet!==aligned){aligned=allMet;pin.classList.toggle('aligned',aligned);cap.textContent=aligned?'ALIGNED ON RULES · OUTCOME STILL UNKNOWN':'OUTCOME UNKNOWN · RINGS NEVER FULLY SEAT';}
   fxDraw(dt);
   if(drifting)stepDrift(dt);
@@ -283,9 +283,17 @@ if('IntersectionObserver'in window)new IntersectionObserver(function(e){visible=
 document.addEventListener('visibilitychange',go);
 
 function setSlider(id,v){var g=G.filter(function(x){return x.id===id})[0];v=clamp(v,g.min,g.max);val[id]=v;els[id].value=v;}
-function stepDrift(dt){G.forEach(function(g){if(g.kind==='seg')return;var span=g.max-g.min;vel[g.id]=(vel[g.id]||0)*.96+(Math.random()-.5)*span*.9*dt;setSlider(g.id,val[g.id]+vel[g.id]*dt*4);});update();}
+var dT=0,dAcc=0,dPh=G.map(function(g,i){return {a:i*1.7+.6,b:i*2.9+1.1,fa:.11+.035*i,fb:.19+.05*((i*3)%5)};});
+function stepDrift(dt){
+  dT+=dt;dAcc+=dt;
+  G.forEach(function(g,i){if(g.kind==='seg')return;var span=g.max-g.min,c=dPh[i];
+    var w=.5+.5*(.62*Math.sin(dT*c.fa*2+c.a)+.38*Math.sin(dT*c.fb*2+c.b));   // smooth 0..1 wander
+    var goal=g.min+span*w,cv=val[g.id];
+    val[g.id]=cv+(goal-cv)*Math.min(1,dt*1.8);els[g.id].value=val[g.id];});
+  if(dAcc>.09){dAcc=0;update();}     // text/DOM refresh ~11x/s, rings still animate every frame
+}
 var dBtn=document.getElementById('drift');
-dBtn.onclick=function(){drifting=!drifting;dBtn.setAttribute('aria-pressed',String(drifting));dBtn.textContent=drifting?'Stop':'Drift';};
+dBtn.onclick=function(){drifting=!drifting;dBtn.setAttribute('aria-pressed',String(drifting));dBtn.textContent=drifting?'Stop':'Drift';if(drifting)dAcc=1;};
 document.getElementById('reset').addEventListener('click',function(){
   drifting=false;dBtn.setAttribute('aria-pressed','false');dBtn.textContent='Drift';
   G.forEach(function(g){if(g.kind==='seg')val[g.id]=g.start;else setSlider(g.id,g.start);});
