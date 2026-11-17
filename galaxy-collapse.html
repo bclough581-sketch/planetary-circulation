@@ -44,6 +44,7 @@ main{padding-top:8px}
 .sample{border:1px solid #2b4a74;border-radius:10px;padding:9px 11px;margin:8px 0;color:#a9c1de;font-size:.84rem;background:#0a1d3b}
 .ring{--z:0px!important}
 .fxc{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2}
+.oil{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:3;mix-blend-mode:hard-light;opacity:.8;border-radius:inherit;transition:opacity .3s}.oil.off{opacity:0}
 .bloom{position:absolute;inset:0;pointer-events:none;z-index:0;opacity:.12;background:radial-gradient(ellipse at 50% 58%,#8fd6ff77,#2f8bff33 38%,transparent 68%)}
 .ring.seated{box-shadow:0 0 0 1px #fff,0 0 10px #d6f0ff,0 0 26px #4aa8ffcc,inset 0 0 0 1px #e4f1ff,inset 0 0 14px #7fc8ff88,0 5px 0 #020b1d,0 7px 0 #7fb4ee}
 @media(max-width:700px){.ring.seated{box-shadow:0 0 0 1px #fff,0 0 12px #6bbcffcc,inset 0 0 0 1px #e4f1ff,0 5px 0 #020b1d,0 7px 0 #7fb4ee}}
@@ -65,7 +66,7 @@ main{padding-top:8px}
 </div>
 <div class="controls"><button id="spin" aria-pressed="true">Pause motion</button><button id="settle">Settle view</button><button id="depth">Depth view</button><button id="reset">Reset</button></div><div class="motion-presets" role="group" aria-label="Visual motion"><span>Motion</span><button data-motion="still" aria-pressed="false">Still</button><button data-motion="drift" aria-pressed="true">Drift</button><button data-motion="flow" aria-pressed="false">Flow</button></div>
 <p class="motion-note muted">Drag to tilt · Motion is decorative, not signal strength.</p>
-<div class="fx"><button id="hap" aria-pressed="false">Haptics</button><button id="snd" aria-pressed="false">Sound</button> feel each ring seat</div>
+<div class="fx"><button id="hap" aria-pressed="false">Haptics</button><button id="snd" aria-pressed="false">Sound</button><button id="oil" aria-pressed="true">Oil paint</button> feel each ring seat</div>
 <div id="rows"></div>
 <footer>Rules describe what already happened. They have not been shown to predict winners. Catalyst and book correlation are notes outside the verdict, drawn here only so you can see all five. Ring height is a drawing aid, not a score.<br><br><a href="collapse-lab.html" style="color:#8fc4ff">Flat-ring classic</a> · <a href="collapse-scifi.html" style="color:#8fc4ff">Sci-fi chevrons</a></footer>
 </main>
@@ -255,6 +256,24 @@ function fxDraw(dt){
   fctx.globalCompositeOperation='source-over';
 }
 
+/* oil-paint look: ONE static brushstroke canvas (painted once, zero per-frame cost) blended over the stage */
+var oilC=document.createElement('canvas');oilC.className='oil';oilC.setAttribute('aria-hidden','true');stage.appendChild(oilC);
+(function(){
+  var W=360,H=360,c=oilC,x;c.width=W;c.height=H;x=c.getContext('2d');
+  x.fillStyle='#808080';x.fillRect(0,0,W,H);
+  var seed=7;function rnd(){seed=(seed*16807)%2147483647;return seed/2147483647;}
+  for(var n=0;n<1500;n++){
+    var px=rnd()*W,py=rnd()*H,ang=-.35+(rnd()-.5)*.7+(rnd()<.18?1.1:0),len=26+rnd()*54,wd=8+rnd()*14;
+    var tone=rnd(),a=.12+rnd()*.16;
+    x.save();x.translate(px,py);x.rotate(ang);
+    var g=x.createLinearGradient(0,-wd/2,0,wd/2);   // ridge highlight on one edge, shadow on the other = impasto
+    g.addColorStop(0,'rgba(255,255,255,'+a+')');g.addColorStop(.5,'rgba(128,128,128,0)');g.addColorStop(1,'rgba(0,0,0,'+a*.9+')');
+    x.fillStyle=g;x.beginPath();x.moveTo(-len/2,0);
+    x.quadraticCurveTo(0,-wd*.6,len/2,(rnd()-.5)*3);x.quadraticCurveTo(0,wd*.6,-len/2,0);x.fill();
+    x.restore();
+  }
+})();
+var oilB=document.getElementById('oil');oilB.onclick=function(){var on=oilC.classList.toggle('off');oilB.setAttribute('aria-pressed',String(!on));};
 var cap=document.getElementById('cap'),pin=document.getElementById('pin');
 var last=0,raf=0,visible=true,drifting=false,vel={};
 function frame(ts){
