@@ -300,7 +300,7 @@ function frame(ts){
     var zq=Math.round(zc[i]*10)/10;if(zq!==zlast[i]){zlast[i]=zq;rings[i].style.translate='0 0 '+zq+'px';}
     var oq=(.55+.45*cur[i]).toFixed(2);if(oq!==olast[i]){olast[i]=oq;rings[i].style.opacity=oq;}
     var m=cur[i]>=.995?1:0;
-    if(m!==met[i]){met[i]=m;rings[i].classList.toggle('seated',!!m);if(started&&!drifting){fx(m?'lock':'release');if(m)spawnSeat(i);}}
+    if(m!==met[i]){met[i]=m;if(!drifting)rings[i].classList.toggle('seated',!!m);if(started&&!drifting){fx(m?'lock':'release');if(m)spawnSeat(i);}}
     if(!m)allMet=false;
   }
   if(allMet&&!aligned&&started&&!drifting){fx('align');if(!reducedMotion.matches)shocks.push({i:0,t:0,big:true});}
@@ -323,10 +323,11 @@ function stepDrift(dt){
     val[g.id]=cv+(goal-cv)*Math.min(1,dt*1.8);});
   if(dAcc>.12){dAcc=0;G.forEach(function(g){if(g.kind!=='seg')els[g.id].value=val[g.id];});update();}     // text/DOM refresh ~11x/s, rings still animate every frame
 }
+function syncSeated(){rings.forEach(function(r,i){r.classList.toggle('seated',!!met[i]);});}
 var dBtn=document.getElementById('drift');
-dBtn.onclick=function(){drifting=!drifting;dBtn.setAttribute('aria-pressed',String(drifting));dBtn.textContent=drifting?'Stop':'Drift';oilC.style.display=drifting?'none':'';if(drifting)dAcc=1;};
+dBtn.onclick=function(){drifting=!drifting;dBtn.setAttribute('aria-pressed',String(drifting));dBtn.textContent=drifting?'Stop':'Drift';oilC.style.display=drifting?'none':'';if(drifting)dAcc=1;else syncSeated();};
 document.getElementById('reset').addEventListener('click',function(){
-  drifting=false;dBtn.setAttribute('aria-pressed','false');dBtn.textContent='Drift';oilC.style.display='';
+  drifting=false;dBtn.setAttribute('aria-pressed','false');dBtn.textContent='Drift';oilC.style.display='';syncSeated();
   G.forEach(function(g){if(g.kind==='seg')val[g.id]=g.start;else setSlider(g.id,g.start);});
   [].forEach.call(document.querySelectorAll('.seg button'),function(b){b.setAttribute('aria-pressed',String(b.textContent==='unknown'))});
   rings.forEach(function(r){r.classList.remove('selected')});update();
