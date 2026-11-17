@@ -229,7 +229,7 @@ function fxDraw(dt){
   var ce={x:rCe.x,y:rCe.y,t:rCe.t},mx=(cs[0].x+cs[1].x+cs[2].x+cs[3].x+cs[4].x+ce.x)/6,px=mx,ylock=Math.min(1,Math.abs(yaw)/8);   // straight axis unless you yaw the view
   for(i=0;i<5;i++)cs[i].x=mx+(cs[i].x-mx)*ylock;ce.x=mx+(ce.x-mx)*ylock;
   /* dust galaxy on the floor plane: orbits faster and brighter as rules seat */
-  for(k=0;k<(lite?45:MOTES.length);k++){var mo=MOTES[k];
+  for(k=0;k<((lite||drifting)?40:MOTES.length);k++){var mo=MOTES[k];
     if(!still)mo.a+=mo.w*(.35+1.65*m)/Math.sqrt(mo.r)*dt;
     var x=px+Math.cos(mo.a)*mo.r*rx*1.1,y=py+Math.sin(mo.a)*mo.r*ry*1.1;
     var tw=.5+.5*Math.sin(ft*1.7+mo.p),al=(.16+.5*m)*(.35+.65*tw)*(mo.r>1?.5:1);
@@ -257,7 +257,7 @@ function fxDraw(dt){
   for(k=shocks.length-1;k>=0;k--){var sh=shocks[k];sh.t+=dt;var us=sh.t/(sh.big?1.4:1.0);
     if(us>=1){shocks.splice(k,1);continue;}
     var base=sh.big?d.R0:d.R0*(1-.1*sh.i),rr=base*(1+(sh.big?.9:.5)*us);
-    var nd=lite?18:(sh.big?34:26),sa0=sh.i*1.3,fa=(1-us)*(sh.big?.9:.8);
+    var nd=(lite||drifting)?14:(sh.big?34:26),sa0=sh.i*1.3,fa=(1-us)*(sh.big?.9:.8);
     for(var q=0;q<nd;q++){var an=sa0+q/nd*6.283+us*.5;
       dab(px+Math.cos(an)*rr,py+Math.sin(an)*rr*d.cT,Math.atan2(Math.cos(an)*rr*d.cT,-Math.sin(an)*rr),(sh.big?.9:.62)*(1-us*.35),fa,q);}
     dabEnd();}
@@ -320,13 +320,13 @@ function stepDrift(dt){
   G.forEach(function(g,i){if(g.kind==='seg')return;var span=g.max-g.min,c=dPh[i];
     var w=.5+.5*(.62*Math.sin(dT*c.fa*2+c.a)+.38*Math.sin(dT*c.fb*2+c.b));   // smooth 0..1 wander
     var goal=g.min+span*w,cv=val[g.id];
-    val[g.id]=cv+(goal-cv)*Math.min(1,dt*1.8);els[g.id].value=val[g.id];});
-  if(dAcc>.09){dAcc=0;update();}     // text/DOM refresh ~11x/s, rings still animate every frame
+    val[g.id]=cv+(goal-cv)*Math.min(1,dt*1.8);});
+  if(dAcc>.12){dAcc=0;G.forEach(function(g){if(g.kind!=='seg')els[g.id].value=val[g.id];});update();}     // text/DOM refresh ~11x/s, rings still animate every frame
 }
 var dBtn=document.getElementById('drift');
-dBtn.onclick=function(){drifting=!drifting;dBtn.setAttribute('aria-pressed',String(drifting));dBtn.textContent=drifting?'Stop':'Drift';if(drifting)dAcc=1;};
+dBtn.onclick=function(){drifting=!drifting;dBtn.setAttribute('aria-pressed',String(drifting));dBtn.textContent=drifting?'Stop':'Drift';oilC.style.display=drifting?'none':'';if(drifting)dAcc=1;};
 document.getElementById('reset').addEventListener('click',function(){
-  drifting=false;dBtn.setAttribute('aria-pressed','false');dBtn.textContent='Drift';
+  drifting=false;dBtn.setAttribute('aria-pressed','false');dBtn.textContent='Drift';oilC.style.display='';
   G.forEach(function(g){if(g.kind==='seg')val[g.id]=g.start;else setSlider(g.id,g.start);});
   [].forEach.call(document.querySelectorAll('.seg button'),function(b){b.setAttribute('aria-pressed',String(b.textContent==='unknown'))});
   rings.forEach(function(r){r.classList.remove('selected')});update();
