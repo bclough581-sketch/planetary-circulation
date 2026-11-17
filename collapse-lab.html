@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#03060e">
+<title>Amalgam · Collapse lab (sample numbers)</title>
+<style>
+:root{color-scheme:dark;--ink:#eaf3ff;--mute:#a9c1de;--line:#2b4a74;--panel:#0a1d3b}
+*{box-sizing:border-box}
+html,body{margin:0;background:#050d1f;color:var(--ink);font:16px/1.45 system-ui,sans-serif}
+main{max-width:560px;margin:0 auto;padding:14px 14px 40px}
+h1{font-size:1.35rem;margin:6px 0 2px;letter-spacing:-.02em}
+.eyebrow{font:600 .68rem ui-monospace,Consolas,monospace;letter-spacing:.14em;color:#8fc4ff;text-transform:uppercase}
+.sample{border:1px solid var(--line);border-radius:10px;padding:9px 11px;margin:10px 0;color:var(--mute);font-size:.84rem;background:var(--panel)}
+.stage{position:relative;border:1px solid #6fa6e6;border-radius:14px;background:radial-gradient(ellipse at 50% 55%,#13407f 0,#07204a 55%,#04122b 100%);overflow:hidden;contain:layout paint;touch-action:none}
+canvas{display:block;width:100%;height:auto;aspect-ratio:1/1}
+.readout{display:flex;justify-content:space-between;gap:8px;font:600 .72rem ui-monospace,Consolas,monospace;letter-spacing:.06em;color:#cfe3ff;padding:9px 12px;border-top:1px solid #1d3d68;background:#06173a}
+.readout b{color:#fff}
+.row{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:9px 0;background:var(--panel)}
+.row .top{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.row .name{font-weight:650}
+.row .note{font-size:.7rem;color:#8fb2da;font-weight:500;margin-left:6px}
+.row .val{font:600 .95rem ui-monospace,Consolas,monospace;white-space:nowrap}
+.row .rule{font-size:.8rem;color:var(--mute);margin:2px 0 4px}
+.row .state{font:600 .72rem ui-monospace,Consolas,monospace;letter-spacing:.08em;text-transform:uppercase;color:#bcd9ff}
+input[type=range]{width:100%;height:34px;accent-color:#8fc4ff}
+.seg{display:flex;gap:6px;margin-top:4px}
+button{background:#14376a;color:#eaf3ff;border:1px solid #5d8fd0;border-radius:9px;padding:11px 13px;font:inherit;font-size:.9rem}
+button[aria-pressed=true]{background:#2a6bd0;border-color:#cfe6ff}
+.seg button{flex:1;padding:9px 6px}
+.bar{display:flex;gap:8px;margin:12px 0}
+.bar button{flex:1}
+footer{color:#8fb2da;font-size:.78rem;margin-top:18px}
+</style>
+</head>
+<body>
+<main>
+<div class="eyebrow">Amalgam · sandbox</div>
+<h1>Collapse lab</h1>
+<div class="sample">Sample numbers on a made-up ticker. Not a real stock, not advice. Each ring settles as its own rule gets closer to being met, and lifts again as the number moves away. No ring ever fully closes: the gap stays, because a rule being met says nothing about what happens next.</div>
+
+<div class="stage" id="stage">
+  <canvas id="cv" aria-label="Five rings. Each ring flattens as its rule gets closer to being met. A gap always remains."></canvas>
+  <div class="readout"><span>RULES MET <b id="metN">0</b> / 5</span><span>OUTCOME <b>UNKNOWN</b></span></div>
+</div>
+
+<div class="bar"><button id="drift" aria-pressed="false">Drift the data</button><button id="reset">Reset</button></div>
+
+<div id="rows"></div>
+
+<footer>Rules describe what already happened. They have not been shown to predict winners. Catalyst and book correlation are notes outside the verdict, drawn here only so you can see all five. Ring height is a drawing aid, not a score.</footer>
+</main>
+
+<script src="gates.js"></script>
+<script>
+(function(){
+'use strict';
+var T=(window.GATES&&window.GATES.T)||{rangeFail:.85,rangeWarn:.70,rsiPassLo:40,rsiPassHi:65,rsiFail:70,volMult:1.5,corrFail:.70,corrFlag:.50};
+var clamp=function(x,a,b){return Math.max(a,Math.min(b,x))};
+var pct=function(x){return Math.round(x*100)+'%'};
+
+/* Each gate: input, how far it is from its stated rule (0..1, 1 = rule met), and plain-English state. */
+var G=[
+ {id:'g1',name:'G1 · Range position',note:'',min:0,max:1,step:.01,start:.92,
+  fmt:function(v){return pct(v)+' of 6-month range'},
+  rule:'Rule: under '+pct(T.rangeWarn)+' of its 6-month range',
+  prog:function(v){return v<=T.rangeWarn?1:clamp((1-v)/(1-T.rangeWarn),0,1)},
+  state:function(v){return v<T.rangeWarn?'rule met':v<T.rangeFail?'near the rule':'rule not met'}},
+ {id:'g2',name:'G2 · RSI (14)',note:'',min:10,max:90,step:1,start:78,
+  fmt:function(v){return String(Math.round(v))},
+  rule:'Rule: between '+T.rsiPassLo+' and '+T.rsiPassHi,
+  prog:function(v){return v>=T.rsiPassLo&&v<=T.rsiPassHi?1:v<T.rsiPassLo?clamp((v-20)/(T.rsiPassLo-20),0,1):clamp((85-v)/(85-T.rsiPassHi),0,1)},
+  state:function(v){return v>=T.rsiPassLo&&v<=T.rsiPassHi?'rule met':v>T.rsiFail?'rule not met':'near the rule'}},
+ {id:'g3',name:'G3 · Up-day volume',note:'',min:0,max:3,step:.05,start:.7,
+  fmt:function(v){return v.toFixed(2)+'× 20-day avg'},
+  rule:'Rule: up day on at least '+T.volMult+'× average volume',
+  prog:function(v){return clamp(v/T.volMult,0,1)},
+  state:function(v){return v>=T.volMult?'rule met':v>=T.volMult*.7?'near the rule':'rule not met'}},
+ {id:'g4',name:'G4 · Catalyst',note:'note · outside the verdict',kind:'seg',start:'unknown',opts:['no','unknown','yes'],
+  fmt:function(v){return v},
+  rule:'You mark this by hand: is there a known reason for the move?',
+  prog:function(v){return v==='yes'?1:v==='unknown'?.45:.1},
+  state:function(v){return v==='yes'?'marked yes':v==='no'?'marked no':'not marked'}},
+ {id:'g5',name:'G5 · Overlap with your book',note:'note · outside the verdict',min:0,max:1,step:.01,start:.78,
+  fmt:function(v){return 'r '+v.toFixed(2)},
+  rule:'Note: under '+T.corrFlag.toFixed(2)+' correlation with your closest holding',
+  prog:function(v){return v<=T.corrFlag?1:clamp((.95-v)/(.95-T.corrFlag),0,1)},
+  state:function(v){return v<T.corrFlag?'rule met':v<T.corrFail?'near the rule':'rule not met'}}
+];
+var val={},tgt=[0,0,0,0,0],cur=[0,0,0,0,0],els={};
+
+var rows=document.getElementById('rows');
+G.forEach(function(g,i){
+  val[g.id]=g.start;
+  var d=document.createElement('div');d.className='row';
+  d.innerHTML='<div class="top"><span class="name">'+g.name+(g.note?'<span class="note">'+g.note+'</span>':'')+'</span><span class="val" id="v_'+g.id+'"></span></div>'+
+   '<div class="rule">'+g.rule+'</div><div class="state" id="s_'+g.id+'"></div>';
+  if(g.kind==='seg'){
+    var sg=document.createElement('div');sg.className='seg';
+    g.opts.forEach(function(o){var b=document.createElement('button');b.textContent=o;b.setAttribute('aria-pressed',String(o===g.start));
+      b.onclick=function(){val[g.id]=o;[].forEach.call(sg.children,function(c){c.setAttribute('aria-pressed',String(c===b))});update();};sg.appendChild(b);});
+    d.appendChild(sg);
+  }else{
+    var r=document.createElement('input');r.type='range';r.min=g.min;r.max=g.max;r.step=g.step;r.value=g.start;r.id='r_'+g.id;
+    r.setAttribute('aria-label',g.name);r.oninput=function(){val[g.id]=parseFloat(r.value);update();};
+    d.appendChild(r);els[g.id]=r;
+  }
+  rows.appendChild(d);
+});
+
+function update(){
+  var met=0;
+  G.forEach(function(g,i){
+    var v=val[g.id],p=g.prog(v);tgt[i]=p;
+    if(p>=1)met++;
+    document.getElementById('v_'+g.id).textContent=g.fmt(v);
+    document.getElementById('s_'+g.id).textContent=g.state(v);
+  });
+  document.getElementById('metN').textContent=met;
+}
+update();
+
+/* ---- drawing: one 2D canvas, no shadows or filters ---- */
+var cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+var W=0,DPR=1;
+function size(){DPR=Math.min(window.devicePixelRatio||1,1.75);W=cv.clientWidth||360;cv.width=Math.round(W*DPR);cv.height=Math.round(W*DPR);}
+size();addEventListener('resize',size);
+
+var RAD=[.94,.77,.61,.46,.32];     // outer -> inner, fraction of half-width
+var GAP=.13;                         // share of every ring that never closes
+var TILT=.40;                        // vertical squash of the plane
+var HMAX=.17;                        // popped-up height, fraction of width
+var N=96,CH=22;
+
+function pt(cx,cy,R,th,z){return [cx+Math.cos(th)*R, cy+Math.sin(th)*R*TILT - z];}
+
+function ring(i,t){
+  var p=cur[i],cx=W*DPR/2,cy=W*DPR*.56,R=RAD[i]*W*DPR/2;
+  var open=1-p;                                   // 1 = fully lifted, 0 = rule met
+  var floor=.035;                                 // never fully flat
+  var lift=(floor+open*(1-floor))*HMAX*W*DPR*(1-i*.11);
+  var und=reduce?0:Math.sin(t*1.3+i*1.1)*(.012+open*.03)*W*DPR;   // gentle undulation
+  var z=lift+und;
+  var rot=reduce?0:t*(.05+i*.012)*(i%2?-1:1);
+  var bright=.42+.58*p;                           // brightness, never red/green: met is brighter, not "good"
+  var a0=rot+GAP*Math.PI*2*.5, a1=rot+Math.PI*2-GAP*Math.PI*2*.5;
+
+  /* faint footprint on the plane so the lift reads as height */
+  ctx.lineWidth=1*DPR;ctx.strokeStyle='rgba(140,190,255,'+(.10+.10*open)+')';
+  ctx.beginPath();ctx.ellipse(cx,cy,R,R*TILT,0,0,Math.PI*2);ctx.stroke();
+
+  /* ring body, with the permanent gap */
+  ctx.lineCap='round';
+  ctx.lineWidth=(2.4+1.2*(1-i*.12))*DPR;
+  ctx.strokeStyle='rgba('+Math.round(150+90*bright)+','+Math.round(190+55*bright)+',255,'+(.45+.5*bright)+')';
+  ctx.beginPath();
+  for(var k=0;k<=N;k++){var th=a0+(a1-a0)*k/N,q=pt(cx,cy,R,th,z);k?ctx.lineTo(q[0],q[1]):ctx.moveTo(q[0],q[1]);}
+  ctx.stroke();
+
+  /* chevrons: sharp and lifted when the rule is far, flat and seated as it nears */
+  var s=R*.052,ch=open*R*.13+floor*R*.05;
+  ctx.lineWidth=1.6*DPR;
+  ctx.strokeStyle='rgba(235,246,255,'+(.35+.55*bright)+')';
+  for(var c=0;c<CH;c++){
+    var th2=a0+(a1-a0)*(c+.5)/CH;
+    var base=pt(cx,cy,R,th2,z);
+    var tx=-Math.sin(th2),ty=Math.cos(th2)*TILT;
+    var L=Math.hypot(tx,ty)||1;tx/=L;ty/=L;
+    ctx.beginPath();
+    ctx.moveTo(base[0]-tx*s,base[1]-ty*s);
+    ctx.lineTo(base[0],base[1]-ch);
+    ctx.lineTo(base[0]+tx*s,base[1]+ty*s);
+    ctx.stroke();
+  }
+  /* the gap, marked: two short ticks either side */
+  var ga=pt(cx,cy,R,a1,z),gb=pt(cx,cy,R,a0,z);
+  ctx.fillStyle='rgba(235,246,255,.9)';
+  [ga,gb].forEach(function(g){ctx.beginPath();ctx.arc(g[0],g[1],1.8*DPR,0,7);ctx.fill();});
+}
+
+function center(t){
+  var cx=W*DPR/2,y=W*DPR*.9;
+  ctx.textAlign='center';
+  ctx.font='700 '+Math.round(W*DPR*.03)+'px ui-monospace,Consolas,monospace';
+  ctx.fillStyle='rgba(225,240,255,.95)';
+  ctx.fillText('AMALGAM\u2122',cx,y);
+  ctx.font='600 '+Math.round(W*DPR*.024)+'px ui-monospace,Consolas,monospace';
+  ctx.fillStyle='rgba(170,205,250,.9)';
+  ctx.fillText('THE GAP NEVER CLOSES',cx,y+W*DPR*.04);
+}
+
+var last=0,t=0,visible=true,raf=0;
+function frame(ts){
+  raf=0;
+  var dt=last?Math.min((ts-last)/1000,.05):.016;last=ts;t+=dt;
+  for(var i=0;i<5;i++){cur[i]=reduce?tgt[i]:cur[i]+(tgt[i]-cur[i])*Math.min(1,dt*3.2);}
+  if(drifting)stepDrift(dt);
+  ctx.clearRect(0,0,cv.width,cv.height);
+  for(var j=0;j<5;j++)ring(j,t);       // outer first, inner drawn over
+  center(t);
+  if(visible&&!document.hidden)raf=requestAnimationFrame(frame);
+}
+function go(){if(!raf&&visible&&!document.hidden){last=0;raf=requestAnimationFrame(frame);}}
+if('IntersectionObserver'in window)new IntersectionObserver(function(e){visible=e[0].isIntersecting;go();}).observe(document.getElementById('stage'));
+document.addEventListener('visibilitychange',go);
+
+/* ---- drift: a slow random walk so you can watch rings fall and rise on their own ---- */
+var drifting=false,dBtn=document.getElementById('drift'),vel={};
+function setSlider(id,v){var g=G.filter(function(x){return x.id===id})[0];v=clamp(v,g.min,g.max);val[id]=v;els[id].value=v;}
+function stepDrift(dt){
+  G.forEach(function(g){
+    if(g.kind==='seg')return;
+    var span=g.max-g.min;vel[g.id]=(vel[g.id]||0)*.96+(Math.random()-.5)*span*.9*dt;
+    setSlider(g.id,val[g.id]+vel[g.id]*dt*4);
+  });
+  update();
+}
+dBtn.onclick=function(){drifting=!drifting;dBtn.setAttribute('aria-pressed',String(drifting));dBtn.textContent=drifting?'Stop drifting':'Drift the data';};
+document.getElementById('reset').onclick=function(){
+  drifting=false;dBtn.setAttribute('aria-pressed','false');dBtn.textContent='Drift the data';
+  G.forEach(function(g){if(g.kind==='seg'){val[g.id]=g.start;}else{setSlider(g.id,g.start);}});
+  [].forEach.call(document.querySelectorAll('.seg button'),function(b){b.setAttribute('aria-pressed',String(b.textContent==='unknown'))});
+  update();
+};
+for(var i=0;i<5;i++)cur[i]=tgt[i];
+go();
+})();
+</script>
+</body>
+</html>
