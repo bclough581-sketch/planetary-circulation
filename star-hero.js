@@ -12,8 +12,8 @@
   var css = document.createElement('style');
   css.textContent =
     '.star-hero{position:relative;height:clamp(420px,76vh,780px);height:clamp(420px,76svh,780px);overflow:hidden;' +
-    'background:radial-gradient(ellipse 70% 55% at 78% 8%,#7a1f4a66,transparent 70%),' +
-    'radial-gradient(ellipse 80% 60% at 12% 92%,#0f3f8a77,transparent 70%),' +
+    'background:radial-gradient(ellipse 70% 55% at 78% 8%,#263d4a66,transparent 70%),' +
+    'radial-gradient(ellipse 80% 60% at 12% 92%,#263b4777,transparent 70%),' +
     'radial-gradient(ellipse at 50% 45%,#0a1838,#030712 78%);' +
     '-webkit-mask-image:linear-gradient(#000 88%,transparent);mask-image:linear-gradient(#000 88%,transparent);' +
     'touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}' +
@@ -27,6 +27,15 @@
     'border:1px solid #8fb4e688;background:#050b1acc;color:#d6e6ff;font:inherit;font-size:.85rem;letter-spacing:.03em;opacity:0;pointer-events:none;transition:opacity .5s ease;-webkit-tap-highlight-color:transparent}' +
     '.star-hero .star-reset.on{opacity:1;pointer-events:auto}' +
     '@media(max-width:700px){.star-hero{height:clamp(380px,68vh,640px);height:clamp(380px,68svh,640px)}}';
+  /* Cinematic material treatment. All layers remain decorative and interactive. */
+  css.textContent +=
+    '.star-hero{background:radial-gradient(ellipse 55% 45% at 50% 43%,#29405255,transparent 76%),radial-gradient(ellipse 110% 60% at 50% 115%,#314c5c88,transparent 72%),linear-gradient(160deg,#060b10 0%,#0b151e 52%,#03070c 100%)}' +
+    '.star-hero:before{content:"";position:absolute;z-index:1;pointer-events:none;left:-20%;right:-20%;bottom:-26%;height:54%;border-radius:50%;border-top:1px solid #9eb7c055;background:radial-gradient(ellipse at 50% 0%,#a9c9d622 0%,#18303b2b 19%,transparent 66%);box-shadow:0 -18px 90px #b3d5e41c;opacity:.75}' +
+    '.star-hero:after{content:"AMALGAM  /  CELESTIAL INSTRUMENT";position:absolute;z-index:1;pointer-events:none;top:6%;left:0;right:0;text-align:center;color:#a9bbc6a8;font:500 clamp(9px,1.1vw,12px)/1.5 system-ui,sans-serif;letter-spacing:.32em}' +
+    '.star-hero .star-hint{color:#b4c4ce;letter-spacing:.07em;font-size:.75rem}' +
+    '.star-hero .star-reset{background:#101b24e8;border-color:#8babb966;color:#dce8ed;box-shadow:0 8px 30px #0007}' +
+    '@media(max-width:700px){.star-hero:after{top:5%;font-size:9px;letter-spacing:.17em}.star-hero:before{bottom:-19%;height:40%}}' +
+    '@media(prefers-reduced-motion:reduce){.star-hero .star-hint{transition:none}}';
   document.head.appendChild(css);
 
   var host = document.createElement('section');
@@ -48,10 +57,10 @@
   /* three nested string-art stars, outer to inner */
   var LAYERS = [
     { r: 1.00, z: 0.00, rot: 0.00, spin: -0.020, warp: 0.10, hue: [240, 247, 255], north: true,  delay: 0.00 },
-    { r: 0.66, z: 0.16, rot: 0.62, spin: -0.046, warp: 0.30, hue: [110, 214, 255], north: false, delay: 0.25 },
-    { r: 0.40, z: 0.30, rot: 1.31, spin: -0.082, warp: 0.42, hue: [205, 236, 255], north: false, delay: 0.50 }
+    { r: 0.66, z: 0.16, rot: 0.62, spin: -0.046, warp: 0.30, hue: [164, 195, 208], north: false, delay: 0.25 },
+    { r: 0.40, z: 0.30, rot: 1.31, spin: -0.082, warp: 0.42, hue: [198, 212, 220], north: false, delay: 0.50 }
   ];
-  var RED = [255, 52, 104];
+  var RED = [185, 207, 218];
 
   var dust = []; for (var i = 0; i < 170; i++) dust.push({ x: Math.random(), y: Math.random(), s: Math.random() * 1.3 + 0.25, p: Math.random() * TAU, d: Math.random() * 0.6 + 0.2 });
 
