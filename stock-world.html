@@ -101,6 +101,8 @@ main{max-width:1280px;margin:0 auto;padding:12px 14px}
 .panel h2{margin:0 0 4px;font-size:17px}
 .badge{display:inline-block;border:1px solid var(--sw-line);border-radius:4px;padding:1px 7px;font-size:11px;letter-spacing:.08em;margin:0 6px 6px 0;color:var(--blue-ice)}
 .badge.s{border-color:var(--sw-post);color:var(--sw-post)}
+.badge.live{border-color:#2bff88;color:#2bff88;text-shadow:0 0 6px #2bff88}
+.sample.live{border-color:#2bff88;background:#04180fcc;color:#c9ffe0}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}
 .grid2 div{border:1px solid var(--sw-line);border-radius:6px;padding:6px 8px;font-size:12px;color:var(--silver-muted)}
 .grid2 b{display:block;font-size:16px;color:var(--text);font-weight:500;font-variant-numeric:tabular-nums}
@@ -155,7 +157,7 @@ form.pf label{display:grid;gap:3px;font-size:12px}
 <body>
 <header><strong>◉ AMALGAM™ / STOCK WORLD</strong><a href="ring-engine-lab.html">Back to the rings</a><a href="coffee.html">Coffee Briefing</a><a href="map.html">Money map</a><a href="decision-journal.html">My decisions</a></header>
 <main>
-<div class="sample" role="note"><b>SAMPLE DATA.</b> Every company, price, number and connection on this page is a made-up placeholder so the layout can be explored. Nothing here is real market data, a forecast or advice.</div>
+<div class="sample" role="note" id="banner"><b>SAMPLE DATA.</b> Every company, price, number and connection on this page is a made-up placeholder so the layout can be explored. Nothing here is real market data, a forecast or advice.</div>
 
 <div class="tabs" role="tablist" aria-label="Stock World views">
   <button type="button" role="tab" id="tab-board" aria-controls="view" data-v="board">Board</button>
@@ -170,6 +172,7 @@ form.pf label{display:grid;gap:3px;font-size:12px}
 <p class="legal">Information and education only. Not investment advice, and nothing here tells anyone what to buy or sell. A postulate is a question to test, not a finding. Your postulates stay in this browser. <a href="privacy.html">Privacy</a></p>
 </main>
 
+<script src="stockworld-data.js"></script>
 <script>
 (function(){
 'use strict';
@@ -209,12 +212,21 @@ SECTORS.forEach(function(s){
     COMPANIES.push({id:t,t:t,name:nm,sec:s.id,cap:cap,day:chg,yr:gauss()*28+3,price:20+R()*180,range:R(),rv:0.5+R()*2.2,rsi:28+R()*46,spark:w});
   }
 });
+var LIVE=!!(window.SW_DATA&&window.SW_DATA.sectors&&Object.keys(window.SW_DATA.sectors).length);
+if(LIVE){
+  COMPANIES=[];
+  SECTORS=SECTORS.filter(function(s){return window.SW_DATA.sectors[s.id]});
+  SECTORS.forEach(function(s){var d=window.SW_DATA.sectors[s.id];s.etf=d.etf;
+    d.co.forEach(function(c){COMPANIES.push({id:c.t,t:c.t,name:c.name,sec:s.id,cap:c.dv,day:c.day,yr:c.yr,price:c.price,range:c.range,rv:c.rv,rsi:c.rsi,spark:c.spark})})});
+}
 SECTORS.forEach(function(s){
   s.co=COMPANIES.filter(function(c){return c.sec===s.id});
   s.cap=s.co.reduce(function(a,c){return a+c.cap},0);
   s.day=s.co.reduce(function(a,c){return a+c.day*c.cap},0)/s.cap;
   s.yr=s.co.reduce(function(a,c){return a+c.yr*c.cap},0)/s.cap;
+  if(LIVE&&s.etf){s.day=s.etf.day;s.yr=s.etf.yr}
 });
+var TAG=LIVE?'<span class="badge live">LIVE \u00B7 '+esc(window.SW_DATA.asof)+'</span>':'<span class="badge s">SAMPLE</span>',SMP=LIVE?'':' (SAMPLE)';
 function sec(id){return SECTORS.filter(function(s){return s.id===id})[0]}
 function co(id){return COMPANIES.filter(function(c){return c.id===id})[0]}
 
@@ -328,13 +340,13 @@ function renderBoard(){
   if(S.level==='all'){items=SECTORS.map(function(s){return {id:s.id,v:s.cap,label:s.name,chg:metric(s),kind:'sector'}})}
   else{var sc=sec(S.sector);crumbs+=' › <a data-go="sector" tabindex="0" role="link">'+esc(sc.name)+'</a>';
     items=sc.co.map(function(c){return {id:c.id,v:c.cap,label:c.t,chg:metric(c),kind:'company'}});}
-  var legendTxt=S.color==='day'?'Day change (SAMPLE)':'1-year change (SAMPLE)';
+  var legendTxt=S.color==='day'?'Day change'+SMP:'1-year change'+SMP;
   var sel=S.company||null,c=sel?co(sel):null,s2=S.level==='sector'?sec(S.sector):null;
   var panel=c?companyPanel(c):(s2?sectorPanel(s2):boardIntro());
   $view.innerHTML='<div class="crumbs">'+crumbs+'</div>'+
    '<div class="row"><label>Color by <select id="colorBy"><option value="day"'+(S.color==='day'?' selected':'')+'>Day change</option><option value="yr"'+(S.color==='yr'?' selected':'')+'>1-year change</option></select></label>'+
    '<label><input type="checkbox" id="safeBox"'+(S.safe?' checked':'')+'> Color-safe palette (blue/orange)</label>'+
-   '<div class="legend"><span>'+fmt(-range,0)+'</span><i aria-hidden="true" style="background:linear-gradient(90deg,'+pal(-range,range).n+',#05080f,'+pal(range,range).n+')"></i><span>'+fmt(range,0)+'</span><span>'+legendTxt+'. Tile size = sample size; stronger glow = bigger move. Every tile also shows ▲/▼ and its number.</span></div></div>'+battleHtml(items)+
+   '<div class="legend"><span>'+fmt(-range,0)+'</span><i aria-hidden="true" style="background:linear-gradient(90deg,'+pal(-range,range).n+',#05080f,'+pal(range,range).n+')"></i><span>'+fmt(range,0)+'</span><span>'+legendTxt+'. Tile size = '+(LIVE?'avg daily dollar volume':'sample size')+'; stronger glow = bigger move. Every tile also shows ▲/▼ and its number.</span></div></div>'+battleHtml(items)+
    '<div class="layout"><div class="board" id="board" role="group" aria-label="Sample heatmap"></div><aside class="panel" id="panel" aria-label="Details">'+panel+'</aside></div>';
   var b=document.getElementById('board'),W=b.clientWidth,H=b.clientHeight;
   items.sort(function(a,z){return z.v-a.v});
@@ -343,8 +355,8 @@ function renderBoard(){
     var it=r.it,d=document.createElement('div'),pl=pal(it.chg,range),hh=hash(it.id),big=!(r.w<70||r.h<38);
     d.className='tile'+(big?'':' small')+(+pl.m>0.8?' hot':'')+(sel===it.id?' sel':'');
     d.setAttribute('role','button');d.tabIndex=0;
-    d.setAttribute('aria-label',it.label+', sample '+fmt(it.chg)+(it.kind==='sector'?', open sector':', show details'));
-    d.title=it.label+' '+fmt(it.chg)+' (SAMPLE)';
+    d.setAttribute('aria-label',it.label+(LIVE?', ':', sample ')+fmt(it.chg)+(it.kind==='sector'?', open sector':', show details'));
+    d.title=it.label+' '+fmt(it.chg)+SMP;
     d.style.cssText='left:'+(r.x+3)+'px;top:'+(r.y+3)+'px;width:'+Math.max(0,r.w-6)+'px;height:'+Math.max(0,r.h-6)+'px;--nr:'+pl.rgb+';--fa:'+pl.fa+';--m:'+pl.m+';--sp:'+(4.5+(hh%40)/10)+'s;--pd:'+(3.6-2.4*pl.m).toFixed(2)+'s;--nf:'+Math.max(13,Math.min((r.w-18)/7.4,(r.h-30)*0.42,54)).toFixed(1)+'px;--lf:'+Math.max(11,Math.min((r.w-18)/11,15)).toFixed(1)+'px;animation-delay:-'+(hh%30)/10+'s';
     d.innerHTML='<b>'+esc(it.label)+'</b><span>'+arrow(it.chg)+' '+fmt(it.chg)+'</span>';
     var tr=d.style;tr.setProperty('--ang',((hh%360))+'deg');
@@ -363,18 +375,18 @@ function renderBoard(){
 function battleHtml(items){
   var tot=0,up=0,nu=0,nd=0;items.forEach(function(i){tot+=i.v;if(i.chg>=0){up+=i.v;nu++}else nd++});
   var pu=Math.round(up/tot*100);
-  return '<div class="battle" role="group" aria-label="Sample advancing versus retreating share"><div class="bl"><b>THE BATTLE LINE (SAMPLE)</b><span>▲ Advancing '+nu+' · '+pu+'% of sample weight</span><span>▼ Retreating '+nd+' · '+(100-pu)+'%</span></div><div class="bar"><i style="width:'+pu+'%"></i></div></div>'}
-function boardIntro(){return '<h2>The sample board</h2><p class="why">Eleven invented sectors sized by sample company size. Tap a sector to open it, then tap a company for details. Everything shown is a placeholder.</p><p class="why">Switch to <b>Web</b> to see how companies, sectors and world signals could connect, and to add your own postulates.</p>'}
+  return '<div class="battle" role="group" aria-label="Sample advancing versus retreating share"><div class="bl"><b>THE BATTLE LINE'+SMP.toUpperCase()+'</b><span>▲ Advancing '+nu+' · '+pu+'% of '+(LIVE?'dollar volume':'sample weight')+'</span><span>▼ Retreating '+nd+' · '+(100-pu)+'%</span></div><div class="bar"><i style="width:'+pu+'%"></i></div></div>'}
+function boardIntro(){return LIVE?'<h2>The board \u00B7 live</h2><p class="why">Eleven sector ETFs colored by their own move, each holding 5 large members. Tile size = average daily dollar volume. Tap a sector, then a company.</p><p class="why">Web links, signals and events are still SAMPLE.</p>':'<h2>The sample board</h2><p class="why">Eleven invented sectors sized by sample company size. Tap a sector to open it, then tap a company for details. Everything shown is a placeholder.</p><p class="why">Switch to <b>Web</b> to see how companies, sectors and world signals could connect, and to add your own postulates.</p>'}
 function sectorPanel(s){
   var top=s.co.slice().sort(function(a,b){return b.day-a.day});
-  return '<h2>'+esc(s.name)+'</h2><span class="badge s">SAMPLE</span><span class="badge">Sector</span>'+
-   '<div class="grid2"><div>Day<b>'+arrow(s.day)+' '+fmt(s.day)+'</b></div><div>1 year<b>'+arrow(s.yr)+' '+fmt(s.yr)+'</b></div><div>Companies<b>'+s.co.length+'</b></div><div>Biggest sample mover<b>'+esc(top[0].t)+'</b></div></div>'+
+  return '<h2>'+esc(s.name)+'</h2>'+TAG+'<span class="badge">'+(LIVE&&s.etf?esc(s.etf.t)+' \u00B7 ':'')+'Sector</span>'+
+   '<div class="grid2"><div>Day<b>'+arrow(s.day)+' '+fmt(s.day)+'</b></div><div>1 year<b>'+arrow(s.yr)+' '+fmt(s.yr)+'</b></div><div>Companies<b>'+s.co.length+'</b></div><div>Biggest '+(LIVE?'':'sample ')+'mover<b>'+esc(top[0].t)+'</b></div></div>'+
    '<p class="why">Linked signals (sample):</p>'+chipsFor(s.id)+(S.taking===s.id?takeForm(s.id):'<button type="button" data-act="take" data-id="'+s.id+'" class="primary">I have a take</button> '+'<button type="button" data-act="web" data-id="'+s.id+'">See it in the web</button>')}
 function companyPanel(c){
   var s=sec(c.sec);
-  return '<h2>'+esc(c.name)+'</h2><span class="badge s">SAMPLE</span><span class="badge">'+esc(c.t)+'</span><span class="badge">'+esc(s.name)+'</span>'+
+  return '<h2>'+esc(c.name)+'</h2>'+TAG+'<span class="badge">'+esc(c.t)+'</span><span class="badge">'+esc(s.name)+'</span>'+
    spark(c.spark,300,60)+
-   '<div class="grid2"><div>Sample price<b>$'+c.price.toFixed(2)+'</b></div><div>Day<b>'+arrow(c.day)+' '+fmt(c.day)+'</b></div><div>1 year<b>'+arrow(c.yr)+' '+fmt(c.yr)+'</b></div><div>52-week range position<b>'+Math.round(c.range*100)+'%</b></div><div>Relative volume<b>'+c.rv.toFixed(1)+'×</b></div><div>RSI(14)<b>'+c.rsi.toFixed(0)+'</b></div></div>'+
+   '<div class="grid2"><div>'+(LIVE?'Price':'Sample price')+'<b>$'+c.price.toFixed(2)+'</b></div><div>Day<b>'+arrow(c.day)+' '+fmt(c.day)+'</b></div><div>1 year<b>'+arrow(c.yr)+' '+fmt(c.yr)+'</b></div><div>52-week range position<b>'+Math.round(c.range*100)+'%</b></div><div>Relative volume<b>'+c.rv.toFixed(1)+'×</b></div><div>RSI(14)<b>'+c.rsi.toFixed(0)+'</b></div></div>'+
    '<p class="why">Connected to (sample):</p><div class="chips"><span class="chip" role="button" tabindex="0" data-act="node" data-id="'+s.id+'">'+esc(s.name)+'</span>'+c.sig.map(function(id){return '<span class="chip" role="button" tabindex="0" data-act="node" data-id="'+id+'">'+esc(nodeName(id))+'</span>'}).join('')+'</div>'+
    (S.taking===c.id?takeForm(c.id):'<button type="button" data-act="take" data-id="'+c.id+'" class="primary">I have a take</button> '+'<button type="button" data-act="web" data-id="'+c.id+'">See it in the web</button>')}
 function linkedIds(id){var c=co(id);if(c)return [c.sec].concat(c.sig);return LINKS.filter(function(l){return l[0]===id||l[1]===id}).map(function(l){return l[0]===id?l[1]:l[0]}).filter(function(x,i,a){return a.indexOf(x)===i})}
@@ -436,7 +448,7 @@ function buildGraph(){
   G={nodes:nodes,links:links,byId:byId};
 }
 function nodeColor(n){return n.kind==='sector'?'#3d8bff':n.kind==='ind'?'#19e6ff':n.kind==='event'?'#ff9a2e':'#e8f6ff'}
-function nodeKind(n){return {sector:'Sector',ind:'World signal',event:'Sample event',co:'Sample company'}[n.kind]}
+function nodeKind(n){return {sector:'Sector',ind:'World signal',event:'Sample event',co:LIVE?'Company':'Sample company'}[n.kind]}
 function neighbors(id){var s={};s[id]=1;G.links.forEach(function(l){if(l.a===id)s[l.b]=1;if(l.b===id)s[l.a]=1});return s}
 
 function renderWeb(){
@@ -459,7 +471,7 @@ function renderWeb(){
   wireWeb();
 }
 function shortName(n){var s=nodeName(n.id);return s.length>22?s.slice(0,21)+'…':s}
-function descFor(id){var s=sec(id);if(s)return 'A sample sector made of '+s.co.length+' invented companies.';var c=co(id);if(c)return c.name+' is an invented company used to show the layout.';var i=IND.filter(function(x){return x.id===id})[0];if(i)return i.desc;var e=EVENTS.filter(function(x){return x.id===id})[0];return e?e.desc:''}
+function descFor(id){var s=sec(id);if(s)return LIVE?s.name+' sector ('+(s.etf?s.etf.t:'')+'), shown with '+s.co.length+' large members. Its links here are illustrative.':'A sample sector made of '+s.co.length+' invented companies.';var c=co(id);if(c)return LIVE?c.name+' ('+c.t+'). Prices are real; the links drawn to it are illustrative.':c.name+' is an invented company used to show the layout.';var i=IND.filter(function(x){return x.id===id})[0];if(i)return i.desc;var e=EVENTS.filter(function(x){return x.id===id})[0];return e?e.desc:''}
 function webPanel(){
   if(S.pairFrom&&S.pairTo)return postForm();
   if(!S.sel)return '<h2>The sample web</h2><p class="why">Select any dot to see what it connects to. Line thickness is a sample strength, not a measured one.</p><p class="why">To add your own idea: select a dot, press <b>Postulate a link</b>, then pick a second dot.</p>';
@@ -572,6 +584,7 @@ function renderRingsSoon(){$view.innerHTML='<div class="lock"><div class="ic" ar
 function flashHtml(){if(!S.flash)return '';var f=S.flash;S.flash=null;
   return f==='web'?'<div class="flash" role="status">\u2728 POSTULATE SAVED \u00B7 THE WEB IS UNLOCKED \u00B7 <a id="flashGo">OPEN IT \u2192</a></div>':'<div class="flash" role="status">POSTULATE SAVED</div>'}
 
+if(LIVE){var bn=document.getElementById('banner');bn.className='sample live';bn.innerHTML='<b>LIVE BOARD \u00B7 PRIVATE.</b> Board prices are real daily closes (Yahoo Finance, personal use only) as of '+esc(window.SW_DATA.asof)+'. Web links, signals and events are still SAMPLE. Not advice.'}
 /* ---------- shell ---------- */
 function render(){
   Array.prototype.forEach.call(document.querySelectorAll('[role=tab]'),function(t){var on=t.dataset.v===S.view;t.setAttribute('aria-selected',on);t.setAttribute('aria-pressed',on);t.tabIndex=on?0:-1;

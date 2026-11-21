@@ -3,3 +3,6 @@ __pycache__/
 body.html
 product-data/ucdp-conflict-summary.json
 dark-state/
+
+# private personal-use price data (Yahoo); never publish
+stockworld-data.js
