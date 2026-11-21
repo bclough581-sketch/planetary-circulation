@@ -55,3 +55,5 @@ function hit(e){return e.target.closest&&e.target.closest('.d9-p')}
 document.addEventListener('pointerdown',function(e){if(hit(e))down()},{passive:true});
 document.addEventListener('pointerup',function(e){if(hit(e))up()},{passive:true});
 })();
+
+;(function(){var s=document.createElement("script");s.src="d9-i18n.js";document.head.appendChild(s)})();
