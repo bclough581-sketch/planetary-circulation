@@ -1,5 +1,5 @@
 /* Press feedback for the Direction 9 home: a soft, low "thock" (Web Audio, no audio files) + short vibrate.
-   Down-stroke: muted low body plus a dull, low-passed bump. Up-stroke: a barely-there release.
+   Down-stroke: heavy low body (150 to 62 Hz) with a sub layer and a dull bump, single decisive hit. Up-stroke: barely-there release.
    No high frequencies, so it stays in the background. Vibrate works in Android Chrome / installed PWA only.
    Turn sound off: localStorage amalgam.sound = "off". */
 (function(){
@@ -10,8 +10,8 @@ function setup(){
   if(ctx)return true;
   var C=window.AudioContext||window.webkitAudioContext;if(!C)return false;
   ctx=new C();
-  master=ctx.createGain();master.gain.value=.5;
-  var lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=1200;lp.Q.value=.5;
+  master=ctx.createGain();master.gain.value=.6;
+  var lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=900;lp.Q.value=.5;
   master.connect(lp);lp.connect(ctx.destination);
   var n=Math.floor(ctx.sampleRate*.08);noiseBuf=ctx.createBuffer(1,n,ctx.sampleRate);
   var d=noiseBuf.getChannelData(0);for(var i=0;i<n;i++)d[i]=(Math.random()*2-1)*(1-i/n);
@@ -30,13 +30,13 @@ function bump(cutoff,peak,dur){
   s.connect(f);f.connect(g);g.connect(master);s.start(t);s.stop(t+dur+.02);
 }
 function down(){
-  try{if(navigator.vibrate)navigator.vibrate(8)}catch(e){}
+  try{if(navigator.vibrate)navigator.vibrate(22)}catch(e){}
   if(!soundOn())return;
-  try{if(!setup())return;if(ctx.state==='suspended')ctx.resume();thump(190,95,.16,.075);bump(700,.09,.04)}catch(e){}
+  try{if(!setup())return;if(ctx.state==='suspended')ctx.resume();thump(150,62,.30,.115);thump(95,52,.20,.14);bump(520,.10,.05)}catch(e){}
 }
 function up(){
   if(!soundOn())return;
-  try{if(!ctx)return;thump(260,170,.04,.035);bump(900,.025,.02)}catch(e){}
+  try{if(!ctx)return;thump(200,130,.03,.03)}catch(e){}
 }
 function hit(e){return e.target.closest&&e.target.closest('.d9-p')}
 document.addEventListener('pointerdown',function(e){if(hit(e))down()},{passive:true});
