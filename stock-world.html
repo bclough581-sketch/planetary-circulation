@@ -109,13 +109,34 @@ main{max-width:1280px;margin:0 auto;padding:12px 14px}
 .chip:hover,.chip:focus-visible{border-color:var(--blue-ice)}
 .chip.mine{border-style:dashed;border-color:var(--sw-post);color:var(--sw-post)}
 .why{font-size:12px;color:var(--silver-muted);margin:2px 0 8px}
-svg.web{width:100%;height:min(70vh,640px);min-height:380px;border:1px solid var(--sw-line);border-radius:8px;background:#06101f;touch-action:none;display:block}
+svg.web{width:100%;height:min(70vh,640px);min-height:380px;border:2px solid #5ff4ff;border-radius:4px;touch-action:none;display:block;
+ background:linear-gradient(#19e6ff22 1px,transparent 1px) 0 0/44px 44px,linear-gradient(90deg,#19e6ff22 1px,transparent 1px) 0 0/44px 44px,radial-gradient(120% 90% at 50% 50%,#0b2f5a 0%,#020610 70%);
+ box-shadow:0 0 18px #19e6ff,0 0 60px #19e6ff88,inset 0 0 60px #000;animation:sw-grid 6s linear infinite}
 .node{cursor:pointer}
-.node text{font-size:11px;fill:#e6f0fb;pointer-events:none;paint-order:stroke;stroke:#06101f;stroke-width:3px}
-.node:focus-visible circle,.node:hover circle{stroke:#fff;stroke-width:2.5px}
-.node.dim,.edge.dim{opacity:.32}
-.edge{stroke:#6f93bf;fill:none}
-.edge.mine{stroke:var(--sw-post);stroke-dasharray:6 5}
+.node .core{filter:url(#glow)}
+.node .halo{fill:none;stroke-width:1.2;opacity:.55}
+.node text{font-family:Orbitron,"Segoe UI",sans-serif;font-size:10.5px;letter-spacing:.06em;fill:#e8fbff;pointer-events:none;paint-order:stroke;stroke:#020610;stroke-width:3.5px}
+.node:focus-visible .core,.node:hover .core{stroke:#fff;stroke-width:2.5px}
+.node.on .halo{opacity:1;stroke-width:2;animation:sw-ring 1.6s ease-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes sw-ring{0%{transform:scale(1);opacity:1}100%{transform:scale(2.2);opacity:0}}
+.node.dim,.edge.dim{opacity:.18}
+.edge{stroke:#19e6ff;stroke-opacity:.5;fill:none;filter:url(#glow)}
+.edge.flow{stroke:#bff8ff;stroke-opacity:1;stroke-dasharray:3 9;animation:sw-flow .9s linear infinite}
+@keyframes sw-flow{to{stroke-dashoffset:-24}}
+.edge.mine{stroke:var(--sw-post);stroke-opacity:.95;stroke-dasharray:7 6}
+.edge.mine.flow{animation:sw-flow .9s linear infinite}
+.tabs [role=tab] .lk{margin-left:6px;font-size:12px}
+.lock{max-width:620px;margin:30px auto;text-align:center;border:2px solid #5ff4ff88;border-radius:6px;padding:26px 20px;background:radial-gradient(120% 90% at 50% 0%,#0b2f5acc,#020610 75%);box-shadow:0 0 26px #19e6ff55}
+.lock .ic{font-size:44px;filter:drop-shadow(0 0 10px #19e6ff)}
+.lock h2{font-family:Orbitron,sans-serif;letter-spacing:.16em;font-size:18px;margin:8px 0;color:#fff;text-shadow:0 0 10px #19e6ff}
+.lock p{color:#cfe3f3;margin:8px 0}
+.prog{display:flex;gap:6px;justify-content:center;margin:12px 0}
+.prog i{width:34px;height:8px;border-radius:2px;background:#16324d}.prog i.on{background:#ffd479;box-shadow:0 0 10px #ffd479}
+.lock .row{justify-content:center}
+.lock .pro{display:block;margin-top:16px;font-size:12px;color:var(--silver-muted);background:none;border:0;text-decoration:underline;cursor:pointer;margin-left:auto;margin-right:auto}
+.flash{border:1.5px solid #ffd479;background:#1a1606;color:#fff1c8;border-radius:6px;padding:9px 12px;margin:0 0 10px;box-shadow:0 0 18px #ffd47977;font-family:Orbitron,sans-serif;letter-spacing:.12em;font-size:13px}
+.flash a{color:#ffd479;cursor:pointer}
+@media(prefers-reduced-motion:reduce){svg.web,.edge.flow,.node.on .halo{animation:none}}
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
 .card{border:1px solid var(--sw-line);background:var(--sw-panel);border-radius:8px;padding:11px}
 .card h3{margin:0 0 4px;font-size:15px}
@@ -139,6 +160,7 @@ form.pf label{display:grid;gap:3px;font-size:12px}
 <div class="tabs" role="tablist" aria-label="Stock World views">
   <button type="button" role="tab" id="tab-board" aria-controls="view" data-v="board">Board</button>
   <button type="button" role="tab" id="tab-web" aria-controls="view" data-v="web">Web</button>
+  <button type="button" role="tab" id="tab-rings" aria-controls="view" data-v="rings">Rings</button>
   <button type="button" role="tab" id="tab-signals" aria-controls="view" data-v="signals">Signals</button>
   <button type="button" role="tab" id="tab-mine" aria-controls="view" data-v="mine">My postulates</button>
 </div>
@@ -347,21 +369,36 @@ function sectorPanel(s){
   var top=s.co.slice().sort(function(a,b){return b.day-a.day});
   return '<h2>'+esc(s.name)+'</h2><span class="badge s">SAMPLE</span><span class="badge">Sector</span>'+
    '<div class="grid2"><div>Day<b>'+arrow(s.day)+' '+fmt(s.day)+'</b></div><div>1 year<b>'+arrow(s.yr)+' '+fmt(s.yr)+'</b></div><div>Companies<b>'+s.co.length+'</b></div><div>Biggest sample mover<b>'+esc(top[0].t)+'</b></div></div>'+
-   '<p class="why">Linked signals (sample):</p>'+chipsFor(s.id)+'<button type="button" data-act="web" data-id="'+s.id+'">See it in the web</button>'}
+   '<p class="why">Linked signals (sample):</p>'+chipsFor(s.id)+(S.taking===s.id?takeForm(s.id):'<button type="button" data-act="take" data-id="'+s.id+'" class="primary">I have a take</button> '+'<button type="button" data-act="web" data-id="'+s.id+'">See it in the web</button>')}
 function companyPanel(c){
   var s=sec(c.sec);
   return '<h2>'+esc(c.name)+'</h2><span class="badge s">SAMPLE</span><span class="badge">'+esc(c.t)+'</span><span class="badge">'+esc(s.name)+'</span>'+
    spark(c.spark,300,60)+
    '<div class="grid2"><div>Sample price<b>$'+c.price.toFixed(2)+'</b></div><div>Day<b>'+arrow(c.day)+' '+fmt(c.day)+'</b></div><div>1 year<b>'+arrow(c.yr)+' '+fmt(c.yr)+'</b></div><div>52-week range position<b>'+Math.round(c.range*100)+'%</b></div><div>Relative volume<b>'+c.rv.toFixed(1)+'×</b></div><div>RSI(14)<b>'+c.rsi.toFixed(0)+'</b></div></div>'+
    '<p class="why">Connected to (sample):</p><div class="chips"><span class="chip" role="button" tabindex="0" data-act="node" data-id="'+s.id+'">'+esc(s.name)+'</span>'+c.sig.map(function(id){return '<span class="chip" role="button" tabindex="0" data-act="node" data-id="'+id+'">'+esc(nodeName(id))+'</span>'}).join('')+'</div>'+
-   '<button type="button" data-act="web" data-id="'+c.id+'">See it in the web</button>'}
+   (S.taking===c.id?takeForm(c.id):'<button type="button" data-act="take" data-id="'+c.id+'" class="primary">I have a take</button> '+'<button type="button" data-act="web" data-id="'+c.id+'">See it in the web</button>')}
+function linkedIds(id){var c=co(id);if(c)return [c.sec].concat(c.sig);return LINKS.filter(function(l){return l[0]===id||l[1]===id}).map(function(l){return l[0]===id?l[1]:l[0]}).filter(function(x,i,a){return a.indexOf(x)===i})}
+function takeForm(id){
+  return '<form class="pf" id="tf"><p class="why">Your take on <b>'+esc(nodeName(id))+'</b></p>'+
+   '<label>Connected to<select name="b">'+linkedIds(id).map(function(x){return '<option value="'+x+'">'+esc(nodeName(x))+'</option>'}).join('')+'</select></label>'+
+   '<label>How do they relate?<select name="rel">'+RELS.map(function(r){return '<option>'+r+'</option>'}).join('')+'</select></label>'+
+   '<label>Over what time?<select name="lag">'+LAGS.map(function(r){return '<option>'+r+'</option>'}).join('')+'</select></label>'+
+   '<label>Your take<input name="note" maxlength="200" placeholder="What I think is going on"></label>'+
+   '<label>Wrong if\u2026<input name="fal" maxlength="160" placeholder="The result that would make me drop it"></label>'+
+   '<div><button type="submit" class="primary">Save postulate</button> <button type="button" data-act="untake">Cancel</button></div></form>'}
 function chipsFor(id){
   var ids=LINKS.filter(function(l){return l[0]===id||l[1]===id}).map(function(l){return l[0]===id?l[1]:l[0]}).filter(function(x,i,a){return a.indexOf(x)===i});
   return '<div class="chips">'+ids.map(function(x){return '<span class="chip" role="button" tabindex="0" data-act="node" data-id="'+x+'">'+esc(nodeName(x))+'</span>'}).join('')+'</div>'}
 function nodeName(id){var s=sec(id);if(s)return s.name;var c=co(id);if(c)return c.t+' · '+c.name;var i=IND.filter(function(x){return x.id===id})[0];if(i)return i.name;var e=EVENTS.filter(function(x){return x.id===id})[0];return e?e.name:id}
 function wirePanel(){
+  var tf=document.getElementById('tf');
+  if(tf)tf.addEventListener('submit',function(e){e.preventDefault();var d=new FormData(tf),first=!S.post.length;
+    S.post.push({id:'p'+Date.now(),a:S.taking,b:d.get('b'),rel:d.get('rel'),lag:d.get('lag'),note:String(d.get('note')||'').slice(0,200),fal:String(d.get('fal')||'').slice(0,160),made:new Date().toISOString().slice(0,10),status:'untested',from:'board'});
+    savePost();S.taking=null;S.flash=first?'web':'saved';render()});
   Array.prototype.forEach.call($view.querySelectorAll('[data-act]'),function(el){
     function go(){var id=el.dataset.id;
+      if(el.dataset.act==='take'){S.taking=id;render();var f=document.querySelector('#tf select');if(f)f.focus();return}
+      if(el.dataset.act==='untake'){S.taking=null;render();return}
       if(el.dataset.act==='web'||el.dataset.act==='node'){if(co(id)){S.expanded[co(id).sec]=1}if(sec(id)&&el.dataset.act==='web'){S.expanded[id]=1}S.sel=id;S.view='web';render();}}
     el.addEventListener('click',go);el.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}});
   });
@@ -398,25 +435,26 @@ function buildGraph(){
   }
   G={nodes:nodes,links:links,byId:byId};
 }
-function nodeColor(n){return n.kind==='sector'?'#4a88e0':n.kind==='ind'?'#4fd0e0':n.kind==='event'?'#e08a3c':'#c9d6e6'}
+function nodeColor(n){return n.kind==='sector'?'#3d8bff':n.kind==='ind'?'#19e6ff':n.kind==='event'?'#ff9a2e':'#e8f6ff'}
 function nodeKind(n){return {sector:'Sector',ind:'World signal',event:'Sample event',co:'Sample company'}[n.kind]}
 function neighbors(id){var s={};s[id]=1;G.links.forEach(function(l){if(l.a===id)s[l.b]=1;if(l.b===id)s[l.a]=1});return s}
 
 function renderWeb(){
   buildGraph();
   var nb=S.sel?neighbors(S.sel):null;
-  var svg='<svg class="web" id="web" viewBox="0 0 '+VW+' '+VH+'" role="group" aria-label="Sample connection web. Select a node for details.">';
+  var svg='<svg class="web" id="web" viewBox="0 0 '+VW+' '+VH+'" role="group" aria-label="Sample connection web. Select a node for details."><defs><filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>';
   G.links.forEach(function(l,i){
     var dim=nb&&!(nb[l.a]&&nb[l.b]&&(l.a===S.sel||l.b===S.sel));
-    svg+='<line class="edge'+(l.mine?' mine':'')+(dim?' dim':'')+'" data-li="'+i+'" x1="'+l.A.x.toFixed(1)+'" y1="'+l.A.y.toFixed(1)+'" x2="'+l.B.x.toFixed(1)+'" y2="'+l.B.y.toFixed(1)+'" stroke-width="'+(0.8+l.w*3.2).toFixed(1)+'"/>';
+    var fl=S.sel&&(l.a===S.sel||l.b===S.sel);
+    svg+='<line class="edge'+(l.mine?' mine':'')+(fl?' flow':'')+(dim?' dim':'')+'" data-li="'+i+'" x1="'+l.A.x.toFixed(1)+'" y1="'+l.A.y.toFixed(1)+'" x2="'+l.B.x.toFixed(1)+'" y2="'+l.B.y.toFixed(1)+'" stroke-width="'+(0.8+l.w*3.2).toFixed(1)+'"/>';
   });
   G.nodes.forEach(function(n,i){
     var dim=nb&&!nb[n.id],on=S.sel===n.id;
-    svg+='<g class="node'+(dim?' dim':'')+'" data-id="'+n.id+'" tabindex="0" role="button" aria-label="'+esc(nodeName(n.id))+', '+nodeKind(n)+'" transform="translate('+n.x.toFixed(1)+','+n.y.toFixed(1)+')"><circle r="'+n.r+'" fill="'+nodeColor(n)+'" stroke="'+(on?'#ffd479':'#06101f')+'" stroke-width="'+(on?3.5:1.5)+'"/>'+
+    svg+='<g class="node'+(dim?' dim':'')+(on?' on':'')+'" data-id="'+n.id+'" tabindex="0" role="button" aria-label="'+esc(nodeName(n.id))+', '+nodeKind(n)+'" transform="translate('+n.x.toFixed(1)+','+n.y.toFixed(1)+')"><circle class="halo" r="'+(n.r+5)+'" stroke="'+(on?'#ffd479':nodeColor(n))+'"/><circle class="core" r="'+n.r+'" fill="'+nodeColor(n)+'" stroke="'+(on?'#ffd479':'#020610')+'" stroke-width="'+(on?3:1.5)+'"/>'+
          (n.kind==='co'?'':'<text y="'+(n.r+12)+'" text-anchor="middle">'+esc(shortName(n))+'</text>')+(n.kind==='co'&&(on||nb&&nb[n.id])?'<text y="'+(n.r+12)+'" text-anchor="middle">'+esc(n.id)+'</text>':'')+'</g>';
   });
   svg+='</svg>';
-  $view.innerHTML='<div class="row"><span class="badge s">SAMPLE</span><span class="legend"><span><b style="color:#4a88e0">●</b> sector</span><span><b style="color:#4fd0e0">●</b> world signal</span><span><b style="color:#e08a3c">●</b> sample event</span><span><b style="color:#c9d6e6">●</b> sample company</span><span><b style="color:#ffd479">- - -</b> your postulate</span></span></div>'+
+  $view.innerHTML='<div class="row"><span class="badge s">SAMPLE</span><span class="legend"><span><b style="color:#3d8bff">●</b> sector</span><span><b style="color:#19e6ff">●</b> world signal</span><span><b style="color:#ff9a2e">●</b> sample event</span><span><b style="color:#e8f6ff">●</b> sample company</span><span><b style="color:#ffd479">- - -</b> your postulate</span></span></div>'+
    '<div class="layout">'+svg+'<aside class="panel" id="panel" aria-label="Details">'+webPanel()+'</aside></div>';
   wireWeb();
 }
@@ -512,14 +550,40 @@ function renderMine(){
     (navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(t):Promise.reject()).then(function(){m.textContent='Copied.'},function(){m.textContent='Could not copy; select and copy from the box below.';var ta=document.createElement('textarea');ta.value=t;ta.rows=10;ta.style.width='100%';m.parentNode.appendChild(ta)})});
 }
 
+/* ---------- unlocks ---------- */
+function allOpen(){return store.get('amalgam.unlock.all.v1')==='1'}
+function webOpen(){return allOpen()||S.post.length>0}
+function scoredN(){return S.post.filter(function(p){return p.status&&p.status!=='untested'}).length}
+function ringsOpen(){return allOpen()||scoredN()>=5}
+function renderLock(kind){
+  var web=kind==='web',n=web?S.post.length:scoredN(),need=web?1:5,bars='';
+  for(var i=0;i<need;i++)bars+='<i class="'+(i<n?'on':'')+'"></i>';
+  $view.innerHTML='<div class="lock"><div class="ic" aria-hidden="true">\uD83D\uDD12</div><h2>'+(web?'THE WEB':'THE RINGS')+' \u00B7 LOCKED</h2>'+
+   (web?'<p>The Web is where you connect things. It opens after your <b>first postulate</b>: one idea, plus what would prove it wrong.</p><p>Make one from any tile on the Board (\u201CI have a take\u201D) or in the Coffee Briefing.</p>'
+       :'<p>The Rings let you line up signals and see how often that lineup happened before. They open after <b>5 of your postulates have been scored</b>, so you\u2019ve seen both right and wrong first.</p><p class="why">Rings themselves arrive in build step 5.</p>')+
+   '<div class="prog" aria-label="'+n+' of '+need+'">'+bars+'</div><p class="why">'+n+' of '+need+'</p>'+
+   '<div class="row">'+(web?'<button type="button" class="primary" id="goBoard">Go to the Board</button><a href="coffee.html" class="button">Coffee Briefing</a>':'<button type="button" id="goMine">My postulates</button>')+'</div>'+
+   '<button type="button" class="pro" id="proAll">I know my way around \u2014 unlock everything</button></div>';
+  var gb=document.getElementById('goBoard');if(gb)gb.addEventListener('click',function(){S.view='board';render()});
+  var gm=document.getElementById('goMine');if(gm)gm.addEventListener('click',function(){S.view='mine';render()});
+  document.getElementById('proAll').addEventListener('click',function(){store.set('amalgam.unlock.all.v1','1');render()});
+}
+function renderRingsSoon(){$view.innerHTML='<div class="lock"><div class="ic" aria-hidden="true">\u25CE</div><h2>THE RINGS \u00B7 UNLOCKED</h2><p>You\u2019ve earned them. The Rings and the Almanac are build step 5 and land here.</p></div>'}
+function flashHtml(){if(!S.flash)return '';var f=S.flash;S.flash=null;
+  return f==='web'?'<div class="flash" role="status">\u2728 POSTULATE SAVED \u00B7 THE WEB IS UNLOCKED \u00B7 <a id="flashGo">OPEN IT \u2192</a></div>':'<div class="flash" role="status">POSTULATE SAVED</div>'}
+
 /* ---------- shell ---------- */
 function render(){
-  Array.prototype.forEach.call(document.querySelectorAll('[role=tab]'),function(t){var on=t.dataset.v===S.view;t.setAttribute('aria-selected',on);t.setAttribute('aria-pressed',on);t.tabIndex=on?0:-1});
+  Array.prototype.forEach.call(document.querySelectorAll('[role=tab]'),function(t){var on=t.dataset.v===S.view;t.setAttribute('aria-selected',on);t.setAttribute('aria-pressed',on);t.tabIndex=on?0:-1;
+    var locked=(t.dataset.v==='web'&&!webOpen())||(t.dataset.v==='rings'&&!ringsOpen()),lk=t.querySelector('.lk');
+    if(locked&&!lk)t.insertAdjacentHTML('beforeend','<span class="lk" aria-label="locked">\uD83D\uDD12</span>');if(!locked&&lk)lk.remove()});
+  var fh=flashHtml();
   if(location.hash.replace('#','')!==S.view)try{history.replaceState(null,'','#'+S.view)}catch(e){}
-  if(S.view==='board')renderBoard();else if(S.view==='web')renderWeb();else if(S.view==='signals')renderSignals();else renderMine();
+  if(S.view==='board')renderBoard();else if(S.view==='web'){if(webOpen())renderWeb();else renderLock('web')}else if(S.view==='rings'){if(ringsOpen())renderRingsSoon();else renderLock('rings')}else if(S.view==='signals')renderSignals();else renderMine();
+  if(fh){$view.insertAdjacentHTML('afterbegin',fh);var fg=document.getElementById('flashGo');if(fg)fg.addEventListener('click',function(){var lp=S.post[S.post.length-1];if(lp){var c=co(lp.a)||co(lp.b);if(c)S.expanded[c.sec]=1;S.sel=lp.a}S.view='web';render()})}
 }
 Array.prototype.forEach.call(document.querySelectorAll('[role=tab]'),function(t){t.addEventListener('click',function(){S.view=t.dataset.v;S.pairFrom=null;S.pairTo=null;render()})});
-var h0=location.hash.replace('#','');if(['board','web','signals','mine'].indexOf(h0)>-1)S.view=h0;
+var h0=location.hash.replace('#','');if(['board','web','rings','signals','mine'].indexOf(h0)>-1)S.view=h0;
 var rt;window.addEventListener('resize',function(){clearTimeout(rt);rt=setTimeout(function(){if(S.view==='board')render()},150)});
 render();
 })();
