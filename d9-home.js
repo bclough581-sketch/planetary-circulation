@@ -1,11 +1,11 @@
 /* Press feedback for the Direction 9 home: a soft, low "thock" (Web Audio, no audio files) + short vibrate.
    Down-stroke: heavy low body (112 to 48 Hz), sub layer, smooth gravelly friction layer (low brown noise, AM grain) and a dull bump, single decisive hit. Up-stroke: barely-there release.
    No high frequencies, so it stays in the background. Vibrate works in Android Chrome / installed PWA only.
-   Turn sound off: localStorage amalgam.sound = "off". */
+   Sound is OFF by default (cut 11/21/26). Haptic buzz stays. Turn sound back on: localStorage amalgam.sound = "on". */
 (function(){
 'use strict';
 var ctx=null,master=null,noiseBuf=null,brownBuf=null;
-function soundOn(){try{return localStorage.getItem('amalgam.sound')!=='off'}catch(e){return true}}
+function soundOn(){try{return localStorage.getItem('amalgam.sound')==='on'}catch(e){return false}}
 function setup(){
   if(ctx)return true;
   var C=window.AudioContext||window.webkitAudioContext;if(!C)return false;
