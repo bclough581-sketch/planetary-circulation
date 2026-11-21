@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Scoreboard · Amalgam™</title>
-<meta name="theme-color" content="#03060e">
+<meta name="theme-color" content="#090b0f">
 <link rel="icon" href="icon-192.png" type="image/png">
 <style>
 :root{--bg:#03060e;--panel:#07101c;--line:#1d3550;--blue:#5aa8f0;--ink:#ecf7ff;--dim:#a8d6ff;--g:#3fbf7f;--y:#e0b341;--r:#e0605a;
@@ -39,9 +39,10 @@ ul{margin:6px 0;padding-left:18px;font-size:12.5px;color:var(--dim)}
 .fine{font-size:11.5px;color:var(--dim);margin-top:18px}
 :focus-visible{outline:2px solid var(--blue);outline-offset:1px}
 </style>
+<link rel="stylesheet" href="blue-steele.css">
 </head>
 <body>
-<header><h1>SCOREBOARD</h1><a class="back" href="ring-engine-lab.html">&larr; Evidence Explorer</a> <a class="back" href="decision-journal.html">My decisions</a></header>
+<header><h1 class="bs-title"><img class="bs-brand-mark" src="icon-192.png" alt="">SCOREBOARD</h1><a class="back" href="ring-engine-lab.html">&larr; Evidence Explorer</a> <a class="back" href="decision-journal.html">My decisions</a></header>
 
 <div class="box"><div class="big" id="headline">Loading…</div><div class="dim" id="asof"></div></div>
 <div class="ctr" id="counters"></div>
