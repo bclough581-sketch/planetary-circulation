@@ -1,0 +1,42 @@
+/* AMALGAM Direction 9 "Stone Cold" home. Locked 2026-11-21 (see project doc amalgam_visual_lock_direction9).
+   One accent (#5CC8FF). Up/down is never colour alone: always a triangle plus the number. */
+:root{--d9-page-top:#0f1217;--d9-page-bottom:#090b0f;--d9-surface:#12151b;--d9-line:#232833;--d9-nav:#0c0f14;
+--d9-text:#e8ecf2;--d9-word:#c4cbd8;--d9-label:#7e889a;--d9-name:#8b94a5;--d9-foot:#6b7486;--d9-accent:#5cc8ff;--d9-down:#9aa2b2;--d9-pill:#2c3340;
+--d9-mono:ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace;--d9-sans:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color-scheme:dark}
+*{box-sizing:border-box}
+html{background:var(--d9-page-bottom)}
+body.d9{margin:0;min-height:100vh;color:var(--d9-text);font-family:var(--d9-sans);background:linear-gradient(180deg,var(--d9-page-top) 0%,var(--d9-page-bottom) 60%) no-repeat;-webkit-font-smoothing:antialiased}
+.d9-app{max-width:430px;min-height:100vh;margin:0 auto;padding:30px 20px 0;display:flex;flex-direction:column;gap:14px}
+.d9-top{display:flex;justify-content:space-between;align-items:center}
+.d9-word{font-family:var(--d9-mono);font-size:12px;letter-spacing:.24em;color:var(--d9-word)}
+.d9-streak{font-family:var(--d9-mono);font-size:11px;letter-spacing:.06em;color:var(--d9-accent);padding:5px 11px;border:1px solid var(--d9-pill);border-radius:999px;background:none}
+.d9-hero{display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:6px;text-align:center}
+.d9-star{position:relative;width:176px;height:176px}
+.d9-star img{display:block;width:176px;height:176px;filter:drop-shadow(0 8px 14px rgba(0,0,0,.65))}
+.d9-core{position:absolute;left:50%;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:var(--d9-accent);box-shadow:0 0 18px rgba(92,200,255,.6)}
+.d9-title{font-size:26px;font-weight:600;letter-spacing:-.02em;margin:8px 0 0}
+.d9-sub{font-family:var(--d9-mono);font-size:11px;letter-spacing:.16em;color:var(--d9-label);margin:0}
+.d9-cards{display:flex;flex-direction:column;gap:9px;margin-top:6px}
+.d9-card,.d9-tile{background:var(--d9-surface);border:1px solid var(--d9-line);box-shadow:inset 0 1px 0 rgba(255,255,255,.045);color:inherit;font:inherit;text-align:left}
+.d9-card{display:block;padding:14px 16px;border-radius:14px;text-decoration:none}
+.d9-card .l{font-family:var(--d9-mono);font-size:11px;letter-spacing:.16em;color:var(--d9-label);margin-bottom:6px}
+.d9-card .l b{color:var(--d9-accent);font-weight:500}
+.d9-card .t{font-size:15px;line-height:1.45}
+.d9-heat{margin-top:6px}
+.d9-heat-h{display:flex;justify-content:space-between;font-family:var(--d9-mono);font-size:11px;letter-spacing:.16em;color:var(--d9-label);margin-bottom:7px}
+.d9-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+.d9-tile{padding:10px 10px 11px;border-radius:12px;cursor:pointer}
+.d9-tile .n{font-size:11px;color:var(--d9-name);margin-bottom:4px}
+.d9-tile .v{font-family:var(--d9-mono);font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+.d9-tile.up .v{color:var(--d9-accent)}.d9-tile.down .v{color:var(--d9-down)}
+.d9-foot{margin-top:auto;font-size:11px;color:var(--d9-foot);text-align:center;padding-bottom:10px}
+.d9-nav{position:sticky;bottom:0;margin:0 -20px;background:var(--d9-nav);display:flex;padding:3px 14px calc(14px + env(safe-area-inset-bottom))}
+.d9-nav:before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:url(d9-rail.png) center/100% 100%}
+.d9-tab{position:relative;flex:1;min-height:58px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--d9-label);font-family:var(--d9-mono);font-size:10px;letter-spacing:.12em;text-decoration:none}
+.d9-tab svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.d9-tab[aria-current=page]{color:var(--d9-accent)}
+.d9-tab[aria-current=page]:before{content:"";position:absolute;top:0;left:22%;right:22%;height:2px;border-radius:2px;background:var(--d9-accent)}
+.d9-p{cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;user-select:none;transition:transform .08s ease,filter .08s ease}
+.d9-p:active{transform:scale(.97);filter:brightness(1.25)}
+.d9-p:focus-visible{outline:2px solid var(--d9-accent);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.d9-p{transition:none}.d9-p:active{transform:none}}
