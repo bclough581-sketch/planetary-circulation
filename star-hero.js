@@ -23,8 +23,8 @@
     '.star-hero .star-hint{position:absolute;left:0;right:0;bottom:11%;margin:0;text-align:center;font-size:.82rem;' +
     'letter-spacing:.02em;color:#bcd3ee;opacity:0;transition:opacity 1.2s ease;pointer-events:none;text-shadow:0 0 12px #030712}' +
     '.star-hero .star-hint.on{opacity:.85}' +
-    '.star-hero .star-reset{position:absolute;z-index:3;left:50%;bottom:3%;transform:translateX(-50%);min-height:44px;padding:0 22px;border-radius:22px;' +
-    'border:1px solid #8fb4e688;background:#050b1acc;color:#d6e6ff;font:inherit;font-size:.85rem;letter-spacing:.03em;opacity:0;pointer-events:none;transition:opacity .5s ease;-webkit-tap-highlight-color:transparent}' +
+    '.star-hero .star-reset{position:absolute;z-index:3;left:50%;bottom:15%;transform:translateX(-50%);min-height:48px;padding:0 26px;border-radius:24px;' +
+    'border:1px solid #bcd6ffcc;background:#0a1630e6;color:#eef5ff;box-shadow:0 0 18px #5aa0ff55;font:inherit;font-size:.85rem;letter-spacing:.03em;opacity:0;pointer-events:none;transition:opacity .5s ease;-webkit-tap-highlight-color:transparent}' +
     '.star-hero .star-reset.on{opacity:1;pointer-events:auto}' +
     '@media(max-width:700px){.star-hero{height:clamp(380px,68vh,640px);height:clamp(380px,68svh,640px)}}';
   document.head.appendChild(css);
@@ -140,28 +140,68 @@
     ctx.stroke();
   }
 
-  function drawCore(t, life) {
-    var g = ease(life / 1.2), r = R * 0.5 * scaleNow * (1 + kick * 0.5);
+  /* The centre is a window that never ends: rings of light stream outward from a vanishing point, forever,
+     with a small spiral galaxy at the bottom and a singularity glowing in it. Spinning the layers makes the dive faster.
+     Pure decoration. */
+  var STREAKS = []; for (var si = 0; si < 120; si++) STREAKS.push({ a: Math.random() * TAU, z: Math.random(), l: 0.5 + Math.random() * 0.9, h: 190 + Math.random() * 90 });
+  var dive = 0.2, QR = 0.74;
+  function hsla(h, l, a) { return 'hsla(' + Math.round(h) + ',92%,' + l + '%,' + Math.max(0, Math.min(1, a)).toFixed(3) + ')'; }
+  function drawCore(t, life, tx, ty) {
+    var g = ease(life / 1.6); if (g <= 0) return;
     proj(0, 0, 0.3, A);
-    var gr = ctx.createRadialGradient(A[0], A[1], 0, A[0], A[1], r);
-    gr.addColorStop(0, 'rgba(255,255,255,' + (0.85 * g).toFixed(3) + ')');
-    gr.addColorStop(0.08, 'rgba(190,232,255,' + (0.42 * g).toFixed(3) + ')');
-    gr.addColorStop(0.4, 'rgba(70,150,255,' + (0.10 * g).toFixed(3) + ')');
-    gr.addColorStop(1, 'rgba(40,110,255,0)');
-    ctx.fillStyle = gr; ctx.fillRect(A[0] - r, A[1] - r, r * 2, r * 2);
-    /* a few live filaments from the centre, one red, as on the icon */
-    for (var f = 0; f < 4; f++) {
-      var base = f * 1.9 + t * 0.07 * (f % 2 ? 1 : -1);
-      ctx.beginPath(); ctx.moveTo(A[0], A[1]);
-      for (var s = 1; s <= 14; s++) {
-        var u = s / 14, ang = base + Math.sin(t * 0.9 + f * 2.1 + u * 5) * 0.55 * u + Math.sin(t * 1.7 + f + u * 11) * 0.18;
-        var d = u * (0.26 + 0.05 * Math.sin(t * 0.6 + f)) * g;
-        proj(Math.cos(ang) * d, Math.sin(ang) * d, 0.3, B); ctx.lineTo(B[0], B[1]);
-      }
-      ctx.lineWidth = (f ? 0.9 : 1.3) * DPR;
-      ctx.strokeStyle = f ? 'rgba(170,228,255,' + (0.45 * g).toFixed(3) + ')' : 'rgba(255,70,110,' + (0.75 * g).toFixed(3) + ')';
-      ctx.stroke();
+    var cx = A[0], cy = A[1], rp = R * 0.37 * scaleNow * (1 + kick * 0.14) * g;
+    var vx = cx + Math.sin(ty) * rp * 0.55 + Math.sin(t * 0.37) * rp * 0.10, vy = cy - Math.sin(tx) * rp * 0.55 + Math.cos(t * 0.29) * rp * 0.10;   /* where it all converges */
+    ctx.save();
+    ctx.globalCompositeOperation = 'source-over';        /* the void: hides the strings behind it so the window has depth */
+    var vg = ctx.createRadialGradient(cx, cy, rp * 0.6, cx, cy, rp * 1.22);
+    vg.addColorStop(0, 'rgba(1,3,10,0.97)'); vg.addColorStop(0.82, 'rgba(1,3,10,0.9)'); vg.addColorStop(1, 'rgba(1,3,10,0)');
+    ctx.fillStyle = vg; ctx.beginPath(); ctx.arc(cx, cy, rp * 1.22, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx, cy, rp, 0, TAU); ctx.clip();
+    ctx.globalCompositeOperation = 'lighter';
+    var fr = dive - Math.floor(dive), k, n, th;
+    for (k = 0; k < STREAKS.length; k++) {               /* warp streaks racing outward */
+      var S = STREAKS[k], d = (S.z + dive * 0.55) % 1, r1 = rp * 1.3 * Math.pow(d, 2.3), r0 = r1 * (1 - 0.16 * S.l * (0.3 + d));
+      var ca = Math.cos(S.a), sa = Math.sin(S.a);
+      ctx.beginPath(); ctx.moveTo(vx + ca * r0, vy + sa * r0); ctx.lineTo(vx + ca * r1, vy + sa * r1);
+      ctx.lineWidth = (0.5 + 1.3 * d) * DPR; ctx.strokeStyle = hsla(S.h, 82, d * d * 0.75 * g); ctx.stroke();
     }
+    for (k = 0; k < 24; k++) {                           /* rings, each one deeper than the last, forever */
+      var f = k - fr, r = rp * 1.18 * Math.pow(QR, f), q = Math.min(1.4, r / rp);
+      var al = Math.min(1, r / (rp * 0.5)) * (r > rp ? Math.max(0, 1 - (r - rp) / (rp * 0.4)) : 1) * g;
+      if (al <= 0.01 || r < 0.6 * DPR) continue;
+      var kk = k + Math.floor(dive), rx = vx + (cx - vx) * Math.min(1, q), ry = vy + (cy - vy) * Math.min(1, q);   /* deeper rings slide toward the vanishing point */
+      var tw = kk * 0.55 - dive * 1.1 - t * 0.12, hue = 215 + 75 * Math.sin(kk * 0.62 + t * 0.2), wob = 0.07 + 0.05 * Math.sin(kk * 1.3 + t * 0.8);
+      ctx.beginPath();
+      for (n = 0; n <= 72; n++) {
+        th = n / 72 * TAU; var rr = r * (0.8 + 0.2 * Math.cos(4 * (th - tw)) + wob * Math.sin(7 * th + kk + t * 1.3));   /* four-pointed, like the star it lives in */
+        var X = rx + Math.cos(th) * rr, Y = ry + Math.sin(th) * rr;
+        if (n) ctx.lineTo(X, Y); else ctx.moveTo(X, Y);
+      }
+      ctx.lineWidth = (0.5 + 2.4 * Math.min(1, q)) * DPR;
+      ctx.strokeStyle = hsla(hue, 66, al * 0.55); ctx.stroke();
+      ctx.lineWidth = (0.4 + 0.6 * Math.min(1, q)) * DPR;
+      ctx.strokeStyle = hsla(hue + 20, 88, al * 0.9); ctx.stroke();
+    }
+    var gr0 = rp * 0.17;                                 /* a small spiral galaxy at the very bottom */
+    for (var arm = 0; arm < 3; arm++) {
+      ctx.beginPath();
+      for (n = 0; n < 50; n++) {
+        var u = n / 50, aa = arm * TAU / 3 + u * 6.2 + t * 0.8 + dive * 0.4, rd = gr0 * (0.1 + u * 0.9);
+        var gx = vx + Math.cos(aa) * rd, gy = vy + Math.sin(aa) * rd * 0.8;
+        ctx.moveTo(gx, gy); ctx.lineTo(gx + 0.01, gy + 0.01);
+      }
+      ctx.lineCap = 'round'; ctx.lineWidth = 1.8 * DPR; ctx.strokeStyle = hsla(200 + arm * 40, 85, 0.7 * g); ctx.stroke(); ctx.lineCap = 'butt';
+    }
+    var sr = rp * (0.20 + 0.03 * Math.sin(t * 1.1)) * (1 + kick * 0.5);   /* the singularity */
+    var sg = ctx.createRadialGradient(vx, vy, 0, vx, vy, sr);
+    sg.addColorStop(0, 'rgba(255,255,255,' + (0.95 * g).toFixed(3) + ')'); sg.addColorStop(0.18, 'rgba(200,235,255,' + (0.55 * g).toFixed(3) + ')');
+    sg.addColorStop(0.5, 'rgba(110,120,255,' + (0.16 * g).toFixed(3) + ')'); sg.addColorStop(1, 'rgba(90,60,220,0)');
+    ctx.fillStyle = sg; ctx.fillRect(vx - sr, vy - sr, sr * 2, sr * 2);
+    ctx.restore();
+    ctx.lineWidth = 5 * DPR; ctx.strokeStyle = 'rgba(120,170,255,' + (0.10 * g).toFixed(3) + ')';   /* the window's own edge */
+    ctx.beginPath(); ctx.arc(cx, cy, rp, 0, TAU); ctx.stroke();
+    ctx.lineWidth = 1.2 * DPR; ctx.strokeStyle = 'rgba(205,228,255,' + (0.55 * g).toFixed(3) + ')';
+    ctx.beginPath(); ctx.arc(cx, cy, rp, 0, TAU); ctx.stroke();
   }
 
   function draw(t) {
@@ -178,7 +218,7 @@
     }
     drawRing(t, life);
     for (var l = 0; l < LAYERS.length; l++) drawLayer(LAYERS[l], t, life, l);
-    drawCore(t, life);
+    drawCore(t, life, tx, ty);
     for (var p = pulses.length - 1; p >= 0; p--) {
       var age = t - pulses[p]; if (age > 1.8) { pulses.splice(p, 1); continue; }
       var pr = ease(age / 1.8) * 1.55;
@@ -201,7 +241,7 @@
       hot[l] += ((held[l] ? 1 : 0) - hot[l]) * Math.min(1, dt * 8);
     }
     if (resetting) {                                     /* Reset: every turn eases back to the start by the shortest way round */
-      var rk = Math.min(1, dt * 4.5), done = true; uvX = uvY = 0;
+      var rk = Math.min(1, dt * 3.5), done = true; uvX = uvY = 0;
       var ox = Math.round(uX / TAU), oy = Math.round(uY / TAU); uX += (ox * TAU - uX) * rk; uY += (oy * TAU - uY) * rk;
       if (Math.abs(uX - ox * TAU) > 0.003 || Math.abs(uY - oy * TAU) > 0.003) done = false;
       for (var rl = 0; rl < 3; rl++) { w[rl] = 0; var oa = Math.round(ang[rl] / TAU); ang[rl] += (oa * TAU - ang[rl]) * rk; if (Math.abs(ang[rl] - oa * TAU) > 0.003) done = false; }
@@ -213,6 +253,7 @@
     var off = resetting || Math.abs(uX - Math.round(uX / TAU) * TAU) > 0.06 || Math.abs(uY - Math.round(uY / TAU) * TAU) > 0.06;
     for (var rc = 0; rc < 3 && !off; rc++) off = Math.abs(w[rc]) > 0.05 || Math.abs(ang[rc] - Math.round(ang[rc] / TAU) * TAU) > 0.06;
     if (off !== rOn) { rOn = off; rbtn.classList.toggle('on', off); }
+    dive += dt * (0.30 + Math.min(1.6, (Math.abs(w[0]) + Math.abs(w[1]) + Math.abs(w[2])) * 0.045));   /* spinning the layers speeds the dive */
     kick *= Math.pow(0.08, dt);
     draw(clock);
     requestAnimationFrame(frame);
@@ -280,11 +321,15 @@
     else if (!g.moved && !cancelled && now - g.t0 < 500) { pulses.push(clock); kick = 1; if (reduce) draw(clock); }
   }
   rbtn.addEventListener('pointerdown', function (e) { e.stopPropagation(); });
-  rbtn.addEventListener('click', function () {
-    uvX = uvY = 0; wake();
+  var lastHit = 0;
+  function recenter() {
+    var nowT = performance.now(); if (nowT - lastHit < 400) return; lastHit = nowT;   /* pointerup and click both land on a phone */
+    uvX = uvY = 0; tgtX = 0.12; tgtY = 0; wake(); pulses.push(clock); kick = 1;     /* a ring and a flash show the tap landed */
     if (reduce) { uX = uY = 0; for (var q = 0; q < 3; q++) { ang[q] = 0; vis[q] = 0; w[q] = 0; } draw(0); return; }
     resetting = true;
-  });
+  }
+  rbtn.addEventListener('pointerup', recenter);
+  rbtn.addEventListener('click', recenter);
   pad.addEventListener('pointerup', function (e) { release(e, false); });
   pad.addEventListener('pointercancel', function (e) { release(e, true); });
   host.addEventListener('pointermove', function (e) { if (e.pointerType === 'mouse' && e.buttons === 0) { wake(); aim(e); } });
