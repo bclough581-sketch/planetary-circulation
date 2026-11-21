@@ -60,7 +60,7 @@ The user zooms in from World to Market to Company. Each level links to the other
 | # | Build | Done when |
 |---|---|---|
 | 1 | This spine | Brent says it's locked ✅ |
-| 2 | Coffee Briefing (sample data) | Opens to 3 sample oddities, a streak and yesterday's scores in under 5 seconds on a phone |
+| 2 | Coffee Briefing (sample data) | Opens to 3 sample oddities, a streak and yesterday's scores in under 5 seconds on a phone | 🟡 built, awaiting your check |
 | 3 | Neon Web plus unlocks | The Web matches the TRON board; Web and Rings are locked until earned |
 | 4 | Real data swap-in | Heatmap on free ETF prices; signals from licensed sources; SAMPLE labels removed only where data is real |
 | 5 | Rings and Almanac | Enough logged history to show honest X-of-N counts |

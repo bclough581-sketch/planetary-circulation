@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Coffee Briefing · Amalgam™</title>
+<meta name="description" content="A 60-second daily look at what's unusual. Sample data. Information and education only.">
+<meta name="theme-color" content="#02060f">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--c:#19e6ff;--g:#2bff88;--r:#ff2447;--y:#ffd479;--ink:#e8f6ff;--dim:#9fc2dc;--line:#19e6ff66;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{min-height:100vh;color:var(--ink);font:15px/1.5 "Segoe UI",system-ui,sans-serif;
+ background:linear-gradient(#19e6ff12 1px,transparent 1px) 0 0/40px 40px,linear-gradient(90deg,#19e6ff12 1px,transparent 1px) 0 0/40px 40px,radial-gradient(120% 70% at 50% 0%,#0b2f5a,#02060f 72%);
+ animation:grid 8s linear infinite}
+@keyframes grid{to{background-position:0 40px,40px 0,0 0}}
+main{max-width:620px;margin:0 auto;padding:14px 14px 60px}
+a{color:var(--c)}
+.top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.top a{font-size:12.5px}
+h1{font-family:Orbitron,sans-serif;font-weight:900;font-size:18px;letter-spacing:.2em;margin:0;color:#fff;text-shadow:0 0 8px var(--c),0 0 24px #19e6ff88}
+.date{font-size:12px;color:var(--dim);letter-spacing:.08em}
+.sample{border:1px dashed var(--y);background:#2a2208aa;color:#ffe9b0;border-radius:6px;padding:6px 10px;font-size:12px;margin:10px 0}
+.hud{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;margin:4px 0 12px}
+.streak{border:1.5px solid var(--y);border-radius:6px;padding:8px 10px;background:#140f03cc;box-shadow:0 0 14px #ffd47944}
+.streak b{font-family:Orbitron,sans-serif;font-size:22px;color:#fff;text-shadow:0 0 8px var(--y)}
+.streak span{font-size:12px;color:#efe2c0;margin-left:6px}
+.dots{display:flex;gap:5px;margin-top:6px}
+.dots i{width:16px;height:6px;border-radius:2px;background:#3a3320}
+.dots i.on{background:var(--y);box-shadow:0 0 8px var(--y)}
+.clock{font-family:Orbitron,sans-serif;font-size:26px;font-weight:700;color:#fff;text-shadow:0 0 8px var(--c);text-align:right}
+.clock small{display:block;font-family:"Segoe UI",sans-serif;font-size:11px;color:var(--dim);font-weight:400}
+.steps{display:flex;gap:6px;margin:0 0 10px}
+.steps i{flex:1;height:4px;border-radius:2px;background:#16324d}
+.steps i.on{background:var(--c);box-shadow:0 0 10px var(--c)}
+.card{position:relative;border:2px solid rgb(var(--k,25,230,255));border-radius:6px;padding:14px 14px 12px;background:radial-gradient(120% 90% at 50% 0%,rgba(var(--k,25,230,255),.16),#030914 70%);
+ box-shadow:0 0 22px rgba(var(--k,25,230,255),.45),inset 0 0 30px rgba(var(--k,25,230,255),.18);animation:pulse 3s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 0 34px rgba(var(--k,25,230,255),.65),inset 0 0 44px rgba(var(--k,25,230,255),.26)}}
+.card .lab{font-family:Orbitron,sans-serif;font-size:11px;letter-spacing:.22em;color:rgb(var(--k,25,230,255));text-shadow:0 0 6px rgb(var(--k,25,230,255))}
+.card h2{font-size:19px;line-height:1.3;margin:6px 0 8px;color:#fff}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}
+.pair div{border:1px solid var(--line);border-radius:5px;padding:7px 8px;background:#04101fcc}
+.pair .nm{font-size:12px;color:var(--dim)}
+.pair .v{font-family:Orbitron,sans-serif;font-size:18px;font-weight:700}
+.up{color:var(--g);text-shadow:0 0 8px #2bff8899}.dn{color:var(--r);text-shadow:0 0 8px #ff244799}
+.tap{background:none;border:0;border-bottom:1px dashed currentColor;color:inherit;font:inherit;padding:0;cursor:pointer}
+.q{font-size:16px;color:var(--y);margin:10px 0 4px;text-shadow:0 0 8px #ffd47955}
+.guide{font-size:13px;color:#cfe3f3;border-left:3px solid var(--c);padding:4px 0 4px 9px;margin:8px 0}
+.row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.b{font:600 14px "Segoe UI",sans-serif;color:#fff;background:#071a2e;border:1.5px solid var(--c);border-radius:5px;padding:10px 14px;min-height:44px;cursor:pointer;box-shadow:0 0 10px #19e6ff44}
+.b:hover,.b:focus-visible{background:#0b2a48;outline:2px solid #fff;outline-offset:1px}
+.b.pri{border-color:var(--y);box-shadow:0 0 12px #ffd47966;background:#1a1606}
+form{display:grid;gap:8px;margin-top:10px}
+label{display:grid;gap:3px;font-size:12.5px;color:var(--dim)}
+select,input,textarea{font:14px "Segoe UI",sans-serif;color:#fff;background:#04101f;border:1px solid var(--line);border-radius:5px;padding:9px}
+.drawer{border:1px solid var(--line);border-radius:5px;background:#020812;padding:9px 10px;margin:8px 0;font-size:13px}
+.drawer b{color:#fff}.drawer p{margin:4px 0}
+.scored{display:grid;gap:8px;margin-top:8px}
+.sc{border:1.5px solid rgb(var(--k));border-radius:5px;padding:9px 10px;background:rgba(var(--k),.08);box-shadow:0 0 10px rgba(var(--k),.3)}
+.sc .tag{float:right;font-family:Orbitron,sans-serif;font-size:11px;letter-spacing:.14em;color:rgb(var(--k));text-shadow:0 0 6px rgb(var(--k))}
+.sc p{margin:3px 0;font-size:13px}.sc .t{color:#fff;font-weight:600}
+.sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
+.sum div{border:1px solid var(--line);border-radius:5px;padding:8px;text-align:center}
+.sum b{display:block;font-family:Orbitron,sans-serif;font-size:22px}
+.set{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--dim);margin:12px 0 0;flex-wrap:wrap}
+.set button{font:12px "Segoe UI",sans-serif;color:var(--dim);background:none;border:1px solid var(--line);border-radius:12px;padding:4px 10px;cursor:pointer}
+.set button[aria-pressed=true]{color:#fff;border-color:var(--c);box-shadow:0 0 8px #19e6ff88}
+.legal{margin-top:20px;font-size:11.5px;color:var(--dim)}
+@media(prefers-reduced-motion:reduce){body,.card{animation:none}}
+</style>
+</head>
+<body>
+<main>
+<div class="top"><h1>☕ COFFEE BRIEFING</h1><span class="date" id="date"></span><span style="flex:1"></span><a href="stock-world.html">Stock World</a></div>
+<div class="sample"><b>SAMPLE DATA.</b> Every number here is a placeholder to show the flow. Nothing is real market data, a forecast or advice.</div>
+
+<div class="hud">
+ <div class="streak" aria-live="polite"><b id="streakN">1</b><span>day streak</span><div class="dots" id="dots" aria-hidden="true"></div></div>
+ <div class="clock" id="clock" aria-label="Seconds spent today">0:00<small>of about 1:00</small></div>
+</div>
+<div class="steps" id="steps" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+
+<section id="stage" aria-live="polite"></section>
+
+<div class="set" role="group" aria-label="Guide voice"><span>Guide:</span><button type="button" data-g="teach">Teach me</button><button type="button" data-g="hint">Hint</button><button type="button" data-g="silent">Silent</button></div>
+<p class="legal">Information and education only. Not investment advice; nothing here says what to buy or sell. A postulate is a question to test, not a finding. Your postulates and streak stay in this browser. <a href="privacy.html">Privacy</a></p>
+</main>
+<script>
+(function(){'use strict';
+var mem={},store={get:function(k){try{return localStorage.getItem(k)}catch(e){return mem[k]||null}},set:function(k,v){try{localStorage.setItem(k,v)}catch(e){mem[k]=v}}};
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function $(i){return document.getElementById(i)}
+var today=new Date(),dayKey=today.toISOString().slice(0,10);
+$('date').textContent=today.toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'}).toUpperCase();
+
+/* ---- streak ---- */
+var st={};try{st=JSON.parse(store.get('amalgam.coffee.streak.v1')||'{}')||{}}catch(e){st={}}
+function dayDiff(a,b){return Math.round((Date.parse(b)-Date.parse(a))/864e5)}
+if(st.last!==dayKey){var d=st.last?dayDiff(st.last,dayKey):99;st.n=(d===1?(st.n||0)+1:1);st.last=dayKey;st.days=(st.days||[]).concat(dayKey).slice(-7);store.set('amalgam.coffee.streak.v1',JSON.stringify(st))}
+$('streakN').textContent=st.n;
+var dh='';for(var i=6;i>=0;i--){var k=new Date(today.getTime()-i*864e5).toISOString().slice(0,10);dh+='<i class="'+((st.days||[]).indexOf(k)>-1?'on':'')+'"></i>'}$('dots').innerHTML=dh;
+
+/* ---- clock ---- */
+var t0=Date.now(),done=false;
+setInterval(function(){if(done)return;var s=Math.floor((Date.now()-t0)/1000);$('clock').firstChild.nodeValue=Math.floor(s/60)+':'+('0'+s%60).slice(-2)},500);
+
+/* ---- guide ---- */
+var guide=store.get('amalgam.guide.v1')||'teach';
+function setGuide(g){guide=g;store.set('amalgam.guide.v1',g);Array.prototype.forEach.call(document.querySelectorAll('[data-g]'),function(b){b.setAttribute('aria-pressed',b.dataset.g===g)});render()}
+Array.prototype.forEach.call(document.querySelectorAll('[data-g]'),function(b){b.addEventListener('click',function(){setGuide(b.dataset.g)})});
+
+/* ---- sample content ---- */
+var DEPTH={
+ hy:{n:'High-yield spread',m:'How much extra yield riskier companies pay to borrow, over safe government bonds.',x:'HY bond index yield minus a matching Treasury yield, in percentage points.',s:'ICE BofA US High Yield index via FRED (BAMLH0A0HYM2). Not connected yet.'},
+ iwm:{n:'Small vs large caps',m:'Whether smaller companies are doing better or worse than giants.',x:'Price of a small-cap ETF divided by a large-cap ETF; we show the day change of that ratio.',s:'Public ETF prices. Not connected yet.'},
+ vix:{n:'VIX',m:'The market’s guess of how much the S&P 500 will swing in the next 30 days.',x:'Computed by Cboe from S&P 500 option prices; quoted as annualized %.',s:'Cboe / FRED (VIXCLS). Not connected yet.'},
+ term:{n:'VIX term ratio',m:'Near-term fear compared with 3-month fear. Above 1.0 means near-term fear is higher.',x:'VIX divided by VIX3M.',s:'Cboe / FRED (VIXCLS, VXVCLS). Not connected yet.'},
+ energy:{n:'Energy sector',m:'Oil, gas and power companies as a group.',x:'Day change of a sector index, size-weighted.',s:'Public sector ETF prices. Not connected yet.'},
+ oil:{n:'Crude oil',m:'The price of a barrel of oil, a cost in nearly everything.',x:'Day change of the front-month benchmark price.',s:'EIA. Not connected yet.'}
+};
+var ODD=[
+ {k:'255,36,71',lab:'ODDITY 1 · CREDIT vs APPETITE',h:'Credit got nervous while small caps rallied',a:{id:'hy',v:'+0.18 pts',sub:'3rd day wider',cls:'dn'},b:{id:'iwm',v:'+1.4%',sub:'ratio up today',cls:'up'},
+  q:'Lenders are asking for more, yet buyers are chasing riskier stocks. Which side is early?',teach:'Credit spreads and small caps usually move together. When they split, one of them is often reading the situation first.',hint:'Think about who usually notices trouble first.'},
+ {k:'255,212,121',lab:'ODDITY 2 · FEAR CURVE',h:'Near-term fear rose above 3-month fear',a:{id:'term',v:'1.04',sub:'above 1.0',cls:'dn'},b:{id:'vix',v:'17.2',sub:'still middling',cls:'up'},
+  q:'The headline fear number looks calm, but the curve flipped. What is the market bracing for this month?',teach:'Normally longer-term fear is higher, because more can happen over three months. A flip means traders are paying up for protection right now.',hint:'Is there a scheduled event in the next few weeks?'},
+ {k:'43,255,136',lab:'ODDITY 3 · SECTOR vs INPUT',h:'Energy stocks rose while oil fell',a:{id:'energy',v:'+2.1%',sub:'best sector today',cls:'up'},b:{id:'oil',v:'−1.6%',sub:'second down day',cls:'dn'},
+  q:'Producers usually follow the barrel. What else could be lifting them?',teach:'When a sector and its main input split, the reason is often something other than the input: a deal, a rate change, money rotating in.',hint:'Look at what money left today, not only where it went.'}
+];
+var SCORED=[
+ {k:'43,255,136',tag:'RIGHT',t:'Staples hold up better than discretionary this week',w:'Wrong if: discretionary beats staples by more than 1%',r:'Staples −0.3%, discretionary −2.0% (sample).'},
+ {k:'255,36,71',tag:'WRONG',t:'Heat wave lifts utilities within days',w:'Wrong if: utilities lag the market over 5 days',r:'Utilities trailed the market by 1.2% (sample).'},
+ {k:'255,212,121',tag:'TOO EARLY',t:'Oil leads airlines lower over weeks',w:'Wrong if: airlines rise more than 5% in 4 weeks',r:'Day 6 of 28. Airlines −1.1% so far (sample).'}
+];
+
+var step=0,form=false,open=null,log=[];
+function bar(){Array.prototype.forEach.call($('steps').children,function(e,i){e.className=i<=step?'on':''})}
+function stat(o){return '<div><span class="nm"><button type="button" class="tap" data-d="'+o.id+'">'+esc(DEPTH[o.id].n)+'</button></span><span class="v '+o.cls+'"> '+esc(o.v)+'</span><span class="nm"> · '+esc(o.sub)+'</span></div>'}
+function drawer(id){var d=DEPTH[id];return '<div class="drawer"><p><b>What it means:</b> '+esc(d.m)+'</p><p><b>The math:</b> '+esc(d.x)+'</p><p><b>Source:</b> '+esc(d.s)+'</p></div>'}
+function render(){
+  bar();var h='';
+  if(step<3){
+    var o=ODD[step];
+    h='<div class="card" style="--k:'+o.k+'"><div class="lab">'+o.lab+' · SAMPLE</div><h2>'+esc(o.h)+'</h2><div class="pair">'+stat(o.a)+stat(o.b)+'</div>'+(open?drawer(open):'')+
+      '<p class="q">'+esc(o.q)+'</p>'+(guide==='teach'?'<p class="guide">'+esc(o.teach)+'</p>':guide==='hint'?'<p class="guide">Hint: '+esc(o.hint)+'</p>':'');
+    if(form){h+='<form id="pf"><label>How do you think they relate?<select name="rel"><option>leads (moves first)</option><option>moves with</option><option>moves opposite to</option><option>follows (moves after)</option></select></label>'+
+      '<label>Over what time?<select name="lag"><option>days</option><option>weeks</option><option>months</option></select></label>'+
+      '<label>Your take (one line)<input name="note" maxlength="200" placeholder="What I think is going on"></label>'+
+      '<label>Wrong if…<input name="fal" maxlength="160" placeholder="The result that would make me drop it"></label>'+
+      '<div class="row"><button class="b pri" type="submit">Save postulate</button><button class="b" type="button" data-a="cancel">Cancel</button></div></form>';}
+    else h+='<div class="row"><button class="b pri" type="button" data-a="post">I have a take</button><button class="b" type="button" data-a="skip">Next →</button></div>';
+    h+='</div>';
+  } else {
+    done=true;var s=Math.floor((Date.now()-t0)/1000),n=log.length;
+    h='<div class="card" style="--k:25,230,255"><div class="lab">YESTERDAY’S POSTULATES · SCORED · SAMPLE</div><div class="sum"><div><b class="up">1</b>right</div><div><b class="dn">1</b>wrong</div><div><b style="color:var(--y)">1</b>too early</div></div><div class="scored">'+
+      SCORED.map(function(c){return '<div class="sc" style="--k:'+c.k+'"><span class="tag">'+c.tag+'</span><p class="t">'+esc(c.t)+'</p><p>'+esc(c.w)+'</p><p>'+esc(c.r)+'</p></div>'}).join('')+'</div>'+
+      (guide!=='silent'?'<p class="guide">Wrong is useful: it tells you which link to stop trusting. Too early just means keep watching.</p>':'')+
+      '<h2 style="margin-top:14px">Done in '+Math.floor(s/60)+':'+('0'+s%60).slice(-2)+'. '+(n?n+' new postulate'+(n>1?'s':'')+' saved.':'No new postulates today.')+'</h2>'+
+      '<p style="color:var(--dim);margin:0">Streak: '+st.n+' day'+(st.n>1?'s':'')+'. Today’s takes get scored as time passes.</p>'+
+      '<div class="row"><a class="b" style="text-decoration:none;display:inline-flex;align-items:center" href="stock-world.html#mine">See my postulates</a><a class="b" style="text-decoration:none;display:inline-flex;align-items:center" href="stock-world.html#board">Open the board</a><button class="b" type="button" data-a="again">Replay</button></div></div>';
+  }
+  $('stage').innerHTML=h;wire();
+}
+function wire(){
+  Array.prototype.forEach.call($('stage').querySelectorAll('[data-d]'),function(b){b.addEventListener('click',function(){open=open===b.dataset.d?null:b.dataset.d;render()})});
+  Array.prototype.forEach.call($('stage').querySelectorAll('[data-a]'),function(b){b.addEventListener('click',function(){var a=b.dataset.a;
+    if(a==='post'){form=true}if(a==='cancel'){form=false}if(a==='skip'){step++;form=false;open=null}if(a==='again'){step=0;form=false;open=null;done=false;t0=Date.now();log=[]}render();
+    var f=$('pf');if(f)f.querySelector('select').focus()})});
+  var f=$('pf');if(f)f.addEventListener('submit',function(e){e.preventDefault();var fd=new FormData(f),o=ODD[step],list=[];
+    try{list=JSON.parse(store.get('amalgam.stockworld.postulates.v1')||'[]')||[]}catch(x){list=[]}
+    var p={id:'p'+Date.now(),a:o.a.id,b:o.b.id,rel:fd.get('rel'),lag:fd.get('lag'),note:String(fd.get('note')||'').slice(0,200),fal:String(fd.get('fal')||'').slice(0,160),made:dayKey,status:'untested',from:'coffee'};
+    list.push(p);store.set('amalgam.stockworld.postulates.v1',JSON.stringify(list));log.push(p);step++;form=false;open=null;render()});
+}
+setGuide(guide);
+})();
+</script>
+</body>
+</html>
