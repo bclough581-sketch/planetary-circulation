@@ -66,8 +66,19 @@ def rsi14(closes):
     return 100 - 100 / (1 + rs)
 
 
+def chart_retry(t):
+    last = None
+    for wait in (0, 2, 5):
+        time.sleep(wait)
+        try:
+            return chart(t)
+        except Exception as e:
+            last = e
+    raise last
+
+
 def stats(t):
-    rows, name = chart(t)
+    rows, name = chart_retry(t)
     c = [r[1] for r in rows]
     v = [r[2] or 0 for r in rows]
     if len(c) < 30:
@@ -131,18 +142,27 @@ def main():
             time.sleep(0.4)
         if sec["etf"] and sec["co"]:
             out["sectors"][sid] = sec
-    if not out["sectors"]:
-        sys.exit("FAIL: no data pulled. " + " ".join(bad))
-    out["asof"] = max(s["etf"]["asof"] for s in out["sectors"].values())
     sig, why = export_signals()
+    data_line = None
+    if out["sectors"]:
+        out["asof"] = max(s["etf"]["asof"] for s in out["sectors"].values())
+        data_line = "window.SW_DATA=" + json.dumps(out, separators=(",", ":")) + ";\n"
+    elif os.path.exists(OUT):  # prices failed: keep the last good board
+        with open(OUT, encoding="utf-8") as f:
+            data_line = next((ln for ln in f if ln.startswith("window.SW_DATA=")), None)
+        print("WARN: prices failed (network?); kept the last good board.")
+    if not data_line and not sig:
+        sys.exit("FAIL: no data pulled. " + " ".join(bad[:5]) + " ...")
     with open(OUT, "w", encoding="utf-8") as f:
-        f.write("window.SW_DATA=" + json.dumps(out, separators=(",", ":")) + ";\n")
+        if data_line:
+            f.write(data_line)
         if sig:
             f.write("window.SW_SIG=" + json.dumps({"series": sig}, separators=(",", ":")) + ";\n")
     n = sum(1 + len(s["co"]) for s in out["sectors"].values())
-    print(f"OK  : {len(out['sectors'])} sectors, {n} tickers, as of {out['asof']} -> {OUT}")
+    if out["sectors"]:
+        print(f"OK  : {len(out['sectors'])} sectors, {n} tickers, as of {out['asof']} -> {OUT}")
     print("SIG :", (str(len(sig)) + " live signals") if sig else ("none (" + why + ")"))
-    print("FAIL:", " ".join(bad) if bad else "none")
+    print("FAIL:", (" ".join(bad[:6]) + (" ..." if len(bad) > 6 else "")) if bad else "none")
 
 
 if __name__ == "__main__":
