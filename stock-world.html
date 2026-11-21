@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stock World · Amalgam™</title>
+<meta name="description" content="A place to look at, explore and connect the stock world. Sample data. Information and education only.">
+<meta name="theme-color" content="#03060e">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="stylesheet" href="amalgam-theme.css">
+<style>
+:root{--sw-line:#2c4a6e;--sw-panel:#0d1c33;--sw-up:#4fd0e0;--sw-down:#e08a3c;--sw-flat:#1b3358;--sw-post:#ffd479}
+*{box-sizing:border-box}
+body{margin:0;padding:0 0 70px;font-size:14px;line-height:1.5}
+header{padding:10px 14px}
+main{max-width:1280px;margin:0 auto;padding:12px 14px}
+.sample{border:1px dashed var(--sw-post);background:#2a2208cc;color:#ffe9b0;border-radius:6px;padding:7px 11px;font-size:12.5px;margin:0 0 10px}
+.sample b{color:#fff}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
+.tabs [role=tab]{padding:8px 14px;min-height:40px}
+.crumbs{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0 0 8px;font-size:13px}
+.crumbs a{cursor:pointer}
+.row{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;margin:0 0 8px}
+.row label{font-size:12.5px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:12px}
+@media(max-width:900px){.layout{grid-template-columns:1fr}}
+.board{position:relative;width:100%;height:min(66vh,620px);min-height:340px;border:1px solid var(--sw-line);border-radius:8px;background:#06101f;overflow:hidden}
+.tile{position:absolute;border:1px solid #06101f;overflow:hidden;cursor:pointer;color:#fff;padding:4px 6px;font-size:12px;line-height:1.25;transition:filter .15s}
+.tile:hover,.tile:focus-visible{filter:brightness(1.25);outline:2px solid #fff;outline-offset:-2px;z-index:2}
+.tile.sel{outline:2px solid var(--sw-post);outline-offset:-2px;z-index:3}
+.tile b{display:block;font-weight:600;letter-spacing:.04em;text-shadow:0 1px 3px #000a}
+.tile span{text-shadow:0 1px 3px #000a}
+.tile.small b,.tile.small span{display:none}
+.legend{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--silver-muted)}
+.legend i{display:block;width:150px;height:10px;border-radius:5px;background:linear-gradient(90deg,var(--sw-down),var(--sw-flat),var(--sw-up))}
+.panel{border:1px solid var(--sw-line);background:var(--sw-panel);border-radius:8px;padding:12px;align-self:start;min-width:0;overflow-wrap:anywhere}
+.panel h2{margin:0 0 4px;font-size:17px}
+.badge{display:inline-block;border:1px solid var(--sw-line);border-radius:4px;padding:1px 7px;font-size:11px;letter-spacing:.08em;margin:0 6px 6px 0;color:var(--blue-ice)}
+.badge.s{border-color:var(--sw-post);color:var(--sw-post)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}
+.grid2 div{border:1px solid var(--sw-line);border-radius:6px;padding:6px 8px;font-size:12px;color:var(--silver-muted)}
+.grid2 b{display:block;font-size:16px;color:var(--text);font-weight:500;font-variant-numeric:tabular-nums}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.chip{border:1px solid var(--sw-line);border-radius:14px;padding:3px 10px;font-size:12px;cursor:pointer;background:#10223b;color:var(--silver)}
+.chip:hover,.chip:focus-visible{border-color:var(--blue-ice)}
+.chip.mine{border-style:dashed;border-color:var(--sw-post);color:var(--sw-post)}
+.why{font-size:12px;color:var(--silver-muted);margin:2px 0 8px}
+svg.web{width:100%;height:min(70vh,640px);min-height:380px;border:1px solid var(--sw-line);border-radius:8px;background:#06101f;touch-action:none;display:block}
+.node{cursor:pointer}
+.node text{font-size:11px;fill:#e6f0fb;pointer-events:none;paint-order:stroke;stroke:#06101f;stroke-width:3px}
+.node:focus-visible circle,.node:hover circle{stroke:#fff;stroke-width:2.5px}
+.node.dim,.edge.dim{opacity:.32}
+.edge{stroke:#6f93bf;fill:none}
+.edge.mine{stroke:var(--sw-post);stroke-dasharray:6 5}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.card{border:1px solid var(--sw-line);background:var(--sw-panel);border-radius:8px;padding:11px}
+.card h3{margin:0 0 4px;font-size:15px}
+.card p{margin:4px 0;font-size:12.5px}
+form.pf{display:grid;gap:7px;margin-top:8px}
+form.pf label{display:grid;gap:3px;font-size:12px}
+.post{border:1px dashed var(--sw-post);border-radius:8px;padding:10px;margin:0 0 8px;background:#1d1a0b66}
+.post h3{margin:0 0 4px;font-size:14px}
+.post p{margin:3px 0;font-size:12.5px}
+.empty{color:var(--silver-muted);font-size:13px}
+.legal{margin-top:22px;font-size:12px;color:var(--silver-muted)}
+.sr{position:absolute;left:-9999px}
+@media(prefers-reduced-motion:reduce){.tile{transition:none}}
+</style>
+</head>
+<body>
+<header><strong>◉ AMALGAM™ / STOCK WORLD</strong><a href="ring-engine-lab.html">Back to the rings</a><a href="map.html">Money map</a><a href="decision-journal.html">My decisions</a></header>
+<main>
+<div class="sample" role="note"><b>SAMPLE DATA.</b> Every company, price, number and connection on this page is a made-up placeholder so the layout can be explored. Nothing here is real market data, a forecast or advice.</div>
+
+<div class="tabs" role="tablist" aria-label="Stock World views">
+  <button type="button" role="tab" id="tab-board" aria-controls="view" data-v="board">Board</button>
+  <button type="button" role="tab" id="tab-web" aria-controls="view" data-v="web">Web</button>
+  <button type="button" role="tab" id="tab-signals" aria-controls="view" data-v="signals">Signals</button>
+  <button type="button" role="tab" id="tab-mine" aria-controls="view" data-v="mine">My postulates</button>
+</div>
+
+<section id="view" role="tabpanel" aria-live="polite"></section>
+
+<p class="legal">Information and education only. Not investment advice, and nothing here tells anyone what to buy or sell. A postulate is a question to test, not a finding. Your postulates stay in this browser. <a href="privacy.html">Privacy</a></p>
+</main>
+
+<script>
+(function(){
+'use strict';
+/* ---------- helpers ---------- */
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;var t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+var R=rng(20261120);
+function gauss(){var u=0,v=0;while(!u)u=R();while(!v)v=R();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+function fmt(n,d){return (n>=0?'+':'−')+Math.abs(n).toFixed(d==null?1:d)+'%'}
+function arrow(n){return n>=0?'▲':'▼'}
+var store={get:function(k){try{return localStorage.getItem(k)}catch(e){return mem[k]||null}},set:function(k,v){try{localStorage.setItem(k,v)}catch(e){mem[k]=v}}},mem={};
+
+/* ---------- sample universe ---------- */
+var SECTORS=[
+ {id:'tech',name:'Technology',a:['Quantum','Vector','Lattice','Photon','Cipher','Nimbus','Kernel'],b:['Systems','Labs','Logic','Devices','Compute']},
+ {id:'energy',name:'Energy',a:['Meridian','Basalt','Cobalt Ridge','Tidewater','Ironwell','Prairie'],b:['Petroleum','Resources','Drilling','Midstream','Power']},
+ {id:'fin',name:'Financials',a:['Harbor','Sterling','Keystone','Anchor','Granite','Lumen'],b:['Bancorp','Capital','Mutual','Trust','Holdings']},
+ {id:'health',name:'Health Care',a:['Vita','Helix','Aster','Cardia','Neuro','Sana'],b:['Therapeutics','Biologics','Medical','Health','Diagnostics']},
+ {id:'ind',name:'Industrials',a:['Atlas','Forge','Summit','Railhead','Bolt','Cargo'],b:['Industries','Aerospace','Logistics','Machinery','Works']},
+ {id:'mat',name:'Materials',a:['Copperline','Silica','Ore','Alloy','Quarry','Polymer'],b:['Metals','Chemicals','Mining','Materials','Minerals']},
+ {id:'util',name:'Utilities',a:['Evergreen','Gridline','Aqua','Solstice','Riverbend','Beacon'],b:['Electric','Water','Utilities','Energy','Gas']},
+ {id:'cyc',name:'Consumer Cyclical',a:['Voyage','Maple','Rally','Crest','Orchard','Skyline'],b:['Motors','Retail','Travel','Homes','Brands']},
+ {id:'def',name:'Consumer Defensive',a:['Hearth','Goldfield','Pantry','Clover','Staple','Harvest'],b:['Foods','Beverage','Household','Grocers','Farms']},
+ {id:'re',name:'Real Estate',a:['Cornerstone','Bluff','Parkway','Terrace','Landmark','Pier'],b:['Properties','REIT','Realty','Towers','Storage']},
+ {id:'comm',name:'Communications',a:['Signal','Echo','Prism','Relay','Orbit','Beacon Hill'],b:['Media','Networks','Telecom','Broadcast','Interactive']}
+];
+var used={},COMPANIES=[];
+SECTORS.forEach(function(s){
+  s.drift=gauss()*0.8;
+  for(var i=0;i<5;i++){
+    var nm=s.a[i]+' '+s.b[(i*2+Math.floor(R()*3))%s.b.length];
+    var base='Z'+s.id.charAt(0).toUpperCase()+s.a[i].replace(/[^A-Za-z]/g,'').slice(0,2).toUpperCase(),t=base,k=2;
+    while(used[t]){t=base+k;k++}
+    used[t]=1;
+    var cap=Math.exp(Math.log(35)+gauss()*0.75),chg=s.drift+gauss()*1.3,w=[],v=50;
+    for(var j=0;j<60;j++){v+=gauss()*1.6+(chg/40);w.push(v)}
+    COMPANIES.push({id:t,t:t,name:nm,sec:s.id,cap:cap,day:chg,yr:gauss()*28+3,price:20+R()*180,range:R(),rv:0.5+R()*2.2,rsi:28+R()*46,spark:w});
+  }
+});
+SECTORS.forEach(function(s){
+  s.co=COMPANIES.filter(function(c){return c.sec===s.id});
+  s.cap=s.co.reduce(function(a,c){return a+c.cap},0);
+  s.day=s.co.reduce(function(a,c){return a+c.day*c.cap},0)/s.cap;
+  s.yr=s.co.reduce(function(a,c){return a+c.yr*c.cap},0)/s.cap;
+});
+function sec(id){return SECTORS.filter(function(s){return s.id===id})[0]}
+function co(id){return COMPANIES.filter(function(c){return c.id===id})[0]}
+
+var IND=[
+ {id:'hy',name:'High-yield spread',grp:'Credit',desc:'Extra yield that lower-rated borrowers pay over safe bonds. It widens when lenders get nervous.',src:'Federal Reserve data (FRED)'},
+ {id:'vix',name:'VIX',grp:'Volatility',desc:'Options-implied expected swing in the S&P 500 over the next 30 days.',src:'Cboe'},
+ {id:'term',name:'VIX term structure',grp:'Volatility',desc:'Short-term vs 3-month VIX. When near-term fear exceeds longer-term fear the curve inverts.',src:'Cboe / FRED'},
+ {id:'claims',name:'Jobless claims',grp:'Economy',desc:'New unemployment filings each week, one of the fastest labor reads.',src:'US Dept. of Labor via FRED'},
+ {id:'curve',name:'Yield curve (10y−3m)',grp:'Rates',desc:'Long rate minus short rate. Inversions have often come before slowdowns.',src:'US Treasury via FRED'},
+ {id:'nfci',name:'Financial conditions',grp:'Credit',desc:'Chicago Fed index of how tight or loose money feels across markets.',src:'Chicago Fed via FRED'},
+ {id:'liq',name:'Net liquidity',grp:'Liquidity',desc:'Fed balance sheet minus reverse repo minus Treasury cash: a rough read on money in the system.',src:'Federal Reserve data (FRED)'},
+ {id:'iwm',name:'Small vs large caps',grp:'Appetite',desc:'Ratio of a small-company ETF to a large-company ETF. Rising means appetite for smaller, riskier names.',src:'ETF prices'},
+ {id:'xly',name:'Cyclicals vs defensives',grp:'Appetite',desc:'Discretionary sector vs staples sector. Rising means people are leaning toward growth.',src:'ETF prices'},
+ {id:'brd',name:'Breadth',grp:'Participation',desc:'How many parts of the market are above their long-term average at once.',src:'ETF prices (computed)'},
+ {id:'oil',name:'Oil',grp:'Commodity',desc:'Crude oil price, an input to costs almost everywhere.',src:'EIA'},
+ {id:'usd',name:'US dollar',grp:'Currency',desc:'The dollar against a basket of other currencies.',src:'Public FX data'},
+ {id:'ship',name:'Chokepoint shipping',grp:'Physical flow',desc:'Daily ship transits through key waterways.',src:'IMF PortWatch'},
+ {id:'wx',name:'Severe weather',grp:'Nature',desc:'Storms, heat and floods that interrupt supply or raise demand.',src:'NOAA'},
+ {id:'conf',name:'Regional conflict',grp:'Geopolitics',desc:'Tone and volume of conflict-related news around the world.',src:'GDELT'}
+];
+IND.forEach(function(d,i){var w=[],v=50;for(var j=0;j<60;j++){v+=gauss()*1.8;w.push(v)}d.spark=w;d.level=(40+R()*40).toFixed(1);d.chg=gauss()*2});
+var EVENTS=[
+ {id:'ev1',name:'Port closure (sample event)',desc:'An invented example of a physical disruption, used to show how an event can ripple through the web.'},
+ {id:'ev2',name:'Heat wave (sample event)',desc:'An invented example of a weather event that changes demand for power and water.'},
+ {id:'ev3',name:'Rate decision (sample event)',desc:'An invented example of a scheduled central-bank announcement.'}
+];
+/* [from,to,strength 0-1 (sample),relation,illustrative mechanism] */
+var LINKS=[
+ ['hy','fin',.7,'moves with','Lenders feel credit stress first, so their shares can reflect it early.'],
+ ['hy','re',.5,'moves with','Property depends on borrowing costs and credit access.'],
+ ['hy','nfci',.7,'moves with','Both measure how tight credit feels.'],
+ ['vix','tech',.6,'moves opposite to','Growth-heavy sectors often swing the other way when fear rises.'],
+ ['vix','brd',.5,'moves opposite to','Fear spikes tend to arrive when fewer parts of the market are rising.'],
+ ['term','vix',.8,'leads','An inverted term structure has sometimes shown up before VIX spikes.'],
+ ['claims','cyc',.5,'leads','Job losses can show up in spending on non-essentials.'],
+ ['curve','fin',.5,'leads','The curve shapes bank lending margins.'],
+ ['liq','tech',.4,'moves with','Cheap, plentiful money can favor long-duration growth names.'],
+ ['iwm','brd',.6,'moves with','Small-company strength usually needs wide participation.'],
+ ['xly','cyc',.6,'moves with','The ratio is built from the consumer cyclical sector.'],
+ ['xly','def',.5,'moves opposite to','Defensive staples are the other half of the ratio.'],
+ ['oil','energy',.8,'moves with','Producers earn more when oil is higher.'],
+ ['oil','ind',.4,'moves opposite to','Fuel is a cost for shipping and flying.'],
+ ['oil','cyc',.3,'moves opposite to','Gas prices compete with other household spending.'],
+ ['usd','mat',.4,'moves opposite to','Commodities priced in dollars often soften when the dollar firms.'],
+ ['ship','oil',.5,'leads','Blocked waterways can tighten oil supply.'],
+ ['ship','ind',.4,'leads','Delays in shipping flow through to manufacturers.'],
+ ['wx','util',.4,'amplifies','Extreme weather changes power and water demand.'],
+ ['wx','energy',.3,'amplifies','Storms can interrupt production and refining.'],
+ ['wx','def',.3,'amplifies','Crop and supply disruptions can move food prices.'],
+ ['conf','oil',.6,'leads','Conflict near producers can raise supply fears.'],
+ ['conf','ship',.5,'leads','Conflict near waterways changes routes and insurance.'],
+ ['conf','comm',.2,'amplifies','News attention can lift media engagement.'],
+ ['ev1','ship',.7,'amplifies','A closure removes capacity from a chokepoint.'],
+ ['ev2','util',.6,'amplifies','Heat raises demand for power and water.'],
+ ['ev2','wx',.6,'moves with','The event is a form of severe weather.'],
+ ['ev3','curve',.6,'amplifies','Rate decisions move the short end of the curve.'],
+ ['ev3','fin',.4,'amplifies','Rates change lending margins.'],
+ ['health','def',.3,'moves with','Both are viewed as steadier sectors.'],
+ ['health','claims',.2,'dampens','Health spending tends to be less sensitive to job swings.'],
+ ['mat','ind',.4,'moves with','Materials are an input to industrial output.'],
+ ['tech','comm',.3,'moves with','Digital platforms span both sectors.'],
+ ['re','curve',.4,'moves opposite to','Longer rates feed mortgage and financing costs.'],
+ ['nfci','liq',.4,'moves opposite to','Looser liquidity usually eases financial conditions.']
+];
+/* Sample company-to-signal links (2 per company, fixed by seed) */
+COMPANIES.forEach(function(c){
+  var s=sec(c.sec),pool=LINKS.filter(function(l){return l[0]===s.id||l[1]===s.id}).map(function(l){return l[0]===s.id?l[1]:l[0]});
+  pool=pool.filter(function(x,i){return pool.indexOf(x)===i&&!sec(x)});
+  c.sig=[];
+  for(var k=0;k<2&&pool.length;k++){c.sig.push(pool.splice(Math.floor(R()*pool.length),1)[0])}
+});
+
+/* ---------- state ---------- */
+var S={view:'board',level:'all',sector:null,company:null,color:'day',
+  sel:null,pairFrom:null,pairTo:null,expanded:{},post:[]};
+try{S.post=JSON.parse(store.get('amalgam.stockworld.postulates.v1')||'[]')||[]}catch(e){S.post=[]}
+function savePost(){store.set('amalgam.stockworld.postulates.v1',JSON.stringify(S.post))}
+var $view=document.getElementById('view');
+
+/* ---------- sparkline ---------- */
+function spark(a,w,h){var mn=Math.min.apply(null,a),mx=Math.max.apply(null,a),p=a.map(function(v,i){return (i/(a.length-1)*w).toFixed(1)+','+(h-(v-mn)/(mx-mn||1)*(h-4)-2).toFixed(1)}).join(' ');
+  return '<svg viewBox="0 0 '+w+' '+h+'" width="100%" height="'+h+'" role="img" aria-label="Sample trend line"><polyline points="'+p+'" fill="none" stroke="#a8d2ff" stroke-width="1.6"/></svg>'}
+
+/* ---------- treemap ---------- */
+function squarify(items,x,y,w,h){
+  var total=items.reduce(function(s,i){return s+i.v},0),scale=w*h/total,out=[],rest=items.map(function(i){return {it:i,a:i.v*scale}});
+  function worst(row,side){var s=row.reduce(function(t,r){return t+r.a},0),mx=Math.max.apply(null,row.map(function(r){return r.a})),mn=Math.min.apply(null,row.map(function(r){return r.a}));return Math.max(side*side*mx/(s*s),s*s/(side*side*mn))}
+  while(rest.length){
+    var side=Math.min(w,h),row=[rest[0]],i=1;
+    while(i<rest.length){var nr=row.concat(rest[i]);if(worst(nr,side)<=worst(row,side)){row=nr;i++}else break}
+    rest=rest.slice(row.length);
+    var s=row.reduce(function(t,r){return t+r.a},0);
+    if(w>=h){var cw=s/h,cy=y;row.forEach(function(r){var rh=r.a/cw;out.push({it:r.it,x:x,y:cy,w:cw,h:rh});cy+=rh});x+=cw;w-=cw}
+    else{var rh2=s/w,cx=x;row.forEach(function(r){var rw=r.a/rh2;out.push({it:r.it,x:cx,y:y,w:rw,h:rh2});cx+=rw});y+=rh2;h-=rh2}
+  }
+  return out;
+}
+function mix(a,b,t){var pa=[1,3,5].map(function(i){return parseInt(a.substr(i,2),16)}),pb=[1,3,5].map(function(i){return parseInt(b.substr(i,2),16)});return 'rgb('+pa.map(function(v,i){return Math.round(v+(pb[i]-v)*t)}).join(',')+')'}
+function tileColor(v,range){var t=Math.max(-1,Math.min(1,v/range));return t>=0?mix('#1b3358','#4fd0e0',t):mix('#1b3358','#e08a3c',-t)}
+function metric(x){return S.color==='day'?x.day:x.yr}
+
+/* ---------- BOARD view ---------- */
+function renderBoard(){
+  var range=S.color==='day'?3:35,items,crumbs='<a data-go="all" tabindex="0" role="link">All sectors</a>';
+  if(S.level==='all'){items=SECTORS.map(function(s){return {id:s.id,v:s.cap,label:s.name,chg:metric(s),kind:'sector'}})}
+  else{var sc=sec(S.sector);crumbs+=' › <a data-go="sector" tabindex="0" role="link">'+esc(sc.name)+'</a>';
+    items=sc.co.map(function(c){return {id:c.id,v:c.cap,label:c.t,chg:metric(c),kind:'company'}});}
+  var legendTxt=S.color==='day'?'Day change (SAMPLE)':'1-year change (SAMPLE)';
+  var sel=S.company||null,c=sel?co(sel):null,s2=S.level==='sector'?sec(S.sector):null;
+  var panel=c?companyPanel(c):(s2?sectorPanel(s2):boardIntro());
+  $view.innerHTML='<div class="crumbs">'+crumbs+'</div>'+
+   '<div class="row"><label>Color by <select id="colorBy"><option value="day"'+(S.color==='day'?' selected':'')+'>Day change</option><option value="yr"'+(S.color==='yr'?' selected':'')+'>1-year change</option></select></label>'+
+   '<div class="legend"><span>'+fmt(-range,0)+'</span><i aria-hidden="true"></i><span>'+fmt(range,0)+'</span><span>'+legendTxt+'. Tile size = sample company size. Each tile also shows its number and ▲/▼.</span></div></div>'+
+   '<div class="layout"><div class="board" id="board" role="group" aria-label="Sample heatmap"></div><aside class="panel" id="panel" aria-label="Details">'+panel+'</aside></div>';
+  var b=document.getElementById('board'),W=b.clientWidth,H=b.clientHeight;
+  items.sort(function(a,z){return z.v-a.v});
+  squarify(items,0,0,W,H).forEach(function(r){
+    var it=r.it,d=document.createElement('div');
+    d.className='tile'+(r.w<70||r.h<38?' small':'')+(sel===it.id?' sel':'');
+    d.setAttribute('role','button');d.tabIndex=0;
+    d.setAttribute('aria-label',it.label+', sample '+fmt(it.chg)+(it.kind==='sector'?', open sector':', show details'));
+    d.title=it.label+' '+fmt(it.chg)+' (SAMPLE)';
+    d.style.cssText='left:'+r.x+'px;top:'+r.y+'px;width:'+r.w+'px;height:'+r.h+'px;background:'+tileColor(it.chg,range);
+    d.innerHTML='<b>'+esc(it.label)+'</b><span>'+arrow(it.chg)+' '+fmt(it.chg)+'</span>';
+    function go(){if(it.kind==='sector'){S.level='sector';S.sector=it.id;S.company=null}else{S.company=it.id}render()}
+    d.addEventListener('click',go);d.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}});
+    b.appendChild(d);
+  });
+  document.getElementById('colorBy').addEventListener('change',function(e){S.color=e.target.value;render()});
+  Array.prototype.forEach.call($view.querySelectorAll('.crumbs a'),function(a){
+    function go(){if(a.dataset.go==='all'){S.level='all';S.sector=null;S.company=null}else{S.company=null}render()}
+    a.addEventListener('click',go);a.addEventListener('keydown',function(e){if(e.key==='Enter')go()});
+  });
+  wirePanel();
+}
+function boardIntro(){return '<h2>The sample board</h2><p class="why">Eleven invented sectors sized by sample company size. Tap a sector to open it, then tap a company for details. Everything shown is a placeholder.</p><p class="why">Switch to <b>Web</b> to see how companies, sectors and world signals could connect, and to add your own postulates.</p>'}
+function sectorPanel(s){
+  var top=s.co.slice().sort(function(a,b){return b.day-a.day});
+  return '<h2>'+esc(s.name)+'</h2><span class="badge s">SAMPLE</span><span class="badge">Sector</span>'+
+   '<div class="grid2"><div>Day<b>'+arrow(s.day)+' '+fmt(s.day)+'</b></div><div>1 year<b>'+arrow(s.yr)+' '+fmt(s.yr)+'</b></div><div>Companies<b>'+s.co.length+'</b></div><div>Biggest sample mover<b>'+esc(top[0].t)+'</b></div></div>'+
+   '<p class="why">Linked signals (sample):</p>'+chipsFor(s.id)+'<button type="button" data-act="web" data-id="'+s.id+'">See it in the web</button>'}
+function companyPanel(c){
+  var s=sec(c.sec);
+  return '<h2>'+esc(c.name)+'</h2><span class="badge s">SAMPLE</span><span class="badge">'+esc(c.t)+'</span><span class="badge">'+esc(s.name)+'</span>'+
+   spark(c.spark,300,60)+
+   '<div class="grid2"><div>Sample price<b>$'+c.price.toFixed(2)+'</b></div><div>Day<b>'+arrow(c.day)+' '+fmt(c.day)+'</b></div><div>1 year<b>'+arrow(c.yr)+' '+fmt(c.yr)+'</b></div><div>52-week range position<b>'+Math.round(c.range*100)+'%</b></div><div>Relative volume<b>'+c.rv.toFixed(1)+'×</b></div><div>RSI(14)<b>'+c.rsi.toFixed(0)+'</b></div></div>'+
+   '<p class="why">Connected to (sample):</p><div class="chips"><span class="chip" role="button" tabindex="0" data-act="node" data-id="'+s.id+'">'+esc(s.name)+'</span>'+c.sig.map(function(id){return '<span class="chip" role="button" tabindex="0" data-act="node" data-id="'+id+'">'+esc(nodeName(id))+'</span>'}).join('')+'</div>'+
+   '<button type="button" data-act="web" data-id="'+c.id+'">See it in the web</button>'}
+function chipsFor(id){
+  var ids=LINKS.filter(function(l){return l[0]===id||l[1]===id}).map(function(l){return l[0]===id?l[1]:l[0]}).filter(function(x,i,a){return a.indexOf(x)===i});
+  return '<div class="chips">'+ids.map(function(x){return '<span class="chip" role="button" tabindex="0" data-act="node" data-id="'+x+'">'+esc(nodeName(x))+'</span>'}).join('')+'</div>'}
+function nodeName(id){var s=sec(id);if(s)return s.name;var c=co(id);if(c)return c.t+' · '+c.name;var i=IND.filter(function(x){return x.id===id})[0];if(i)return i.name;var e=EVENTS.filter(function(x){return x.id===id})[0];return e?e.name:id}
+function wirePanel(){
+  Array.prototype.forEach.call($view.querySelectorAll('[data-act]'),function(el){
+    function go(){var id=el.dataset.id;
+      if(el.dataset.act==='web'||el.dataset.act==='node'){if(co(id)){S.expanded[co(id).sec]=1}if(sec(id)&&el.dataset.act==='web'){S.expanded[id]=1}S.sel=id;S.view='web';render();}}
+    el.addEventListener('click',go);el.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}});
+  });
+}
+
+/* ---------- WEB view ---------- */
+var VW=1000,VH=680,G=null;
+function buildGraph(){
+  var nodes=[],links=[],byId={},r=rng(77);
+  function add(n){byId[n.id]=n;nodes.push(n)}
+  SECTORS.forEach(function(s,i){var a=i/SECTORS.length*Math.PI*2;add({id:s.id,kind:'sector',x:VW/2+Math.cos(a)*300,y:VH/2+Math.sin(a)*240,r:14})});
+  IND.forEach(function(d,i){var a=i/IND.length*Math.PI*2+0.2;add({id:d.id,kind:'ind',x:VW/2+Math.cos(a)*150,y:VH/2+Math.sin(a)*120,r:9})});
+  EVENTS.forEach(function(e,i){var a=i/EVENTS.length*Math.PI*2+1;add({id:e.id,kind:'event',x:VW/2+Math.cos(a)*220,y:VH/2+Math.sin(a)*180,r:10})});
+  LINKS.forEach(function(l){links.push({a:l[0],b:l[1],w:l[2],rel:l[3],why:l[4],mine:false})});
+  Object.keys(S.expanded).forEach(function(sid){
+    sec(sid).co.forEach(function(c){var p=byId[sid];if(byId[c.id])return;add({id:c.id,kind:'co',x:p.x+(r()-.5)*70,y:p.y+(r()-.5)*70,r:6});
+      links.push({a:c.id,b:sid,w:.9,rel:'belongs to',why:'Sample company in this sector.',mine:false,co:true});
+      c.sig.forEach(function(x){links.push({a:c.id,b:x,w:.35,rel:'sample link',why:'Illustrative link between a sample company and a world signal.',mine:false,co:true})});});
+  });
+  S.post.forEach(function(p){if(byId[p.a]&&byId[p.b])links.push({a:p.a,b:p.b,w:.5,rel:p.rel,why:p.note||'',mine:true,pid:p.id})});
+  links.forEach(function(l){l.A=byId[l.a];l.B=byId[l.b]});
+  links=links.filter(function(l){return l.A&&l.B});
+  // light force layout
+  for(var it=0;it<320;it++){
+    var cool=1-it/320;
+    nodes.forEach(function(n){n.fx=(VW/2-n.x)*0.0012;n.fy=(VH/2-n.y)*0.0012});
+    for(var i=0;i<nodes.length;i++)for(var j=i+1;j<nodes.length;j++){
+      var A=nodes[i],B=nodes[j],dx=A.x-B.x,dy=A.y-B.y,d2=dx*dx+dy*dy+.01,d=Math.sqrt(d2),f=(16000/d2)*(0.35+0.65*cool);
+      A.fx+=dx/d*f;A.fy+=dy/d*f;B.fx-=dx/d*f;B.fy-=dy/d*f;
+    }
+    links.forEach(function(l){var dx=l.B.x-l.A.x,dy=l.B.y-l.A.y,d=Math.sqrt(dx*dx+dy*dy)+.01,rest=l.co?52:190,f=(d-rest)*0.012*(l.co?1.6:l.w+.2);
+      l.A.fx+=dx/d*f;l.A.fy+=dy/d*f;l.B.fx-=dx/d*f;l.B.fy-=dy/d*f});
+    nodes.forEach(function(n){if(n.pin)return;n.x+=Math.max(-14,Math.min(14,n.fx*6));n.y+=Math.max(-14,Math.min(14,n.fy*6));n.x=Math.max(40,Math.min(VW-40,n.x));n.y=Math.max(26,Math.min(VH-26,n.y))});
+  }
+  G={nodes:nodes,links:links,byId:byId};
+}
+function nodeColor(n){return n.kind==='sector'?'#4a88e0':n.kind==='ind'?'#4fd0e0':n.kind==='event'?'#e08a3c':'#c9d6e6'}
+function nodeKind(n){return {sector:'Sector',ind:'World signal',event:'Sample event',co:'Sample company'}[n.kind]}
+function neighbors(id){var s={};s[id]=1;G.links.forEach(function(l){if(l.a===id)s[l.b]=1;if(l.b===id)s[l.a]=1});return s}
+
+function renderWeb(){
+  buildGraph();
+  var nb=S.sel?neighbors(S.sel):null;
+  var svg='<svg class="web" id="web" viewBox="0 0 '+VW+' '+VH+'" role="group" aria-label="Sample connection web. Select a node for details.">';
+  G.links.forEach(function(l,i){
+    var dim=nb&&!(nb[l.a]&&nb[l.b]&&(l.a===S.sel||l.b===S.sel));
+    svg+='<line class="edge'+(l.mine?' mine':'')+(dim?' dim':'')+'" data-li="'+i+'" x1="'+l.A.x.toFixed(1)+'" y1="'+l.A.y.toFixed(1)+'" x2="'+l.B.x.toFixed(1)+'" y2="'+l.B.y.toFixed(1)+'" stroke-width="'+(0.8+l.w*3.2).toFixed(1)+'"/>';
+  });
+  G.nodes.forEach(function(n,i){
+    var dim=nb&&!nb[n.id],on=S.sel===n.id;
+    svg+='<g class="node'+(dim?' dim':'')+'" data-id="'+n.id+'" tabindex="0" role="button" aria-label="'+esc(nodeName(n.id))+', '+nodeKind(n)+'" transform="translate('+n.x.toFixed(1)+','+n.y.toFixed(1)+')"><circle r="'+n.r+'" fill="'+nodeColor(n)+'" stroke="'+(on?'#ffd479':'#06101f')+'" stroke-width="'+(on?3.5:1.5)+'"/>'+
+         (n.kind==='co'?'':'<text y="'+(n.r+12)+'" text-anchor="middle">'+esc(shortName(n))+'</text>')+(n.kind==='co'&&(on||nb&&nb[n.id])?'<text y="'+(n.r+12)+'" text-anchor="middle">'+esc(n.id)+'</text>':'')+'</g>';
+  });
+  svg+='</svg>';
+  $view.innerHTML='<div class="row"><span class="badge s">SAMPLE</span><span class="legend"><span><b style="color:#4a88e0">●</b> sector</span><span><b style="color:#4fd0e0">●</b> world signal</span><span><b style="color:#e08a3c">●</b> sample event</span><span><b style="color:#c9d6e6">●</b> sample company</span><span><b style="color:#ffd479">- - -</b> your postulate</span></span></div>'+
+   '<div class="layout">'+svg+'<aside class="panel" id="panel" aria-label="Details">'+webPanel()+'</aside></div>';
+  wireWeb();
+}
+function shortName(n){var s=nodeName(n.id);return s.length>22?s.slice(0,21)+'…':s}
+function descFor(id){var s=sec(id);if(s)return 'A sample sector made of '+s.co.length+' invented companies.';var c=co(id);if(c)return c.name+' is an invented company used to show the layout.';var i=IND.filter(function(x){return x.id===id})[0];if(i)return i.desc;var e=EVENTS.filter(function(x){return x.id===id})[0];return e?e.desc:''}
+function webPanel(){
+  if(S.pairFrom&&S.pairTo)return postForm();
+  if(!S.sel)return '<h2>The sample web</h2><p class="why">Select any dot to see what it connects to. Line thickness is a sample strength, not a measured one.</p><p class="why">To add your own idea: select a dot, press <b>Postulate a link</b>, then pick a second dot.</p>';
+  var id=S.sel,n=G.byId[id];if(!n)return '<p class="why">That item is not shown. Reset the selection.</p>';
+  var h='<h2>'+esc(nodeName(id))+'</h2><span class="badge s">SAMPLE</span><span class="badge">'+nodeKind(n)+'</span><p class="why">'+esc(descFor(id))+'</p>';
+  var ind=IND.filter(function(x){return x.id===id})[0];
+  if(ind)h+=spark(ind.spark,300,50)+'<div class="grid2"><div>Sample level<b>'+ind.level+'</b></div><div>Sample change<b>'+arrow(ind.chg)+' '+fmt(ind.chg)+'</b></div></div><p class="why">Real source later: '+esc(ind.src)+'</p>';
+  var c=co(id);if(c)h+=spark(c.spark,300,50);
+  if(sec(id)&&!S.expanded[id])h+='<button type="button" data-w="expand">Show its sample companies</button> ';
+  h+='<button type="button" class="primary" data-w="post">Postulate a link…</button> <button type="button" data-w="clear">Clear</button>';
+  var rows=G.links.filter(function(l){return l.a===id||l.b===id});
+  h+='<p class="why" style="margin-top:10px">Connections ('+rows.length+'):</p>';
+  rows.forEach(function(l){var o=l.a===id?l.b:l.a,dir=l.a===id?'':'(from them) ';
+    h+='<div><span class="chip'+(l.mine?' mine':'')+'" role="button" tabindex="0" data-w="go" data-id="'+o+'">'+esc(nodeName(o))+'</span><div class="why">'+esc(dir)+esc(l.rel)+(l.co?'':' · sample strength '+Math.round(l.w*100)+'%')+(l.mine?' · your postulate':'')+(l.why?'. '+esc(l.why):'')+'</div></div>'});
+  return h;
+}
+var RELS=['moves with','moves opposite to','leads (moves first)','follows (moves after)','amplifies','dampens'];
+var LAGS=['no lag','days','weeks','months'];
+function postForm(){
+  var a=S.pairFrom,b=S.pairTo;
+  return '<h2>Postulate a link</h2><p class="why"><b>'+esc(nodeName(a))+'</b> → <b>'+esc(nodeName(b))+'</b></p>'+
+   '<form class="pf" id="pf"><label>How do you think they relate?<select name="rel">'+RELS.map(function(r){return '<option>'+r+'</option>'}).join('')+'</select></label>'+
+   '<label>Over what time?<select name="lag">'+LAGS.map(function(r){return '<option>'+r+'</option>'}).join('')+'</select></label>'+
+   '<label>Your reasoning<textarea name="note" rows="3" maxlength="600" placeholder="Why might this be true?"></textarea></label>'+
+   '<label>What would prove it wrong?<input name="fal" maxlength="200" placeholder="A result that would make you drop it"></label>'+
+   '<div><button type="submit" class="primary">Save postulate</button> <button type="button" data-w="cancel">Cancel</button></div></form>'+
+   '<p class="why">Saved only in this browser. A postulate is a question to test, not a finding.</p>';
+}
+function wireWeb(){
+  var svg=document.getElementById('web'),drag=null,moved=false;
+  function pt(e){var m=svg.getScreenCTM().inverse(),p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;return p.matrixTransform(m)}
+  function pick(id){
+    if(S.pairFrom&&id!==S.pairFrom){S.pairTo=id;render();return}
+    S.sel=id;render();
+  }
+  Array.prototype.forEach.call(svg.querySelectorAll('.node'),function(g){
+    var id=g.dataset.id,n=G.byId[id];
+    g.addEventListener('pointerdown',function(e){drag={n:n,sx:e.clientX,sy:e.clientY};moved=false;g.setPointerCapture(e.pointerId)});
+    g.addEventListener('pointermove',function(e){if(!drag||drag.n!==n)return;if(Math.abs(e.clientX-drag.sx)+Math.abs(e.clientY-drag.sy)>5)moved=true;if(moved){var p=pt(e);n.x=Math.max(20,Math.min(VW-20,p.x));n.y=Math.max(20,Math.min(VH-20,p.y));g.setAttribute('transform','translate('+n.x.toFixed(1)+','+n.y.toFixed(1)+')');
+      Array.prototype.forEach.call(svg.querySelectorAll('.edge'),function(ln){var l=G.links[+ln.dataset.li];ln.setAttribute('x1',l.A.x);ln.setAttribute('y1',l.A.y);ln.setAttribute('x2',l.B.x);ln.setAttribute('y2',l.B.y)})}});
+    g.addEventListener('pointerup',function(e){var wasMoved=moved;drag=null;if(!wasMoved)pick(id)});
+    g.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();pick(id)}});
+  });
+  var p=document.getElementById('panel');
+  Array.prototype.forEach.call(p.querySelectorAll('[data-w]'),function(el){
+    function go(){var w=el.dataset.w;
+      if(w==='go'){S.sel=el.dataset.id;render()}
+      if(w==='clear'){S.sel=null;S.pairFrom=null;S.pairTo=null;render()}
+      if(w==='expand'){S.expanded[S.sel]=1;render()}
+      if(w==='post'){S.pairFrom=S.sel;S.pairTo=null;banner('Now select the second dot to connect to '+nodeName(S.sel)+'.')}
+      if(w==='cancel'){S.pairFrom=null;S.pairTo=null;render()}}
+    if(el.tagName!=='FORM'){el.addEventListener('click',go);el.addEventListener('keydown',function(e){if((e.key==='Enter'||e.key===' ')&&el.getAttribute('role')==='button'){e.preventDefault();go()}})}
+  });
+  var f=document.getElementById('pf');
+  if(f)f.addEventListener('submit',function(e){e.preventDefault();var d=new FormData(f);
+    S.post.push({id:'p'+Date.now(),a:S.pairFrom,b:S.pairTo,rel:d.get('rel'),lag:d.get('lag'),note:String(d.get('note')||'').slice(0,600),fal:String(d.get('fal')||'').slice(0,200),made:new Date().toISOString().slice(0,10),status:'untested'});
+    savePost();S.sel=S.pairFrom;S.pairFrom=null;S.pairTo=null;render()});
+}
+function banner(t){var p=document.getElementById('panel');if(p)p.innerHTML='<h2>Postulate a link</h2><p class="why">'+esc(t)+'</p><button type="button" id="cancelPair">Cancel</button>';var b=document.getElementById('cancelPair');if(b)b.addEventListener('click',function(){S.pairFrom=null;S.pairTo=null;render()})}
+
+/* ---------- SIGNALS view ---------- */
+function renderSignals(){
+  var groups={};IND.forEach(function(d){(groups[d.grp]=groups[d.grp]||[]).push(d)});
+  var h='<p class="why">The world signals behind the web. The lines and levels below are <b>SAMPLE</b> placeholders; each card names the real public source it would come from.</p><div class="cards">';
+  IND.forEach(function(d){
+    h+='<div class="card"><span class="badge">'+esc(d.grp)+'</span><span class="badge s">SAMPLE</span><h3>'+esc(d.name)+'</h3>'+spark(d.spark,260,44)+
+       '<p>'+esc(d.desc)+'</p><p class="why">Real source later: '+esc(d.src)+'. Status: not connected yet.</p>'+
+       '<button type="button" data-open="'+d.id+'">See its connections</button></div>';
+  });
+  $view.innerHTML=h+'</div>';
+  Array.prototype.forEach.call($view.querySelectorAll('[data-open]'),function(b){b.addEventListener('click',function(){S.sel=b.dataset.open;S.view='web';render()})});
+}
+
+/* ---------- MY POSTULATES view ---------- */
+function renderMine(){
+  var h='<p class="why">Your own connection ideas. Each one starts as <b>untested</b>. The point is to write down what you think and what would prove it wrong.</p>';
+  if(!S.post.length)h+='<p class="empty">Nothing yet. In the Web view, select a dot and press “Postulate a link”.</p>';
+  S.post.forEach(function(p){
+    h+='<div class="post"><h3>'+esc(nodeName(p.a))+' → '+esc(nodeName(p.b))+'</h3><span class="badge s">'+esc(p.status)+'</span><span class="badge">'+esc(p.rel)+'</span><span class="badge">'+esc(p.lag)+'</span>'+
+       (p.note?'<p><b>Reasoning:</b> '+esc(p.note)+'</p>':'')+(p.fal?'<p><b>Wrong if:</b> '+esc(p.fal)+'</p>':'')+'<p class="why">Made '+esc(p.made)+'</p>'+
+       '<button type="button" data-del="'+p.id+'">Delete</button></div>';
+  });
+  if(S.post.length)h+='<p><button type="button" id="exp">Copy as JSON</button> <span id="expmsg" class="why"></span></p>';
+  $view.innerHTML=h;
+  Array.prototype.forEach.call($view.querySelectorAll('[data-del]'),function(b){b.addEventListener('click',function(){S.post=S.post.filter(function(p){return p.id!==b.dataset.del});savePost();render()})});
+  var e=document.getElementById('exp');
+  if(e)e.addEventListener('click',function(){var t=JSON.stringify(S.post,null,2),m=document.getElementById('expmsg');
+    (navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(t):Promise.reject()).then(function(){m.textContent='Copied.'},function(){m.textContent='Could not copy; select and copy from the box below.';var ta=document.createElement('textarea');ta.value=t;ta.rows=10;ta.style.width='100%';m.parentNode.appendChild(ta)})});
+}
+
+/* ---------- shell ---------- */
+function render(){
+  Array.prototype.forEach.call(document.querySelectorAll('[role=tab]'),function(t){var on=t.dataset.v===S.view;t.setAttribute('aria-selected',on);t.setAttribute('aria-pressed',on);t.tabIndex=on?0:-1});
+  if(location.hash.replace('#','')!==S.view)try{history.replaceState(null,'','#'+S.view)}catch(e){}
+  if(S.view==='board')renderBoard();else if(S.view==='web')renderWeb();else if(S.view==='signals')renderSignals();else renderMine();
+}
+Array.prototype.forEach.call(document.querySelectorAll('[role=tab]'),function(t){t.addEventListener('click',function(){S.view=t.dataset.v;S.pairFrom=null;S.pairTo=null;render()})});
+var h0=location.hash.replace('#','');if(['board','web','signals','mine'].indexOf(h0)>-1)S.view=h0;
+var rt;window.addEventListener('resize',function(){clearTimeout(rt);rt=setTimeout(function(){if(S.view==='board')render()},150)});
+render();
+})();
+</script>
+</body>
+</html>
