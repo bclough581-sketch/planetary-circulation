@@ -122,6 +122,14 @@ table {color:#dfe4eb}
 td,th {border-color:#2b313a}
 th {color:#adb6c3}
 .item,.g,.verdict {background:linear-gradient(180deg,#171b22,#101319);border-color:#343b46}
+/* Keep named outcomes visibly distinct while the surrounding surfaces stay steel. */
+.FAIL,.DEAD,.g.fail {border-left-color:#c86e68!important}
+.CLOSED,.ESTIMATE,.g.flag {border-left-color:#c4a765!important}
+.g.pass {border-left-color:#789b83!important}
+.chip.fresh {color:#a4c9a8;border-color:#536e58}
+.chip.stale {color:#d1b875;border-color:#74643f}
+.chip.unavailable {color:#d58e8d;border-color:#754b4a}
+.chip.preserved {color:#b4bdca;border-color:#5b6572}
 .item summary {min-height:48px}
 .d9-app {background:transparent}
 .d9-word {color:#d7dce4}
