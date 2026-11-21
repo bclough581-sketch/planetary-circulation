@@ -158,3 +158,6 @@ th {color:#adb6c3}
 @media(prefers-reduced-motion:reduce) {
   *,*::before,*::after {animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}
 }
+
+/* Sapphire and steel brand lockup */
+.bs-brand{display:flex;align-items:center;gap:12px}.bs-title{display:flex;align-items:center;gap:12px}.bs-topbar{display:flex;align-items:center;gap:12px}.bs-brand-mark{width:38px;height:38px;object-fit:contain;flex:0 0 auto;border-radius:50%;background:#050608;box-shadow:0 0 0 1px #3b424d,0 3px 12px #0008}.d9-brand{display:flex;align-items:center;gap:10px}.d9-brand .bs-brand-mark{width:34px;height:34px}.map-brand-mark{width:38px;height:38px;object-fit:contain}
