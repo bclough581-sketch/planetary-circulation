@@ -2,6 +2,7 @@
 """
 stockworld_collect.py - real daily data for Amalgam Stock World (PRIVATE, personal use only).
 
+Also exports your FRED/indicator log (indicators.db) into the Signals cards.
 Pulls daily prices for the 11 sector ETFs and 5 large members of each from Yahoo Finance's
 public chart endpoint, and writes stockworld-data.js next to this script. stock-world.html in
 the same folder picks it up automatically and switches the Board from SAMPLE to LIVE.
@@ -13,6 +14,7 @@ Schedule:  schtasks /create /tn "StockWorldLog" /sc daily /st 18:35 /tr "<python
 Stdlib only. Safe to re-run.
 """
 import json
+import sqlite3
 import os
 import sys
 import time
@@ -87,6 +89,32 @@ def stats(t):
     }
 
 
+SIG = {"HY_OAS": "hy", "VIX": "vix", "VIX_TERM": "term", "CLAIMS": "claims", "CURVE_10Y3M": "curve",
+       "NFCI": "nfci", "NET_LIQ_B": "liq", "IWM_SPY": "iwm", "XLY_XLP": "xly", "BREADTH_SECT_200D": "brd"}
+
+
+def export_signals():
+    """Read indicators.db (from indicators_collect.py, one folder up or here) into a small dict."""
+    for db in (os.path.join(os.path.dirname(HERE), "indicators.db"), os.path.join(HERE, "indicators.db")):
+        if os.path.exists(db):
+            break
+    else:
+        return None, "indicators.db not found"
+    con = sqlite3.connect(db)
+    out = {}
+    for name, sid in SIG.items():
+        rows = con.execute("SELECT obs_date, value FROM obs WHERE name=? ORDER BY obs_date", (name,)).fetchall()
+        if not rows:
+            continue
+        vals = [r[1] for r in rows]
+        last = vals[-1]
+        pct = round(100.0 * sum(1 for x in vals if x <= last) / len(vals)) if len(vals) > 1 else None
+        out[sid] = {"v": [round(x, 4) for x in vals[-130:]], "last": round(last, 4),
+                    "prev": round(vals[-2], 4) if len(vals) > 1 else None, "asof": rows[-1][0], "pct": pct, "n": len(vals)}
+    con.close()
+    return out, None
+
+
 def main():
     out, bad = {"sectors": {}, "made": datetime.now(timezone.utc).isoformat(timespec="minutes")}, []
     for sid, (etf, members) in SECTORS.items():
@@ -106,10 +134,14 @@ def main():
     if not out["sectors"]:
         sys.exit("FAIL: no data pulled. " + " ".join(bad))
     out["asof"] = max(s["etf"]["asof"] for s in out["sectors"].values())
+    sig, why = export_signals()
     with open(OUT, "w", encoding="utf-8") as f:
         f.write("window.SW_DATA=" + json.dumps(out, separators=(",", ":")) + ";\n")
+        if sig:
+            f.write("window.SW_SIG=" + json.dumps({"series": sig}, separators=(",", ":")) + ";\n")
     n = sum(1 + len(s["co"]) for s in out["sectors"].values())
     print(f"OK  : {len(out['sectors'])} sectors, {n} tickers, as of {out['asof']} -> {OUT}")
+    print("SIG :", (str(len(sig)) + " live signals") if sig else ("none (" + why + ")"))
     print("FAIL:", " ".join(bad) if bad else "none")
 
 

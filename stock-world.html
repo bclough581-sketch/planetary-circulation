@@ -102,6 +102,24 @@ main{max-width:1280px;margin:0 auto;padding:12px 14px}
 .badge{display:inline-block;border:1px solid var(--sw-line);border-radius:4px;padding:1px 7px;font-size:11px;letter-spacing:.08em;margin:0 6px 6px 0;color:var(--blue-ice)}
 .badge.s{border-color:var(--sw-post);color:var(--sw-post)}
 .badge.live{border-color:#2bff88;color:#2bff88;text-shadow:0 0 6px #2bff88}
+.card.sig{border:1.5px solid #19e6ff66;border-radius:5px;background:radial-gradient(130% 90% at 50% 0%,#0b2f5a99,#030a16 72%);box-shadow:0 0 14px #19e6ff33,inset 0 0 22px #000}
+.card.sig.on{border-color:#19e6ff;box-shadow:0 0 18px #19e6ff77,inset 0 0 26px #19e6ff22;animation:sw-sigp 4s ease-in-out infinite}
+@keyframes sw-sigp{50%{box-shadow:0 0 30px #19e6ffaa,inset 0 0 34px #19e6ff33}}
+.card.sig .sh{display:flex;flex-wrap:wrap}
+.card.sig h3{font-family:Orbitron,sans-serif;font-size:13px;letter-spacing:.1em;margin:4px 0 2px;color:#fff;text-shadow:0 0 6px #19e6ff}
+.card.sig .big{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.card.sig .big b{font-family:Orbitron,sans-serif;font-weight:900;font-size:26px;color:#fff;text-shadow:0 0 8px #19e6ff,0 0 22px #19e6ff88}
+.card.sig .big .u{color:#5ff4ff;text-shadow:0 0 6px #19e6ff}.card.sig .big .d{color:#ffb35c;text-shadow:0 0 6px #ff9a2e}
+.nsp{display:block;margin:6px 0 4px;overflow:visible}
+.nsp .ln{fill:none;stroke:#bff8ff;stroke-width:2;filter:drop-shadow(0 0 4px #19e6ff);stroke-dasharray:1;stroke-dashoffset:1;animation:sw-draw 1.6s ease-out forwards}
+@keyframes sw-draw{to{stroke-dashoffset:0}}
+.nsp .tip{fill:#fff;filter:drop-shadow(0 0 6px #19e6ff);animation:sw-tip 1.4s ease-in-out infinite}
+@keyframes sw-tip{50%{opacity:.35}}
+.card.sig:not(.on) .nsp .ln{stroke:#7fa6c8;filter:none}
+.gauge{position:relative;height:6px;border-radius:3px;background:linear-gradient(90deg,#ff9a2e55,#19e6ff22 50%,#5ff4ff55);margin:6px 0 2px}
+.gauge i{position:absolute;top:-4px;width:3px;height:14px;margin-left:-1.5px;background:#fff;box-shadow:0 0 8px #fff,0 0 14px #19e6ff}
+.pulse{display:inline-block;width:7px;height:7px;border-radius:50%;background:#2bff88;margin-right:6px;box-shadow:0 0 8px #2bff88;animation:sw-tip 1.2s ease-in-out infinite;vertical-align:1px}
+@media(prefers-reduced-motion:reduce){.card.sig.on,.nsp .ln,.nsp .tip,.pulse{animation:none}.nsp .ln{stroke-dashoffset:0}}
 .sample.live{border-color:#2bff88;background:#04180fcc;color:#c9ffe0}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}
 .grid2 div{border:1px solid var(--sw-line);border-radius:6px;padding:6px 8px;font-size:12px;color:var(--silver-muted)}
@@ -248,6 +266,12 @@ var IND=[
  {id:'conf',name:'Regional conflict',grp:'Geopolitics',desc:'Tone and volume of conflict-related news around the world.',src:'GDELT'}
 ];
 IND.forEach(function(d,i){var w=[],v=50;for(var j=0;j<60;j++){v+=gauss()*1.8;w.push(v)}d.spark=w;d.level=(40+R()*40).toFixed(1);d.chg=gauss()*2});
+var UNIT={hy:['pts',2],vix:['',1],term:['\u00D7',3],claims:['K',0,1e-3],curve:['pts',2],nfci:['',2],liq:['$B',0],iwm:['\u00D7',3],xly:['\u00D7',3],brd:['%',0]};
+function sigFmt(id,v){var u=UNIT[id]||['',2],x=v*(u[2]||1);return (u[1]===0?Math.round(x).toLocaleString():x.toFixed(u[1]))+(u[0]==='$B'?'':(u[0]?' '+u[0]:''))}
+var SIGLIVE=!!(window.SW_SIG&&window.SW_SIG.series);
+if(SIGLIVE)IND.forEach(function(d){var g=window.SW_SIG.series[d.id];if(!g||!g.v||g.v.length<2)return;
+  d.live=true;d.spark=g.v.slice(-120);d.asof=g.asof;d.pct=g.pct;d.n=g.n;d.level=(d.id==='liq'?'$':'')+sigFmt(d.id,g.last)+(d.id==='liq'?'B':'');
+  d.delta=g.last-g.prev;d.deltaTxt=(d.delta>=0?'+':'\u2212')+(d.id==='liq'?'$':'')+sigFmt(d.id,Math.abs(d.delta))+(d.id==='liq'?'B':'')});
 var EVENTS=[
  {id:'ev1',name:'Port closure (sample event)',desc:'An invented example of a physical disruption, used to show how an event can ripple through the web.'},
  {id:'ev2',name:'Heat wave (sample event)',desc:'An invented example of a weather event that changes demand for power and water.'},
@@ -478,7 +502,8 @@ function webPanel(){
   var id=S.sel,n=G.byId[id];if(!n)return '<p class="why">That item is not shown. Reset the selection.</p>';
   var h='<h2>'+esc(nodeName(id))+'</h2><span class="badge s">SAMPLE</span><span class="badge">'+nodeKind(n)+'</span><p class="why">'+esc(descFor(id))+'</p>';
   var ind=IND.filter(function(x){return x.id===id})[0];
-  if(ind)h+=spark(ind.spark,300,50)+'<div class="grid2"><div>Sample level<b>'+ind.level+'</b></div><div>Sample change<b>'+arrow(ind.chg)+' '+fmt(ind.chg)+'</b></div></div><p class="why">Real source later: '+esc(ind.src)+'</p>';
+  if(ind&&ind.live)h+=spark(ind.spark,300,50)+'<div class="grid2"><div>Latest ('+esc(ind.asof)+')<b>'+esc(ind.level)+'</b></div><div>Change<b>'+arrow(ind.delta)+' '+esc(ind.deltaTxt)+'</b></div></div><p class="why">LIVE from '+esc(ind.src)+'. Higher than '+ind.pct+'% of its last '+ind.n+' readings.</p>';
+  else if(ind)h+=spark(ind.spark,300,50)+'<div class="grid2"><div>Sample level<b>'+ind.level+'</b></div><div>Sample change<b>'+arrow(ind.chg)+' '+fmt(ind.chg)+'</b></div></div><p class="why">Real source later: '+esc(ind.src)+'</p>';
   var c=co(id);if(c)h+=spark(c.spark,300,50);
   if(sec(id)&&!S.expanded[id])h+='<button type="button" data-w="expand">Show its sample companies</button> ';
   h+='<button type="button" class="primary" data-w="post">Postulate a link…</button> <button type="button" data-w="clear">Clear</button>';
@@ -533,16 +558,24 @@ function wireWeb(){
 function banner(t){var p=document.getElementById('panel');if(p)p.innerHTML='<h2>Postulate a link</h2><p class="why">'+esc(t)+'</p><button type="button" id="cancelPair">Cancel</button>';var b=document.getElementById('cancelPair');if(b)b.addEventListener('click',function(){S.pairFrom=null;S.pairTo=null;render()})}
 
 /* ---------- SIGNALS view ---------- */
+function neonSpark(a,w,h,id){var mn=Math.min.apply(null,a),mx=Math.max.apply(null,a),pts=a.map(function(v,i){return [(i/(a.length-1)*w),(h-4-(v-mn)/(mx-mn||1)*(h-10))]});
+  var d=pts.map(function(p,i){return (i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)}).join(' '),last=pts[pts.length-1];
+  return '<svg class="nsp" viewBox="0 0 '+w+' '+h+'" width="100%" height="'+h+'" role="img" aria-label="Trend line"><defs><linearGradient id="gf'+id+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#19e6ff" stop-opacity=".35"/><stop offset="1" stop-color="#19e6ff" stop-opacity="0"/></linearGradient></defs>'+
+   '<path d="'+d+' L'+w+' '+h+' L0 '+h+' Z" fill="url(#gf'+id+')"/><path class="ln" pathLength="1" d="'+d+'"/><circle class="tip" cx="'+last[0].toFixed(1)+'" cy="'+last[1].toFixed(1)+'" r="3.5"/></svg>'}
 function renderSignals(){
-  var groups={};IND.forEach(function(d){(groups[d.grp]=groups[d.grp]||[]).push(d)});
-  var h='<p class="why">The world signals behind the web. The lines and levels below are <b>SAMPLE</b> placeholders; each card names the real public source it would come from.</p><div class="cards">';
-  IND.forEach(function(d){
-    h+='<div class="card"><span class="badge">'+esc(d.grp)+'</span><span class="badge s">SAMPLE</span><h3>'+esc(d.name)+'</h3>'+spark(d.spark,260,44)+
-       '<p>'+esc(d.desc)+'</p><p class="why">Real source later: '+esc(d.src)+'. Status: not connected yet.</p>'+
-       '<button type="button" data-open="'+d.id+'">See its connections</button></div>';
+  var nl=IND.filter(function(d){return d.live}).length;
+  var h='<p class="why">'+(nl?'<b style="color:#2bff88">'+nl+' signals LIVE</b> from your daily collector (private). The rest are <b>SAMPLE</b> until connected.':'The world signals behind the web. The lines and levels below are <b>SAMPLE</b> placeholders; each card names the real public source it would come from.')+'</p><div class="cards">';
+  IND.slice().sort(function(a,b){return (b.live?1:0)-(a.live?1:0)}).forEach(function(d){
+    var up=d.live?d.delta>=0:d.chg>=0;
+    h+='<div class="card sig'+(d.live?' on':'')+'"><div class="sh"><span class="badge">'+esc(d.grp)+'</span>'+(d.live?'<span class="badge live"><i class="pulse"></i>LIVE \u00B7 '+esc(d.asof)+'</span>':'<span class="badge s">SAMPLE</span>')+'</div>'+
+      '<h3>'+esc(d.name)+'</h3><div class="big"><b>'+esc(d.level)+'</b><span class="'+(up?'u':'d')+'">'+arrow(up?1:-1)+' '+esc(d.live?d.deltaTxt:fmt(d.chg))+'</span></div>'+
+      neonSpark(d.spark,260,54,d.id)+
+      (d.live?'<div class="gauge" title="Where today sits in its own history"><i style="left:'+d.pct+'%"></i></div><p class="why">Higher than '+d.pct+'% of its last '+d.n+' readings.</p>':'')+
+      '<p>'+esc(d.desc)+'</p><p class="why">'+(d.live?'Source: '+esc(d.src)+'.':'Real source later: '+esc(d.src)+'. Status: not connected yet.')+'</p>'+
+      '<button type="button" data-open="'+d.id+'">See its connections</button></div>';
   });
   $view.innerHTML=h+'</div>';
-  Array.prototype.forEach.call($view.querySelectorAll('[data-open]'),function(b){b.addEventListener('click',function(){S.sel=b.dataset.open;S.view='web';render()})});
+  Array.prototype.forEach.call($view.querySelectorAll('[data-open]'),function(b){b.addEventListener('click',function(){S.sel=b.dataset.open;S.view=webOpen()?'web':'web';render()})});
 }
 
 /* ---------- MY POSTULATES view ---------- */
