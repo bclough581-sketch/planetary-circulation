@@ -24,15 +24,30 @@ main{max-width:1280px;margin:0 auto;padding:12px 14px}
 .row label{font-size:12.5px}
 .layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:12px}
 @media(max-width:900px){.layout{grid-template-columns:1fr}}
-.board{position:relative;width:100%;height:min(66vh,620px);min-height:340px;border:1px solid var(--sw-line);border-radius:8px;background:#06101f;overflow:hidden}
-.tile{position:absolute;border:1px solid #06101f;overflow:hidden;cursor:pointer;color:#fff;padding:4px 6px;font-size:12px;line-height:1.25;transition:filter .15s}
-.tile:hover,.tile:focus-visible{filter:brightness(1.25);outline:2px solid #fff;outline-offset:-2px;z-index:2}
-.tile.sel{outline:2px solid var(--sw-post);outline-offset:-2px;z-index:3}
-.tile b{display:block;font-weight:600;letter-spacing:.04em;text-shadow:0 1px 3px #000a}
-.tile span{text-shadow:0 1px 3px #000a}
-.tile.small b,.tile.small span{display:none}
-.legend{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--silver-muted)}
-.legend i{display:block;width:150px;height:10px;border-radius:5px;background:linear-gradient(90deg,var(--sw-down),var(--sw-flat),var(--sw-up))}
+.board{position:relative;width:100%;height:min(66vh,620px);min-height:340px;border:3px solid #b4c3d6;border-radius:6px;background:repeating-conic-gradient(#09121f 0% 25%,#101e35 0% 50%) 0 0/56px 56px;overflow:hidden;box-shadow:0 0 0 1px #1b3050,0 0 34px #1e5fd055,inset 0 0 46px #000d}
+.tile{position:absolute;overflow:hidden;cursor:pointer;color:#fff;padding:6px 8px;font-size:12px;line-height:1.2;border-radius:3px;background:radial-gradient(130% 150% at 18% 8%,var(--hi),var(--c) 52%,var(--lo));box-shadow:inset 0 0 0 1px rgba(255,255,255,.16),inset 0 -14px 30px rgba(0,0,0,.38),0 2px 6px rgba(0,0,0,.55);transition:transform .15s,filter .15s}
+.tile::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 38%,rgba(255,255,255,.17) 49%,transparent 60%);pointer-events:none;mix-blend-mode:soft-light}
+.paint{position:absolute;left:-60%;top:-60%;width:220%;height:220%;transform:rotate(var(--a));pointer-events:none}
+.paint::before,.paint::after{content:"";position:absolute;inset:0;background-size:420px 420px}
+.paint::before{background-image:var(--tl);mix-blend-mode:soft-light;opacity:.55}
+.paint::after{background-image:var(--td);mix-blend-mode:multiply;opacity:.38}
+.tile:hover,.tile:focus-visible{transform:scale(1.015);filter:brightness(1.18) saturate(1.1);outline:2px solid #fff;outline-offset:-2px;z-index:2}
+.tile.sel{outline:3px solid var(--sw-post);outline-offset:-3px;z-index:3}
+.tile b,.tile span{position:relative;z-index:1;display:block}
+.tile b{font-weight:700;letter-spacing:.05em;font-size:13px;text-shadow:0 1px 3px #000c}
+.tile span{font-size:13px;font-weight:600;text-shadow:0 1px 3px #000b}
+.tile.tdark{color:#03170b}.tile.tdark b,.tile.tdark span{text-shadow:0 1px 0 rgba(255,255,255,.35)}
+.pc{position:absolute;right:5%;bottom:0;z-index:1;font-style:normal;font-size:var(--pf);line-height:1;color:rgba(0,0,0,.30);text-shadow:0 1px 0 rgba(255,255,255,.2);pointer-events:none;font-family:"Segoe UI Symbol","Noto Sans Symbols 2","Apple Symbols","DejaVu Sans",serif}
+.tile.tdark .pc{color:rgba(0,30,10,.28)}
+.tile.small b,.tile.small span,.tile.small .pc{display:none}
+.battle{margin:0 0 8px}
+.battle .bl{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:baseline;font-size:12.5px}
+.battle .bl b{font-size:12px;letter-spacing:.18em;color:var(--blue-ice)}
+.battle .bar{height:9px;border-radius:5px;background:#d4162b;overflow:hidden;margin-top:4px;box-shadow:inset 0 0 0 1px #0007}
+.battle .bar i{display:block;height:100%;background:linear-gradient(90deg,#0b9a45,#3dff8a)}
+.safe .battle .bar{background:#e08a3c}.safe .battle .bar i{background:linear-gradient(90deg,#2a8fb0,#4fd0e0)}
+.legend{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:12px;color:var(--silver-muted)}
+.legend i{display:block;width:150px;height:10px;border-radius:5px}
 .panel{border:1px solid var(--sw-line);background:var(--sw-panel);border-radius:8px;padding:12px;align-self:start;min-width:0;overflow-wrap:anywhere}
 .panel h2{margin:0 0 4px;font-size:17px}
 .badge{display:inline-block;border:1px solid var(--sw-line);border-radius:4px;padding:1px 7px;font-size:11px;letter-spacing:.08em;margin:0 6px 6px 0;color:var(--blue-ice)}
@@ -203,7 +218,7 @@ COMPANIES.forEach(function(c){
 
 /* ---------- state ---------- */
 var S={view:'board',level:'all',sector:null,company:null,color:'day',
-  sel:null,pairFrom:null,pairTo:null,expanded:{},post:[]};
+  sel:null,pairFrom:null,pairTo:null,expanded:{},post:[],safe:store.get('amalgam.stockworld.safe.v1')==='1'};
 try{S.post=JSON.parse(store.get('amalgam.stockworld.postulates.v1')||'[]')||[]}catch(e){S.post=[]}
 function savePost(){store.set('amalgam.stockworld.postulates.v1',JSON.stringify(S.post))}
 var $view=document.getElementById('view');
@@ -227,7 +242,21 @@ function squarify(items,x,y,w,h){
   return out;
 }
 function mix(a,b,t){var pa=[1,3,5].map(function(i){return parseInt(a.substr(i,2),16)}),pb=[1,3,5].map(function(i){return parseInt(b.substr(i,2),16)});return 'rgb('+pa.map(function(v,i){return Math.round(v+(pb[i]-v)*t)}).join(',')+')'}
-function tileColor(v,range){var t=Math.max(-1,Math.min(1,v/range));return t>=0?mix('#1b3358','#4fd0e0',t):mix('#1b3358','#e08a3c',-t)}
+function hx(h){return [1,3,5].map(function(i){return parseInt(h.substr(i,2),16)})}
+function mx(a,b,t){var A=hx(a),B=hx(b);return 'rgb('+A.map(function(v,i){return Math.round(v+(B[i]-v)*t)}).join(',')+')'}
+function pal(v,range){
+  var t=Math.max(-1,Math.min(1,v/range)),m=Math.abs(t)<0.015?0:Math.min(1,0.3+0.7*Math.pow(Math.abs(t),0.6)),up=t>=0;
+  if(S.safe){var base='#1b3358';return up?{hi:mx('#2a5a8a','#8fe9f2',m),c:mx(base,'#4fd0e0',m),lo:mx('#0c1a30','#1d6b78',m),dark:m>0.55}:{hi:mx('#4a4660','#ffc080',m),c:mx(base,'#e08a3c',m),lo:mx('#0c1a30','#7a4414',m),dark:m>0.6}}
+  return up?{hi:mx('#1c3a40','#7dffb0',m),c:mx('#14283a','#12c25e',m),lo:mx('#08121f','#04552a',m),dark:m>0.5}
+           :{hi:mx('#3c2236','#ff5a6a',m),c:mx('#1c2238','#e0162d',m),lo:mx('#0a1020','#5b0814',m),dark:false};
+}
+function pieceFor(rank,n){if(rank===0)return '♚';var f=rank/n;return f<=0.2?'♛':f<=0.4?'♜':f<=0.6?'♝':f<=0.8?'♞':'♟'}
+function hash(sx){var h=0;for(var i=0;i<sx.length;i++)h=(h*31+sx.charCodeAt(i))>>>0;return h}
+function tex(seed,light){
+  var svg="<svg xmlns='http://www.w3.org/2000/svg' width='420' height='420'><filter id='f' x='0' y='0' width='100%' height='100%'><feTurbulence type='fractalNoise' baseFrequency='0.004 0.042' numOctaves='3' stitchTiles='stitch' seed='"+seed+"'/><feColorMatrix type='matrix' values='"+(light?'0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 2.2 0 0 0 -0.95':'0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -2.4 0 0 0 1.45')+"'/></filter><rect width='100%' height='100%' filter='url(#f)'/></svg>";
+  return 'url("data:image/svg+xml,'+encodeURIComponent(svg)+'")';
+}
+(function(){var r=document.documentElement.style;for(var i=0;i<4;i++){r.setProperty('--tl'+i,tex(11+i*7,true));r.setProperty('--td'+i,tex(41+i*5,false))}})();
 function metric(x){return S.color==='day'?x.day:x.yr}
 
 /* ---------- BOARD view ---------- */
@@ -241,22 +270,26 @@ function renderBoard(){
   var panel=c?companyPanel(c):(s2?sectorPanel(s2):boardIntro());
   $view.innerHTML='<div class="crumbs">'+crumbs+'</div>'+
    '<div class="row"><label>Color by <select id="colorBy"><option value="day"'+(S.color==='day'?' selected':'')+'>Day change</option><option value="yr"'+(S.color==='yr'?' selected':'')+'>1-year change</option></select></label>'+
-   '<div class="legend"><span>'+fmt(-range,0)+'</span><i aria-hidden="true"></i><span>'+fmt(range,0)+'</span><span>'+legendTxt+'. Tile size = sample company size. Each tile also shows its number and ▲/▼.</span></div></div>'+
+   '<label><input type="checkbox" id="safeBox"'+(S.safe?' checked':'')+'> Color-safe palette (blue/orange)</label>'+
+   '<div class="legend"><span>'+fmt(-range,0)+'</span><i aria-hidden="true" style="background:linear-gradient(90deg,'+pal(-range,range).c+','+pal(0,range).c+','+pal(range,range).c+')"></i><span>'+fmt(range,0)+'</span><span>'+legendTxt+'. Tile size = sample size. Piece = size rank: ♚ biggest down to ♟ smallest. Every tile also shows its number and ▲/▼.</span></div></div>'+battleHtml(items)+
    '<div class="layout"><div class="board" id="board" role="group" aria-label="Sample heatmap"></div><aside class="panel" id="panel" aria-label="Details">'+panel+'</aside></div>';
   var b=document.getElementById('board'),W=b.clientWidth,H=b.clientHeight;
   items.sort(function(a,z){return z.v-a.v});
+  items.forEach(function(it,i){it.piece=pieceFor(i,items.length)});
+  document.body.classList.toggle('safe',!!S.safe);
   squarify(items,0,0,W,H).forEach(function(r){
-    var it=r.it,d=document.createElement('div');
-    d.className='tile'+(r.w<70||r.h<38?' small':'')+(sel===it.id?' sel':'');
+    var it=r.it,d=document.createElement('div'),pl=pal(it.chg,range),hh=hash(it.id),big=!(r.w<70||r.h<38);
+    d.className='tile'+(big?'':' small')+(pl.dark?' tdark':'')+(sel===it.id?' sel':'');
     d.setAttribute('role','button');d.tabIndex=0;
     d.setAttribute('aria-label',it.label+', sample '+fmt(it.chg)+(it.kind==='sector'?', open sector':', show details'));
     d.title=it.label+' '+fmt(it.chg)+' (SAMPLE)';
-    d.style.cssText='left:'+r.x+'px;top:'+r.y+'px;width:'+r.w+'px;height:'+r.h+'px;background:'+tileColor(it.chg,range);
-    d.innerHTML='<b>'+esc(it.label)+'</b><span>'+arrow(it.chg)+' '+fmt(it.chg)+'</span>';
+    d.style.cssText='left:'+(r.x+2)+'px;top:'+(r.y+2)+'px;width:'+Math.max(0,r.w-4)+'px;height:'+Math.max(0,r.h-4)+'px;--hi:'+pl.hi+';--c:'+pl.c+';--lo:'+pl.lo+';--a:'+(((hh%71)-35))+'deg;--pf:'+Math.min(130,Math.min(r.w,r.h)*0.62)+'px;--tl:var(--tl'+(hh%4)+');--td:var(--td'+((hh>>3)%4)+')';
+    d.innerHTML='<i class="paint"></i><em class="pc">'+it.piece+'\uFE0E</em><b>'+esc(it.label)+'</b><span>'+arrow(it.chg)+' '+fmt(it.chg)+'</span>';
     function go(){if(it.kind==='sector'){S.level='sector';S.sector=it.id;S.company=null}else{S.company=it.id}render()}
     d.addEventListener('click',go);d.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}});
     b.appendChild(d);
   });
+  document.getElementById('safeBox').addEventListener('change',function(e){S.safe=e.target.checked;store.set('amalgam.stockworld.safe.v1',S.safe?'1':'0');render()});
   document.getElementById('colorBy').addEventListener('change',function(e){S.color=e.target.value;render()});
   Array.prototype.forEach.call($view.querySelectorAll('.crumbs a'),function(a){
     function go(){if(a.dataset.go==='all'){S.level='all';S.sector=null;S.company=null}else{S.company=null}render()}
@@ -264,6 +297,10 @@ function renderBoard(){
   });
   wirePanel();
 }
+function battleHtml(items){
+  var tot=0,up=0,nu=0,nd=0;items.forEach(function(i){tot+=i.v;if(i.chg>=0){up+=i.v;nu++}else nd++});
+  var pu=Math.round(up/tot*100);
+  return '<div class="battle" role="group" aria-label="Sample advancing versus retreating share"><div class="bl"><b>THE BATTLE LINE (SAMPLE)</b><span>▲ Advancing '+nu+' · '+pu+'% of sample weight</span><span>▼ Retreating '+nd+' · '+(100-pu)+'%</span></div><div class="bar"><i style="width:'+pu+'%"></i></div></div>'}
 function boardIntro(){return '<h2>The sample board</h2><p class="why">Eleven invented sectors sized by sample company size. Tap a sector to open it, then tap a company for details. Everything shown is a placeholder.</p><p class="why">Switch to <b>Web</b> to see how companies, sectors and world signals could connect, and to add your own postulates.</p>'}
 function sectorPanel(s){
   var top=s.co.slice().sort(function(a,b){return b.day-a.day});
