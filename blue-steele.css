@@ -12,6 +12,9 @@
   --bs-muted:#a0a9b7;
   --bs-sapphire:#174bc5;
   --bs-sapphire-bright:#8eafff;
+  --bs-bronze:#b77948;
+  --bs-bronze-bright:#d4a070;
+  --bs-bronze-edge:#795238;
   --bs-mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
   --bs-sans:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   color-scheme:dark;
@@ -30,7 +33,8 @@ h1,h2,h3 {color:#eef1f5}
 h1,.hero h1 {background:none;-webkit-text-fill-color:currentColor;color:#eef1f5;letter-spacing:-.025em;text-shadow:none}
 p,.hero p,.case-study .lead,.case-study ul {color:#c2c9d3}
 .muted,small,.empty,footer,dt,.dim {color:#9ca6b4}
-.eyebrow,.step {color:#a9b8d7}
+.eyebrow {color:var(--bs-bronze-bright)}
+.step {color:#a9b8d7}
 .pill,.tag,.chip {
   color:#d6dce6;border-color:#515b69;
   background:linear-gradient(180deg,#272d35,#171b21);
