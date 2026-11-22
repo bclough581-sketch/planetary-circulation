@@ -36,6 +36,8 @@ header,main{max-width:1180px}.layout{grid-template-columns:minmax(0,1.45fr) minm
 @media(max-width:700px){.lab-header{padding:10px 14px;gap:12px}.lab-header .bs-brand-mark{width:32px;height:32px}.lab-nav{gap:6px}.lab-nav a{min-height:32px;padding:5px 8px;font-size:.8rem}.hero{grid-template-columns:minmax(0,1fr) minmax(100px,23vw);gap:12px;margin:14px 0 12px;padding-bottom:14px}.hero h1{max-width:13ch;font-size:clamp(1.7rem,5vw,2.15rem)}.hero p{margin:8px 0 12px;font-size:.98rem}.hero-logo{width:min(100%,160px)}.hero .primary{max-width:100%;white-space:normal}}
 @media(max-width:480px){.lab-header{flex-wrap:wrap}.lab-nav{width:100%;justify-content:space-between}.lab-nav a{flex:1;justify-content:center;padding:5px 4px;font-size:.77rem}.hero{grid-template-columns:minmax(0,1fr) 96px;gap:10px}.hero h1{font-size:clamp(1.55rem,6.2vw,1.9rem)}.hero-logo{width:96px}.hero .primary{font-size:.82rem;padding:10px 9px}}
 @media(max-width:340px){.hero{grid-template-columns:1fr}.hero-logo{width:118px;justify-self:start}}
+@media(max-width:700px){main{padding-top:10px}.hero{grid-template-columns:1fr;align-items:start;gap:8px;margin:8px 0 12px;padding-bottom:14px}.hero h1{max-width:none;font-size:clamp(2rem,7vw,2.4rem)}.hero-logo{width:104px;justify-self:end;margin:0 4px -2px 0}}
+@media(max-width:480px){.hero h1{font-size:clamp(1.95rem,8vw,2.25rem)}.hero-logo{width:88px}}
 </style><meta name="theme-color" content="#090b0f"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="stylesheet" href="amalgam-theme.css"><link rel="stylesheet" href="blue-steele.css">
 </head><body><header class="lab-header"><strong class="bs-brand"><img class="bs-brand-mark" src="icon-192.png" alt="">AMALGAM</strong><nav class="lab-nav" aria-label="Primary"><a href="decision-journal.html">My decisions</a><a href="scoreboard.html">Scoreboard</a><a href="map.html">Live map</a></nav></header><main>
 <section class="hero" aria-labelledby="introTitle"><div class="hero-copy"><div class="eyebrow">Cross-domain market intelligence</div><h1 id="introTitle">Follow the evidence.<br>See the connections.</h1><p>Explore the forces around a business, inspect the source, and see what the connection can actually tell you.</p><button class="primary" id="openCase">Explore the airline case</button></div><img class="hero-logo" src="blue-steele-logo.png" alt="AMALGAM interlocking brushed-steel rings around a sapphire center" width="512" height="512" fetchpriority="high" draggable="false"></section>
@@ -387,3 +389,4 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden)refreshCon
 motion();restoreStarter();
 refreshContext();
 </script></body></html>
+
