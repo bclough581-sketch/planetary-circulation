@@ -45,12 +45,63 @@ function earningsRead(dateStr,today){
     say:'Reports in '+days+' day'+(days===1?'':'s')+' ('+dateStr+'). Your swing window is 2 to 6 weeks, up to '+T.windowDays+' days.'};
 }
 
+
+function smaSeries(bars,n,last){
+  var out=[],i,s=0;
+  for(i=0;i<bars.length;i++){
+    s+=bars[i].c;if(i>=n)s-=bars[i-n].c;
+    out.push(i>=n-1?s/n:null);
+  }
+  return last?out.slice(-last):out;
+}
+function r2(x){return x===null?null:Math.round(x*100)/100;}
+
+/* state of the trend as it stood on bar i, using only bars up to i */
+function trendStateAt(bars,i,a50,a200){
+  if(a200[i]===null)return null;
+  var c=bars[i].c,a=a50[i],b=a200[i];
+  return (c>a&&a>b)?'UPTREND':(c<a&&a<b)?'DOWNTREND':'MIXED';
+}
+/* History: on days that looked like today, was the price higher HORIZON trading days later?
+   Also returns the same count for every day (base rate) so the user can see what is normal. */
+var HORIZON=20,THIN=30;
+function history(bars,kind){
+  if(!bars||bars.length<T.slow+HORIZON+T.volLen+5)return null;
+  var a50=smaSeries(bars,T.fast),a200=smaSeries(bars,T.slow),i,n=bars.length;
+  function key(j){
+    if(kind==='trend')return trendStateAt(bars,j,a50,a200);
+    if(j<T.volLen+1)return null;
+    var s=0,k;for(k=j-T.volLen;k<j;k++)s+=bars[k].v;
+    var avg=s/T.volLen;if(!(avg>0))return null;
+    return (bars[j].v/avg>=T.volHeavy?'HEAVY':'NORMAL')+(bars[j].c>bars[j-1].c?'U':'D');
+  }
+  var now=key(n-1);if(now===null)return null;
+  var x=0,m=0,bx=0,bm=0;
+  for(i=T.slow;i<n-HORIZON;i++){
+    var k2=key(i);if(k2===null)continue;
+    var up=bars[i+HORIZON].c>bars[i].c?1:0;
+    bm++;bx+=up;
+    if(k2===now){m++;x+=up;}
+  }
+  return {x:x,n:m,base_x:bx,base_n:bm,horizon:HORIZON,thin:m<THIN,days:n};
+}
+
 function ingestBars(ledger,sym,bars,source,license){
-  var out=[],a=trend(bars),v=volume(bars);
+  var out=[];
   if(!bars||!bars.length)return out;
-  var asof=bars[bars.length-1].d;
-  if(a)out.push(ledger.put({id:sym+'.trend',value:a,as_of:asof,source:source,license:license,max_age_days:T.barMaxAge}));
-  if(v)out.push(ledger.put({id:sym+'.volume',value:v,as_of:asof,source:source,license:license,max_age_days:T.barMaxAge}));
+  var asof=bars[bars.length-1].d,a=trend(bars),v=volume(bars),k;
+  if(a){
+    a.spark=bars.slice(-130).map(function(b){return r2(b.c)});
+    a.s50=smaSeries(bars,T.fast,130).map(r2);a.s200=smaSeries(bars,T.slow,130).map(r2);
+    a.prev=bars.length>1?bars[bars.length-2].c:null;
+    out.push(ledger.put({id:sym+'.trend',value:a,as_of:asof,source:source,license:license,max_age_days:T.barMaxAge}));
+    if((k=history(bars,'trend')))out.push(ledger.put({id:sym+'.trend.history',value:k,as_of:asof,source:source+' (computed from its price history)',license:license,max_age_days:T.barMaxAge}));
+  }
+  if(v){
+    v.bars=bars.slice(-30).map(function(b,i,arr){return {v:b.v,up:i>0?b.c>arr[i-1].c:b.c>=b.o}});
+    out.push(ledger.put({id:sym+'.volume',value:v,as_of:asof,source:source,license:license,max_age_days:T.barMaxAge}));
+    if((k=history(bars,'volume')))out.push(ledger.put({id:sym+'.volume.history',value:k,as_of:asof,source:source+' (computed from its price history)',license:license,max_age_days:T.barMaxAge}));
+  }
   return out;
 }
 var YOU='Entered by you. Shown to you only.';
@@ -63,7 +114,7 @@ function ingestEarnings(ledger,sym,dateStr,today,asof){
   return ledger.put({id:sym+'.earnings',value:{date:dateStr},as_of:asof,source:'Typed by you (company report date)',license:YOU,max_age_days:T.earnMaxAge});
 }
 
-var API={T:T,sma:sma,trend:trend,volume:volume,vixRead:vixRead,earningsRead:earningsRead,
+var API={T:T,sma:sma,smaSeries:smaSeries,trendStateAt:trendStateAt,history:history,trend:trend,volume:volume,vixRead:vixRead,earningsRead:earningsRead,
   ingestBars:ingestBars,ingestVix:ingestVix,ingestEarnings:ingestEarnings};
 if(typeof module!=='undefined'&&module.exports)module.exports=API;else root.TIER1=API;
 })(typeof window!=='undefined'?window:this);

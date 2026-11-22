@@ -4,53 +4,87 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b0e13">
-<title>AMALGAM · Armor</title>
+<title>AMALGAM &middot; Armor</title>
 <link rel="manifest" href="manifest.webmanifest">
 <style>
-:root{--bg:#0b0e13;--panel:#12171f;--line:#222a36;--tx:#e6ebf2;--dim:#8a95a6;--acc:#5CC8FF;--amber:#f2b441;--red:#ff6b6b;--ok:#6fd39a}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
-main{max-width:560px;margin:0 auto;padding:12px 14px 28px}
-h1{font-size:15px;letter-spacing:.18em;margin:6px 0 2px;color:var(--acc)}
-.sub{color:var(--dim);font-size:13px;margin:0 0 10px}
-.banner{border:1px solid var(--amber);color:var(--amber);border-radius:8px;padding:8px 10px;font-size:13px;margin:8px 0}
-form.row{display:flex;gap:8px;margin:8px 0 12px}
-input{flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);color:var(--tx);border-radius:8px;padding:11px 12px;font-size:16px;text-transform:none}
-input.tk{text-transform:uppercase;letter-spacing:.08em}
-button{background:var(--acc);color:#04202e;border:0;border-radius:8px;padding:11px 16px;font-weight:700;font-size:14px}
-button.ghost{background:transparent;color:var(--acc);border:1px solid var(--line)}
-.sig{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:11px 12px;margin:8px 0}
-.top{display:flex;align-items:center;gap:8px}
-.name{font-size:12px;letter-spacing:.12em;color:var(--dim);flex:1}
-.pill{font-size:12px;font-weight:700;letter-spacing:.06em;border:1px solid var(--line);border-radius:999px;padding:3px 9px}
-.arrow{font-size:18px;width:20px;text-align:center;color:var(--acc)}
-.say{margin:6px 0 4px;font-size:15px}
-.meta{font-size:12px;color:var(--dim)}
-.meta.stale{color:var(--amber)}
-.gap{color:var(--amber);font-size:14px;margin:6px 0}
-.fill{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
-.fill input{flex:1 1 110px}
-.err{color:var(--red);font-size:13px;min-height:1em;margin:4px 0}
-.foot{color:var(--dim);font-size:12px;margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
-.foot p{margin:4px 0}
-.key{margin:8px 0}
+:root{--bg:#0b0e13;--panel:#12171f;--line:#222a36;--tx:#e6ebf2;--dim:#7d8898;--acc:#5CC8FF;--silver:#c9d1dc;--bronze:#c58b52;--amber:#f2b441;--mute:#5b6575}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.35 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+main{max-width:560px;margin:0 auto;padding:10px 12px 24px}
+.bar{display:flex;align-items:center;gap:8px}
+h1{font-size:13px;letter-spacing:.2em;margin:4px 0;color:var(--acc);flex:1}
+.samp{font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--amber);border:1px solid var(--amber);border-radius:999px;padding:2px 9px}
+form.row{display:flex;gap:8px;margin:8px 0}
+input{flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);color:var(--tx);border-radius:10px;padding:11px 12px;font-size:16px;color-scheme:dark}
+input.tk{text-transform:uppercase;letter-spacing:.1em;font-weight:700}
+button{font:inherit}
+.go{background:var(--acc);color:#04202e;border:0;border-radius:10px;padding:11px 18px;font-weight:800;font-size:14px;letter-spacing:.05em}
+.err{color:var(--amber);font-size:13px;min-height:1.2em}
+.hero{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 12px 8px;margin:6px 0;width:100%;text-align:left;color:inherit}
+.hh{display:flex;align-items:baseline;gap:10px}
+.sym{font-size:22px;font-weight:800;letter-spacing:.06em}
+.px{font-size:22px;font-weight:600;margin-left:auto}
+.chg{font-size:14px;font-weight:700;color:var(--acc)}
+.chg.dn{color:var(--silver)}
+.hero svg{display:block;width:100%;height:auto;margin-top:6px}
+.legend{display:flex;gap:12px;font-size:11px;color:var(--dim);margin-top:2px}
+.legend i{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:4px;vertical-align:middle}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px;text-align:left;color:inherit;min-height:150px;display:flex;flex-direction:column}
+.tile.gap{border-style:dashed}
+.lab{font-size:11px;letter-spacing:.14em;color:var(--dim);font-weight:700}
+.tile svg{display:block;width:100%;height:auto;margin:6px 0 4px}
+.big{font-size:20px;font-weight:800;line-height:1.1}
+.chip{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.07em;border:1px solid var(--line);border-radius:999px;padding:2px 8px;margin-top:5px;align-self:flex-start}
+.chip.acc{color:var(--acc);border-color:var(--acc)}.chip.am{color:var(--amber);border-color:var(--amber)}.chip.mu{color:var(--silver)}.chip.dash{color:var(--dim);border-style:dashed}
+.age{font-size:11px;color:var(--dim);margin-top:auto;padding-top:6px}
+.age.stale{color:var(--amber);font-weight:700}
+.fill{display:flex;gap:6px;margin-top:auto}
+.fill input{padding:8px;font-size:15px}
+.fill button{background:var(--acc);color:#04202e;border:0;border-radius:8px;padding:0 12px;font-weight:800}
+.foot{color:var(--dim);font-size:11px;margin-top:12px;text-align:center}
+.key p{font-size:13px;color:var(--dim);margin:4px 0}
+/* sheet */
+#sheet{position:fixed;inset:0;background:rgba(5,8,12,.72);display:none;align-items:flex-end;justify-content:center;z-index:5}
+#sheet.on{display:flex}
+.card{background:#0f141b;border:1px solid var(--line);border-radius:18px 18px 0 0;width:100%;max-width:560px;max-height:88vh;overflow:auto;padding:12px 14px calc(18px + env(safe-area-inset-bottom))}
+.ch{display:flex;align-items:center;gap:8px}
+.ch .t{font-weight:800;letter-spacing:.1em;font-size:13px;flex:1}
+.x{background:transparent;border:1px solid var(--line);color:var(--silver);border-radius:8px;width:34px;height:34px;font-size:16px}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:10px 0}
+.tabs button{background:var(--panel);border:1px solid var(--line);color:var(--dim);border-radius:10px;padding:9px 0;font-size:11px;font-weight:800;letter-spacing:.08em}
+.tabs button.on{color:#04202e;background:var(--acc);border-color:var(--acc)}
+.why{font-size:17px;line-height:1.35;margin:6px 0 4px}
+.rule{font-size:14px;color:var(--silver);margin:10px 0 6px}
+.nums{display:flex;gap:8px;margin:8px 0}
+.num{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px}
+.num b{display:block;font-size:20px}.num span{font-size:11px;color:var(--dim);letter-spacing:.08em}
+.src{font-size:11px;color:var(--dim);margin-top:8px}
+.src.stale{color:var(--amber)}
+.xr{display:flex;align-items:center;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:9px;margin:6px 0;flex-wrap:wrap}
+.pl{font-size:12px;font-weight:700;border:1px solid var(--line);border-radius:8px;padding:4px 8px}
+.sw{color:var(--dim)}
+.vd{margin-left:auto;font-size:11px;font-weight:800;letter-spacing:.07em;border-radius:999px;padding:3px 9px;border:1px solid var(--line)}
+.vd.agree,.vd.ok{color:var(--acc);border-color:var(--acc)}.vd.disagree,.vd.flag{color:var(--amber);border-color:var(--amber)}.vd.unclear{color:var(--silver)}.vd.missing{color:var(--dim);border-style:dashed}
+.hx{font-size:30px;font-weight:800}.hx small{font-size:15px;color:var(--dim);font-weight:600}
+.meter{height:12px;border-radius:7px;background:#1a212b;overflow:hidden;margin:6px 0}
+.meter i{display:block;height:100%;background:var(--acc)}
+.meter.base i{background:var(--mute)}
+.hl{font-size:12px;color:var(--dim);letter-spacing:.06em;margin-top:10px}
+.note{font-size:12px;color:var(--dim);margin-top:12px}
+.edit{background:transparent;border:1px solid var(--line);color:var(--acc);border-radius:8px;padding:7px 12px;font-weight:700;font-size:13px;margin-top:10px}
 </style>
 </head>
 <body>
 <main>
-<h1>AMALGAM · ARMOR</h1>
-<p class="sub">Tier 1: what you check before anything else.</p>
-<div id="banner"></div>
+<div class="bar"><h1>AMALGAM &middot; ARMOR</h1><span id="samp"></span></div>
 <div id="keybox"></div>
-<form class="row" id="f"><input id="t" class="tk" placeholder="Ticker, like AAPL" autocomplete="off" autocapitalize="characters" spellcheck="false"><button type="submit">CHECK</button></form>
+<form class="row" id="f"><input id="t" class="tk" placeholder="TICKER" autocomplete="off" autocapitalize="characters" spellcheck="false"><button class="go" type="submit">CHECK</button></form>
 <div class="err" id="err"></div>
 <div id="out"></div>
-<div class="foot">
-<p>Information and education only. Not advice. Nothing here says buy or sell.</p>
-<p>Each arrow shows direction of the number it sits on. It does not mean good or bad.</p>
-<p>These numbers describe what already happened. Your 2018 to 2021 hold-out test of the gates failed, so treat them as a checklist. Your call.</p>
-</div>
+<div class="foot">Information and education only. Not advice. Tap anything to see why.</div>
 </main>
+<div id="sheet"><div class="card" id="card"></div></div>
 <script src="ledger.js"></script>
 <script src="tier1.js"></script>
 <script>
@@ -59,27 +93,27 @@ button.ghost{background:transparent;color:var(--acc);border:1px solid var(--line
 var L=window.LEDGER,T1=window.TIER1,$=function(i){return document.getElementById(i)};
 var params=new URLSearchParams(location.search),SAMPLE=params.get('sample')==='1';
 var store=(function(){try{var s=SAMPLE?window.sessionStorage:window.localStorage;s.setItem('_t','1');s.removeItem('_t');return s}catch(e){return null}})();
-var ledger=L.Ledger(store);
+var ledger=L.Ledger(store),S={sym:null,tab:0,sig:null};
+var UP='▲',DN='▼',FL='–',MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 function today(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)}
 function tk(s){return String(s||'').toUpperCase().replace(/[^A-Z0-9.\-]/g,'').slice(0,10)}
+function sd(s){return MON[+s.slice(5,7)-1]+' '+(+s.slice(8,10))}
 function getKey(){try{var v=localStorage.getItem('am_key');return v?JSON.parse(v):''}catch(e){return ''}}
 function setKey(k){try{localStorage.setItem('am_key',JSON.stringify(k))}catch(e){}}
 
-/* ---- sample data (clearly marked) ---- */
+/* ---------- data in ---------- */
 function sampleBars(sym){
   var seed=0,i;for(i=0;i<sym.length;i++)seed=(seed*31+sym.charCodeAt(i))>>>0;
   function rnd(){seed=(seed*1664525+1013904223)>>>0;return seed/4294967296}
   var d=new Date();while(d.getDay()===0||d.getDay()===6)d.setDate(d.getDate()-1);
-  var dates=[];while(dates.length<260){if(d.getDay()!==0&&d.getDay()!==6)dates.unshift(d.toISOString().slice(0,10));d.setDate(d.getDate()-1)}
+  var dates=[];while(dates.length<1300){if(d.getDay()!==0&&d.getDay()!==6)dates.unshift(d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2));d.setDate(d.getDate()-1)}
   var p=100,out=[];
-  dates.forEach(function(ds){var ch=(rnd()-0.46)*0.03,o=p;p=p*(1+ch);out.push({d:ds,o:o,h:Math.max(o,p)*1.005,l:Math.min(o,p)*0.995,c:p,v:Math.round(1e6*(0.6+rnd()*1.2))})});
+  dates.forEach(function(ds){var ch=(rnd()-0.47)*0.03,o=p;p=p*(1+ch);out.push({d:ds,o:o,h:Math.max(o,p)*1.005,l:Math.min(o,p)*0.995,c:p,v:Math.round(1e6*(0.6+rnd()*(rnd()>0.9?3:1)))})});
   return out;
 }
-
-/* ---- real data: your own Twelve Data key, in this browser only ---- */
 function cached(sym){
-  try{var c=JSON.parse(localStorage.getItem('am_s_'+sym)||'null');if(c&&c.day===today()&&c.bars&&c.bars.length>=200)return c.bars}catch(e){}
+  try{var c=JSON.parse(localStorage.getItem('am_h_'+sym)||'null');if(c&&c.day===today()&&c.bars&&c.bars.length>=250)return c.bars}catch(e){}
   return null;
 }
 function parse(v){var b=v.map(function(x){return{d:x.datetime.slice(0,10),o:+x.open,h:+x.high,l:+x.low,c:+x.close,v:+x.volume||0}});b.sort(function(a,c){return a.d<c.d?-1:1});return b}
@@ -87,81 +121,214 @@ async function fetchBars(syms,key){
   var need=syms.filter(function(s){return !cached(s)}),res={};
   syms.forEach(function(s){var c=cached(s);if(c)res[s]=c});
   if(need.length){
-    var r=await fetch('https://api.twelvedata.com/time_series?symbol='+need.map(encodeURIComponent).join(',')+'&interval=1day&outputsize=260&order=ASC&apikey='+encodeURIComponent(key));
+    var r=await fetch('https://api.twelvedata.com/time_series?symbol='+need.map(encodeURIComponent).join(',')+'&interval=1day&outputsize=1300&order=ASC&apikey='+encodeURIComponent(key));
     var j=await r.json();
     need.forEach(function(s){
       var o=need.length===1?j:j[s];
       if(!o||o.status==='error'||!o.values)throw new Error((o&&o.message)||('No data for '+s));
       var bars=parse(o.values);res[s]=bars;
-      try{localStorage.setItem('am_s_'+s,JSON.stringify({day:today(),bars:bars}))}catch(e){}
+      try{localStorage.setItem('am_h_'+s,JSON.stringify({day:today(),bars:bars}))}catch(e){}
     });
   }
   return res;
 }
-
-/* ---- ingest: data goes into the ledger; the screen reads only the ledger ---- */
 var SRC_REAL='Twelve Data (your own key)',LIC_REAL='Your key. Shown to you only. Not redistributed.';
 var SRC_SAMPLE='SAMPLE data, not real',LIC_SAMPLE='Made up for a demo. Never trade on it.';
 async function load(sym){
-  var out=$('out');
-  if(SAMPLE){
-    ['SPY',sym].forEach(function(s){T1.ingestBars(ledger,s,sampleBars(s),SRC_SAMPLE,LIC_SAMPLE)});
-    return;
-  }
-  var key=getKey();
-  if(!key)throw new Error('Add your Twelve Data key first.');
+  if(SAMPLE){['SPY',sym].forEach(function(s){T1.ingestBars(ledger,s,sampleBars(s),SRC_SAMPLE,LIC_SAMPLE)});return}
+  var key=getKey();if(!key)throw new Error('Add your Twelve Data key first.');
   var syms=sym==='SPY'?['SPY']:['SPY',sym],bars=await fetchBars(syms,key);
   syms.forEach(function(s){T1.ingestBars(ledger,s,bars[s],SRC_REAL,LIC_REAL)});
 }
 
-/* ---- render: ledger rows only ---- */
-function metaLine(r){
-  var cls=r.freshness==='stale'?'meta stale':'meta';
-  return '<div class="'+cls+'">as of '+esc(r.as_of)+(r.freshness==='stale'?' · STALE ('+r.age_days+' days old)':'')+' · '+esc(r.source)+'</div>';
+/* ---------- ledger reads only ---------- */
+function rows(){
+  var s=S.sym,t=today(),g=function(id){return ledger.get(id,t)};
+  return {trend:g(s+'.trend'),vol:g(s+'.volume'),idx:g('SPY.trend'),vix:g('VIX.level'),earn:g(s+'.earnings'),
+          hT:g(s+'.trend.history'),hV:g(s+'.volume.history'),hI:g('SPY.trend.history')};
 }
-function sig(name,r,v){
-  if(!r||!v)return '';
-  return '<div class="sig"><div class="top"><span class="name">'+esc(name)+'</span><span class="arrow">'+v.arrow+'</span><span class="pill">'+esc(v.state)+'</span></div><div class="say">'+esc(v.say)+'</div>'+metaLine(r)+'</div>';
+function earnV(r){return r?T1.earningsRead(r.value.date,today()):null}
+
+/* ---------- pictures ---------- */
+function path(vals,x0,w,lo,hi,h,pad){
+  var n=vals.length,d='',pen=false,i,y;
+  for(i=0;i<n;i++){
+    if(vals[i]===null){pen=false;continue}
+    y=pad+(h-2*pad)*(1-(vals[i]-lo)/((hi-lo)||1));
+    d+=(pen?'L':'M')+(x0+w*i/(n-1)).toFixed(1)+' '+y.toFixed(1);pen=true;
+  }
+  return d;
 }
-function gap(name,why,formHtml){
-  return '<div class="sig"><div class="top"><span class="name">'+esc(name)+'</span><span class="pill" style="color:var(--amber);border-color:var(--amber)">NO FREE SOURCE YET</span></div><div class="gap">'+esc(why)+'</div>'+formHtml+'</div>';
+function lineChart(v,w,h,full){
+  var all=[],i;[v.spark,v.s50,v.s200].forEach(function(a){a.forEach(function(x){if(x!==null)all.push(x)})});
+  var lo=Math.min.apply(null,all),hi=Math.max.apply(null,all);
+  return '<svg viewBox="0 0 '+w+' '+h+'" role="img" aria-label="price with 50-day and 200-day averages">'
+   +'<path d="'+path(v.s200,0,w,lo,hi,h,6)+'" fill="none" stroke="#c58b52" stroke-width="1.6" stroke-linejoin="round"/>'
+   +'<path d="'+path(v.s50,0,w,lo,hi,h,6)+'" fill="none" stroke="#c9d1dc" stroke-width="1.6" stroke-linejoin="round"/>'
+   +'<path d="'+path(v.spark,0,w,lo,hi,h,6)+'" fill="none" stroke="#5CC8FF" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/></svg>';
 }
-function render(sym){
-  var t=today(),h='',a,r;
-  r=ledger.get(sym+'.trend',t);h+=r?sig('TREND · '+sym,r,r.value):'';
-  r=ledger.get(sym+'.volume',t);h+=r?sig('VOLUME · '+sym,r,r.value):'';
-  r=ledger.get('SPY.trend',t);h+=r?sig('INDEX TREND · SPY (S&P 500 fund)',r,r.value):'';
-  r=ledger.get('VIX.level',t);
-  if(r)h+=sig('VIX · MARKET FEAR GAUGE',r,r.value)+'<div class="fill" style="margin:-2px 0 6px"><button class="ghost" data-act="vixedit">Update VIX</button></div>';
-  else h+=gap('VIX · MARKET FEAR GAUGE','The free feed has no VIX number. Type today\'s level from any quote page.','<form class="fill" data-act="vix"><input name="lvl" inputmode="decimal" placeholder="VIX level, like 18.4"><input name="prev" inputmode="decimal" placeholder="Yesterday (optional)"><button type="submit">SAVE</button></form>');
-  r=ledger.get(sym+'.earnings',t);
-  if(r){var e=T1.earningsRead(r.value.date,t);h+=sig('NEXT EARNINGS · '+sym,r,e)+'<div class="fill" style="margin:-2px 0 6px"><button class="ghost" data-act="eedit">Change date</button></div>'}
-  else h+=gap('NEXT EARNINGS · '+sym,'The next report date needs a paid data plan. Type it from the company\'s investor page.','<form class="fill" data-act="earn"><input name="date" inputmode="numeric" placeholder="Date, like 2026-12-05"><button type="submit">SAVE</button></form>');
-  $('out').innerHTML=h;
-  var e2=document.querySelectorAll('[data-act]');
-  Array.prototype.forEach.call(e2,function(n){
-    var act=n.getAttribute('data-act');
-    if(act==='vix')n.addEventListener('submit',function(ev){ev.preventDefault();var f=n.elements;try{T1.ingestVix(ledger,parseFloat(f.lvl.value),parseFloat(f.prev.value)||0,today());$('err').textContent='';render(sym)}catch(x){$('err').textContent=x.message}});
-    if(act==='earn')n.addEventListener('submit',function(ev){ev.preventDefault();try{T1.ingestEarnings(ledger,sym,n.elements.date.value.trim(),today(),today());$('err').textContent='';render(sym)}catch(x){$('err').textContent=x.message}});
-    if(act==='vixedit')n.addEventListener('click',function(){ledger.remove('VIX.level');render(sym)});
-    if(act==='eedit')n.addEventListener('click',function(){ledger.remove(sym+'.earnings');render(sym)});
-  });
+function volBars(v){
+  var W=150,H=64,n=v.bars.length,mx=0,i;v.bars.forEach(function(b){if(b.v>mx)mx=b.v});
+  mx=Math.max(mx,v.avg*1.6);
+  var bw=W/n,out='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="last 30 days of volume">';
+  for(i=0;i<n;i++){
+    var bh=Math.max(1,(v.bars[i].v/mx)*(H-4));
+    out+='<rect x="'+(i*bw+0.6).toFixed(1)+'" y="'+(H-bh).toFixed(1)+'" width="'+(bw-1.2).toFixed(1)+'" height="'+bh.toFixed(1)+'" rx="1" fill="'+(v.bars[i].up?'#5CC8FF':'#5b6575')+'"'+(i===n-1?' stroke="#e6ebf2" stroke-width="1.2"':'')+'/>';
+  }
+  var ty=H-(v.avg*T1.T.volHeavy/mx)*(H-4);
+  out+='<line x1="0" x2="'+W+'" y1="'+ty.toFixed(1)+'" y2="'+ty.toFixed(1)+'" stroke="#f2b441" stroke-width="1" stroke-dasharray="3 3"/></svg>';
+  return out;
+}
+function arc(cx,cy,r,a0,a1){
+  function pt(a){return (cx+r*Math.cos(Math.PI-a*Math.PI)).toFixed(1)+' '+(cy-r*Math.sin(Math.PI-a*Math.PI)).toFixed(1)}
+  return 'M'+pt(a0)+' A'+r+' '+r+' 0 0 1 '+pt(a1);
+}
+function gauge(level){
+  var MAX=50,W=150,H=84,cx=75,cy=76,r=58;
+  function f(x){return Math.min(x,MAX)/MAX}
+  var out='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="VIX gauge">'
+   +'<path d="'+arc(cx,cy,r,0,f(15))+'" stroke="#3b4a5c" stroke-width="10" fill="none"/>'
+   +'<path d="'+arc(cx,cy,r,f(15),f(25))+'" stroke="#5b6575" stroke-width="10" fill="none"/>'
+   +'<path d="'+arc(cx,cy,r,f(25),1)+'" stroke="#8a6a2a" stroke-width="10" fill="none"/>';
+  if(level!==null){
+    var a=f(level)*Math.PI,nx=cx+(r-4)*Math.cos(Math.PI-a),ny=cy-(r-4)*Math.sin(Math.PI-a);
+    out+='<line x1="'+cx+'" y1="'+cy+'" x2="'+nx.toFixed(1)+'" y2="'+ny.toFixed(1)+'" stroke="#5CC8FF" stroke-width="3" stroke-linecap="round"/><circle cx="'+cx+'" cy="'+cy+'" r="4" fill="#5CC8FF"/>';
+  }
+  return out+'</svg>';
+}
+function timeline(days){
+  var W=150,H=40,MAXD=60,x=function(d){return 6+(W-12)*Math.min(Math.max(d,0),MAXD)/MAXD};
+  var out='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="days to earnings">'
+   +'<rect x="6" y="16" width="'+(W-12)+'" height="8" rx="4" fill="#1a212b"/>'
+   +'<rect x="6" y="16" width="'+(x(T1.T.windowDays)-6).toFixed(1)+'" height="8" rx="4" fill="#25465a"/>';
+  if(days!==null&&days>=0)out+='<circle cx="'+x(days).toFixed(1)+'" cy="20" r="7" fill="'+(days<=T1.T.windowDays?'#f2b441':'#5CC8FF')+'" stroke="#0b0e13" stroke-width="2"/>';
+  out+='<text x="6" y="36" font-size="9" fill="#7d8898">today</text><text x="'+x(T1.T.windowDays).toFixed(1)+'" y="10" font-size="9" fill="#7d8898" text-anchor="middle">6 wk</text></svg>';
+  return out;
 }
 
-/* ---- wiring ---- */
+/* ---------- main screen ---------- */
+function age(r){return '<div class="age'+(r.freshness==='stale'?' stale':'')+'">'+(r.freshness==='stale'?'STALE · ':'')+sd(r.as_of)+'</div>'}
+function chipFor(v){
+  var c=(v.state==='UPTREND'||v.state==='HEAVY'||v.state==='CLEAR')?'acc':(v.state==='STRESSED'||v.state==='INSIDE YOUR WINDOW')?'am':'mu';
+  return '<span class="chip '+c+'">'+esc(v.state)+(v.arrow&&v.arrow!==FL?' '+v.arrow:'')+'</span>';
+}
+function render(){
+  var R=rows(),h='',s=S.sym;
+  var tv=R.trend&&R.trend.value;
+  if(tv){
+    var ch=R.trend.value.prev?(tv.n/R.trend.value.prev-1)*100:0;
+    h+='<button class="hero" data-k="trend"><div class="hh"><span class="sym">'+esc(s)+'</span>'+chipFor(tv)+'<span class="px">'+tv.n.toFixed(2)+'</span><span class="chg'+(ch<0?' dn':'')+'">'+(ch<0?DN:UP)+' '+Math.abs(ch).toFixed(1)+'%</span></div>'
+      +lineChart(tv,340,120)+'<div class="legend"><span><i style="background:#5CC8FF"></i>price</span><span><i style="background:#c9d1dc"></i>50-day</span><span><i style="background:#c58b52"></i>200-day</span><span style="margin-left:auto'+(R.trend.freshness==='stale'?';color:var(--amber);font-weight:700':'')+'">'+(R.trend.freshness==='stale'?'STALE · ':'')+sd(R.trend.as_of)+'</span></div></button>';
+  } else h+='<div class="hero"><span class="sym">'+esc(s)+'</span><div class="note">Not enough price history for a trend (needs about a year).</div></div>';
+  h+='<div class="grid">';
+  if(R.vol){var v=R.vol.value;h+='<button class="tile" data-k="vol"><span class="lab">VOLUME</span>'+volBars(v)+'<span class="big">'+v.n.toFixed(1)+'x</span>'+chipFor(v)+age(R.vol)+'</button>'}
+  else h+='<div class="tile gap"><span class="lab">VOLUME</span><span class="chip dash">NO DATA</span></div>';
+  if(R.idx){var iv=R.idx.value;h+='<button class="tile" data-k="idx"><span class="lab">MARKET · SPY</span>'+lineChart(iv,150,64)+'<span class="big">'+esc(iv.state==='UPTREND'?'Up':iv.state==='DOWNTREND'?'Down':'Mixed')+'</span>'+chipFor(iv)+age(R.idx)+'</button>'}
+  else h+='<div class="tile gap"><span class="lab">MARKET · SPY</span><span class="chip dash">NO DATA</span></div>';
+  if(R.vix){var xv=R.vix.value;h+='<button class="tile" data-k="vix"><span class="lab">VIX</span>'+gauge(xv.n)+'<span class="big">'+xv.n.toFixed(1)+'</span>'+chipFor(xv)+age(R.vix)+'</button>'}
+  else h+='<div class="tile gap"><span class="lab">VIX</span>'+gauge(null)+'<form class="fill" data-f="vix"><input name="lvl" inputmode="decimal" placeholder="level" aria-label="VIX level"><button type="submit" aria-label="save VIX">✓</button></form></div>';
+  if(R.earn){var e=earnV(R.earn);h+='<button class="tile" data-k="earn"><span class="lab">EARNINGS</span>'+timeline(e.n)+'<span class="big">'+(e.n>=0?e.n+'d':'–')+'</span>'+chipFor(e)+age(R.earn)+'</button>'}
+  else h+='<div class="tile gap"><span class="lab">EARNINGS</span>'+timeline(null)+'<form class="fill" data-f="earn"><input type="date" name="date" aria-label="next earnings date"><button type="submit" aria-label="save date">✓</button></form></div>';
+  h+='</div>';
+  $('out').innerHTML=h;
+  Array.prototype.forEach.call(document.querySelectorAll('[data-k]'),function(n){n.addEventListener('click',function(){openSheet(n.getAttribute('data-k'),0)})});
+  Array.prototype.forEach.call(document.querySelectorAll('[data-f]'),function(n){n.addEventListener('submit',function(ev){
+    ev.preventDefault();
+    try{
+      if(n.getAttribute('data-f')==='vix')T1.ingestVix(ledger,parseFloat(n.elements.lvl.value),0,today());
+      else T1.ingestEarnings(ledger,S.sym,n.elements.date.value,today(),today());
+      $('err').textContent='';render();
+    }catch(x){$('err').textContent=x.message}
+  })});
+}
+
+/* ---------- drill-down: why, how, crossroads, history ---------- */
+var COPY={
+ trend:{name:'TREND',why:'Which way the stock has been heading for months, not days.',rule:'UPTREND: close above the 50-day average, and the 50-day above the 200-day. DOWNTREND: the reverse. Anything else is MIXED.'},
+ vol:{name:'VOLUME',why:'Heavy volume means many people acted. A move on heavy volume counts for more.',rule:'Latest volume divided by the average of the 20 days before it. 1.5x or more is HEAVY.'},
+ idx:{name:'MARKET · SPY',why:'Most stocks follow the market. SPY is a fund that tracks the S&P 500.',rule:'Same test as the stock\'s trend, run on SPY.'},
+ vix:{name:'VIX',why:'The market\'s fear gauge. High means people are paying up for protection.',rule:'You type the level. Under 15 calm. 15 to 25 normal. Over 25 stressed. A common habit, not your rule.'},
+ earn:{name:'EARNINGS',why:'A report can move a stock a lot in one night. Know if one lands inside your hold.',rule:'Days from today to the report. Your swing window is up to 42 days.'}
+};
+function dir(st){return st==='UPTREND'?1:st==='DOWNTREND'?-1:0}
+function xrows(R){
+  var t=R.trend&&R.trend.value,i=R.idx&&R.idx.value,v=R.vol&&R.vol.value,x=R.vix&&R.vix.value,e=earnV(R.earn);
+  function pill(l,txt){return '<span class="pl">'+esc(l)+' '+esc(txt)+'</span>'}
+  var out={};
+  out.ti=!t||!i?{miss:1,a:'TREND',b:'MARKET'}:{a:pill('TREND',t.arrow+' '+t.state),b:pill('MARKET',i.arrow+' '+i.state),vd:(dir(t.state)&&dir(i.state))?(dir(t.state)===dir(i.state)?'agree':'disagree'):'unclear'};
+  var vd2=v?(v.state==='HEAVY'?(v.up?1:-1):0):null;
+  out.tv=!t||!v?{miss:1,a:'TREND',b:'VOLUME'}:{a:pill('TREND',t.arrow+' '+t.state),b:pill('VOLUME',v.arrow+' '+v.state),vd:(vd2===0||!dir(t.state))?'unclear':(vd2===dir(t.state)?'agree':'disagree')};
+  out.tx=!t||!x?{miss:1,a:'TREND',b:'VIX'}:{a:pill('TREND',t.arrow+' '+t.state),b:pill('VIX',x.n.toFixed(1)+' '+x.state),vd:x.state==='STRESSED'?'flag':'ok'};
+  out.xi=!x||!i?{miss:1,a:'VIX',b:'MARKET'}:{a:pill('VIX',x.n.toFixed(1)+' '+x.state),b:pill('MARKET',i.arrow+' '+i.state),vd:(x.state==='STRESSED'&&i.state==='UPTREND')?'disagree':(x.state==='STRESSED'&&i.state==='DOWNTREND')?'agree':'unclear'};
+  out.eh=!e?{miss:1,a:'EARNINGS',b:'YOUR HOLD'}:{a:pill('EARNINGS',e.n>=0?e.n+' days':'passed'),b:pill('YOUR HOLD','up to 42 days'),vd:e.state==='INSIDE YOUR WINDOW'?'flag':e.state==='CLEAR'?'ok':'unclear'};
+  return out;
+}
+var VDW={agree:'AGREE',disagree:'DISAGREE',flag:'FLAG',ok:'CLEAR',unclear:'UNCLEAR',missing:'NEED DATA'};
+function xrHtml(o){
+  if(o.miss)return '<div class="xr"><span class="pl" style="border-style:dashed;color:var(--dim)">'+esc(o.a)+'</span><span class="sw">⇄</span><span class="pl" style="border-style:dashed;color:var(--dim)">'+esc(o.b)+'</span><span class="vd missing">NEED DATA</span></div>';
+  return '<div class="xr">'+o.a+'<span class="sw">⇄</span>'+o.b+'<span class="vd '+o.vd+'">'+VDW[o.vd]+'</span></div>';
+}
+function srcLine(r){return r?'<div class="src'+(r.freshness==='stale'?' stale':'')+'">'+(r.freshness==='stale'?'STALE · ':'')+'As of '+esc(r.as_of)+' · '+esc(r.source)+' · '+esc(r.license)+'</div>':''}
+function histHtml(h,label){
+  if(!h)return '<div class="why">No free history for this one yet.</div><div class="note">Showing a made-up number would be worse than showing none.</div>';
+  var p=h.n?Math.round(100*h.x/h.n):0,bp=h.base_n?Math.round(100*h.base_x/h.base_n):0;
+  return '<div class="hl">'+esc(label)+' · HIGHER '+h.horizon+' TRADING DAYS LATER</div>'
+   +'<div class="hx">'+h.x+' <small>of '+h.n+' days</small></div><div class="meter"><i style="width:'+p+'%"></i></div>'
+   +(h.thin?'<span class="chip am">THIN SAMPLE · ONLY '+h.n+' DAYS</span>':'')
+   +'<div class="hl">ANY DAY, FOR COMPARISON</div><div class="hx" style="font-size:22px">'+h.base_x+' <small>of '+h.base_n+' days</small></div><div class="meter base"><i style="width:'+bp+'%"></i></div>'
+   +'<div class="note">Base rates from this ticker\'s own price history, not a forecast.</div>';
+}
+function body(k,tab,R){
+  var c=COPY[k],m=tab===0?'':'';
+  if(tab===0)return '<div class="why">'+esc(c.why)+'</div>';
+  if(tab===1){
+    var r=k==='trend'?R.trend:k==='vol'?R.vol:k==='idx'?R.idx:k==='vix'?R.vix:R.earn,n='';
+    if(r){
+      var v=r.value;
+      if(k==='trend'||k==='idx')n=[['CLOSE',v.n.toFixed(2)],['50-DAY',v.fast.toFixed(2)],['200-DAY',v.slow.toFixed(2)]];
+      if(k==='vol')n=[['TODAY',(v.n*v.avg/1e6).toFixed(2)+'M'],['20-DAY AVG',(v.avg/1e6).toFixed(2)+'M'],['RATIO',v.n.toFixed(2)+'x']];
+      if(k==='vix')n=[['LEVEL',v.n.toFixed(1)],['BEFORE',v.prev?v.prev.toFixed(1):'–']];
+      if(k==='earn'){var e=earnV(r);n=[['DAYS',e.n>=0?String(e.n):'–'],['DATE',r.value.date.slice(5)]]}
+      n='<div class="nums">'+n.map(function(x){return '<div class="num"><span>'+x[0]+'</span><b>'+esc(x[1])+'</b></div>'}).join('')+'</div>';
+    }
+    var edit=(k==='vix'||k==='earn')&&r?'<button class="edit" data-edit="'+k+'">CHANGE IT</button>':'';
+    return n+'<div class="rule">'+esc(c.rule)+'</div>'+srcLine(r)+edit;
+  }
+  if(tab===2){
+    var X=xrows(R),keys=k==='trend'?['ti','tv','tx','eh']:k==='vol'?['tv','ti']:k==='idx'?['ti','xi']:k==='vix'?['tx','xi']:['eh','tx'];
+    return keys.map(function(q){return xrHtml(X[q])}).join('')+'<div class="note">Where signals agree or clash. A clash is a reason to look closer, not a verdict.</div>';
+  }
+  var h=k==='trend'?R.hT:k==='vol'?R.hV:k==='idx'?R.hI:null,lab=k==='trend'?'DAYS WITH THIS SAME TREND':k==='vol'?'DAYS WITH THIS SAME VOLUME PATTERN':'DAYS WITH THIS SAME MARKET TREND';
+  return histHtml(h&&h.value,lab)+(h?srcLine(h):'');
+}
+function openSheet(k,tab){
+  S.sig=k;S.tab=tab;var R=rows(),c=COPY[k],names=['WHY','HOW','CROSSROADS','HISTORY'];
+  var st=k==='trend'&&R.trend?R.trend.value:k==='vol'&&R.vol?R.vol.value:k==='idx'&&R.idx?R.idx.value:k==='vix'&&R.vix?R.vix.value:k==='earn'&&R.earn?earnV(R.earn):null;
+  $('card').innerHTML='<div class="ch"><span class="t">'+esc(c.name)+(k==='trend'||k==='vol'||k==='earn'?' · '+esc(S.sym):'')+'</span>'+(st?chipFor(st):'')+'<button class="x" aria-label="close" data-close="1">✕</button></div>'
+   +'<div class="tabs">'+names.map(function(n,i){return '<button data-tab="'+i+'" class="'+(i===tab?'on':'')+'">'+n+'</button>'}).join('')+'</div><div id="bd">'+body(k,tab,R)+'</div>';
+  $('sheet').className='on';
+  $('card').onclick=function(e){
+    var t=e.target;
+    if(t.getAttribute('data-close'))$('sheet').className='';
+    if(t.getAttribute('data-tab')!==null)openSheet(k,+t.getAttribute('data-tab'));
+    if(t.getAttribute('data-edit')){ledger.remove(t.getAttribute('data-edit')==='vix'?'VIX.level':S.sym+'.earnings');$('sheet').className='';render()}
+  };
+}
+$('sheet').addEventListener('click',function(e){if(e.target===$('sheet'))$('sheet').className=''});
+
+/* ---------- wiring ---------- */
 function keyBox(){
   var box=$('keybox');
-  if(SAMPLE){box.innerHTML='';return}
-  if(getKey()){box.innerHTML='';return}
-  box.innerHTML='<div class="key"><p class="sub">Prices come through your own free Twelve Data key. It stays in this browser and goes only to Twelve Data.</p><form class="row" id="kf"><input id="ki" placeholder="Paste your Twelve Data key" autocomplete="off" spellcheck="false"><button type="submit">SAVE</button></form><p class="meta"><a style="color:var(--acc)" href="https://twelvedata.com/pricing" target="_blank" rel="noopener">Get a free key</a></p></div>';
+  if(SAMPLE||getKey()){box.innerHTML='';return}
+  box.innerHTML='<div class="key"><p>Prices come through your own free Twelve Data key. It stays in this browser.</p><form class="row" id="kf"><input id="ki" placeholder="Paste your key" autocomplete="off" spellcheck="false"><button class="go" type="submit">SAVE</button></form><p><a style="color:var(--acc)" href="https://twelvedata.com/pricing" target="_blank" rel="noopener">Get a free key</a></p></div>';
   $('kf').addEventListener('submit',function(e){e.preventDefault();var v=$('ki').value.trim();if(v){setKey(v);keyBox()}});
 }
-$('banner').innerHTML=SAMPLE?'<div class="banner">SAMPLE DATA. Made-up prices for a demo. Never trade on this.</div>':'';
+$('samp').innerHTML=SAMPLE?'<span class="samp">SAMPLE DATA</span>':'';
 keyBox();
 $('f').addEventListener('submit',async function(e){
   e.preventDefault();var sym=tk($('t').value);if(!sym){$('err').textContent='Type a ticker.';return}
   $('err').textContent='Loading…';
-  try{await load(sym);$('err').textContent='';render(sym)}catch(x){$('err').textContent=x.message}
+  try{await load(sym);S.sym=sym;$('err').textContent='';render()}catch(x){$('err').textContent=x.message}
 });
 window.__am={ledger:ledger,render:render};
 })();

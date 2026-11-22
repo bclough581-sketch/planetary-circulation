@@ -59,7 +59,7 @@ t('earnings: window edges at 42 days, passed date, bad input',function(){
 });
 t('ingest writes rows with source, license and as-of from the last bar',function(){
   var l=L.Ledger(mem()),b=bars(260,function(i){return 100+i}),rows=T.ingestBars(l,'AAA',b,'SRC','LIC');
-  assert.strictEqual(rows.length,2);
+  assert.strictEqual(rows.length,4);
   var g=l.get('AAA.trend','2025-09-20');assert.strictEqual(g.as_of,b[259].d);
   assert.strictEqual(g.source,'SRC');assert.strictEqual(g.license,'LIC');
   assert.strictEqual(l.get('AAA.trend','2099-01-01').freshness,'stale');
@@ -71,3 +71,39 @@ t('manual entries carry a you-typed source and license',function(){
   assert.throws(function(){T.ingestVix(l,-1,0,'2026-11-22')});assert.throws(function(){T.ingestEarnings(l,'AAA','soon','2026-11-22','2026-11-22')});
 });
 console.log(ok+' passed');
+
+/* ---- history + series ---- */
+var ok2=0;function t2(n,fn){fn();ok2++;console.log('ok',n)}
+t2('smaSeries matches sma at the end and is null before the window fills',function(){
+  var b=bars(260,function(i){return 100+i}),s=T.smaSeries(b,50);
+  assert.strictEqual(s[48],null);assert.strictEqual(s[49],124.5);assert.strictEqual(s[259],T.sma(b,50));
+  assert.strictEqual(T.smaSeries(b,50,10).length,10);
+});
+t2('history: always-rising line is X of N = all, base rate all',function(){
+  var h=T.history(bars(600,function(i){return 100+i}),'trend');
+  assert.ok(h.n>0);assert.strictEqual(h.x,h.n);assert.strictEqual(h.base_x,h.base_n);assert.strictEqual(h.horizon,20);
+});
+t2('history: always-falling line is X = 0',function(){
+  var h=T.history(bars(600,function(i){return 1000-i}),'trend');
+  assert.strictEqual(h.x,0);assert.ok(h.n>0);
+});
+t2('history: thin flag when fewer than 30 matching days',function(){
+  var h=T.history(bars(245,function(i){return 100+i}),'trend');
+  assert.strictEqual(h.n,25);assert.strictEqual(h.thin,true);
+});
+t2('history: too little data returns null, not a guess',function(){
+  assert.strictEqual(T.history(bars(150,function(i){return 100+i}),'trend'),null);
+});
+t2('trend state on a past day never uses later bars',function(){
+  var f=function(i){return 100+i+(i%7)},A=bars(600,f),B=bars(600,f),i;
+  for(i=401;i<600;i++)B[i].c=B[i].c*((i%2&&i<599)?3:0.2);
+  var a50=T.smaSeries(A,50),a200=T.smaSeries(A,200),b50=T.smaSeries(B,50),b200=T.smaSeries(B,200);
+  assert.strictEqual(T.trendStateAt(A,400,a50,a200),T.trendStateAt(B,400,b50,b200));
+  assert.notStrictEqual(T.trendStateAt(A,599,a50,a200),T.trendStateAt(B,599,b50,b200));
+});
+t2('ingest also writes history rows into the ledger',function(){
+  var l=L.Ledger(mem());T.ingestBars(l,'AAA',bars(600,function(i){return 100+i}),'SRC','LIC');
+  assert.ok(l.has('AAA.trend.history'));assert.ok(l.has('AAA.volume.history'));
+  var r=l.get('AAA.trend','2099-01-01').value;assert.strictEqual(r.spark.length,130);assert.strictEqual(r.s200.length,130);
+});
+console.log(ok2+' more passed');
