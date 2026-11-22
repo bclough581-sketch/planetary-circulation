@@ -38,11 +38,11 @@ header,main{max-width:1180px}.layout{grid-template-columns:minmax(0,1.45fr) minm
 @media(max-width:340px){.hero{grid-template-columns:1fr}.hero-logo{width:118px;justify-self:start}}
 main{padding-top:12px}.hero{margin:12px 0;padding-bottom:12px}.hero h1{max-width:none}.hero-logo{filter:none;mix-blend-mode:screen;opacity:.96;transform-origin:center;animation:heroLogoSpin 48s linear infinite;perspective:900px}
 .logo-ring-piece,.logo-gem-piece{position:absolute;inset:0;background:url("blue-steele-logo.png") center/100% 100% no-repeat;transform-style:preserve-3d}
-.logo-ring-piece{--cx:50%;--cy:50%;--spin:28s;transform-origin:var(--cx) var(--cy);mask-image:radial-gradient(circle at var(--cx) var(--cy),transparent 19%,#000 20%,#000 29%,transparent 30%);-webkit-mask-image:radial-gradient(circle at var(--cx) var(--cy),transparent 19%,#000 20%,#000 29%,transparent 30%);animation:logoRingSpin var(--spin) linear infinite}
-.logo-ring-top{--cx:50%;--cy:35%;--spin:27s}
-.logo-ring-left{--cx:37%;--cy:64%;--spin:34s;animation-direction:reverse}
-.logo-ring-right{--cx:64%;--cy:64%;--spin:41s}
-.logo-gem-piece{mask-image:radial-gradient(circle at 50% 50%,#000 0 9%,transparent 9.5%);-webkit-mask-image:radial-gradient(circle at 50% 50%,#000 0 9%,transparent 9.5%)}
+.logo-ring-piece{--cx:50%;--cy:50%;--spin:28s;--size:31%;--inner:64%;--outer:94%;transform-origin:var(--cx) var(--cy);mask-image:radial-gradient(circle var(--size) at var(--cx) var(--cy),transparent var(--inner),#000 calc(var(--inner) + 3%),#000 var(--outer),transparent calc(var(--outer) + 3%));-webkit-mask-image:radial-gradient(circle var(--size) at var(--cx) var(--cy),transparent var(--inner),#000 calc(var(--inner) + 3%),#000 var(--outer),transparent calc(var(--outer) + 3%));animation:logoRingSpin var(--spin) linear infinite}
+.logo-ring-top{--cx:50%;--cy:35%;--spin:27s;--size:32%;--inner:66%;--outer:95%}
+.logo-ring-left{--cx:36%;--cy:64%;--spin:34s;--size:30%;--inner:66%;--outer:96%;animation-direction:reverse}
+.logo-ring-right{--cx:65%;--cy:64%;--spin:41s;--size:31%;--inner:65%;--outer:95%}
+.logo-gem-piece{mask-image:radial-gradient(circle 10% at 50% 50%,#000 0 78%,transparent 90%);-webkit-mask-image:radial-gradient(circle 10% at 50% 50%,#000 0 78%,transparent 90%)}
 @keyframes logoRingSpin{to{transform:rotate(360deg)}}@keyframes heroLogoSpin{to{transform:rotate(360deg)}}
 @media(prefers-reduced-motion:reduce){.hero-logo,.logo-ring-piece{animation:none}}
 @media(max-width:700px){main{padding-top:10px}.hero{grid-template-columns:1fr;align-items:start;gap:8px;margin:8px 0 12px;padding-bottom:14px}.hero h1{max-width:none;font-size:clamp(2rem,7vw,2.4rem)}.hero-logo{width:104px;justify-self:end;margin:0 4px -2px 0}}
