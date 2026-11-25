@@ -221,5 +221,17 @@
     "Picking markets by volume manufactured a pattern that a fresh sample erased.",
     "A placebo that is not matched to the trade can pass pure noise. Ours is matched, and was tested on synthetic noise first.",
     "A control definition once added about 0.35% of fake lift under pure noise. A null test caught it before any real data was used."
-  ]
+  ],
+  "bar": {
+    "title": "HOW HIGH THE BAR IS NOW",
+    "nextSlotK": 27,
+    "slotNote": "Next trial slot is k=27 per the FEAT1 draft. Provisional: not yet checked against the research ledger.",
+    "slices": [
+      1,
+      10,
+      20,
+      100
+    ],
+    "explain": "Every extra slice of the data is another chance to find a fake winner. So each new premise has to clear a stricter bar than the last: p-value below 0.05 divided by k times k+1. Anything that only shows up after slicing and never clears the bar on untouched data is treated as noise."
+  }
 }

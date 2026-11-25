@@ -48,6 +48,9 @@ ul{margin:6px 0;padding-left:18px;font-size:12.5px;color:var(--dim)}
 <div class="ctr" id="counters"></div>
 <p class="dim" id="counterNote"></p>
 
+<h2 id="barTitle"></h2>
+<div class="box" id="bar"></div>
+
 <h2>STILL RUNNING (PAPER, NO MONEY)</h2>
 <div id="tracks"></div>
 <p class="dim" id="trackNote"></p>
@@ -74,6 +77,16 @@ function render(d){
   $('asof').textContent='As of '+d.asof+'. Updated by hand.';
   d.counters.forEach(function(c){var b=el('div');b.appendChild(el('b',null,c[1]));b.appendChild(el('span',null,c[0]));$('counters').appendChild(b);});
   $('counterNote').textContent=d.counterNote;
+  if(d.bar){
+    var bx=$('bar'),k=d.bar.nextSlotK,a=0.05/(k*(k+1));
+    $('barTitle').textContent=d.bar.title;
+    var r1=el('div','big','Next trial must clear p < '+a.toExponential(2).replace('e-','e-')+' (slot k='+k+')');bx.appendChild(r1);
+    bx.appendChild(el('p','dim',d.bar.explain));
+    var tb2=el('table'),h2=el('tr');['Slices tried','Chance of at least one fake winner at p<0.05'].forEach(function(c){h2.appendChild(el('th',null,c));});tb2.appendChild(h2);
+    d.bar.slices.forEach(function(n){var tr=el('tr');tr.appendChild(el('td',null,String(n)));tr.appendChild(el('td',null,(100*(1-Math.pow(0.95,n))).toFixed(0)+'%'));tb2.appendChild(tr);});
+    bx.appendChild(tb2);
+    bx.appendChild(el('p','dim',d.bar.slotNote));
+  }
   d.tracks.forEach(function(t){
     var box=el('div','box');
     box.appendChild(el('div','big',t.name));

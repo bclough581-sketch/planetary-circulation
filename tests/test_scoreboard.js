@@ -16,4 +16,6 @@ const all=JSON.stringify(d).toLowerCase();
 ['buy now','guaranteed','sure thing','recommend you','you should buy','pick '].forEach(w=>ok(all.indexOf(w)<0,'no promotional/advice phrase: '+w.trim()));
 ok(all.indexOf('no edge validated')>=0,'page says no edge validated under our rules');
 ok(d.graveyard.every(g=>!/NOT AN EDGE/.test(JSON.stringify(g))),'no row labels an untested estimate NOT AN EDGE');ok(d.graveyard.filter(g=>/range/.test(g.numbers)).every(g=>/\d\d% range/.test(g.numbers)),'every row that shows a range states its level');
+ok(d.bar&&Number.isInteger(d.bar.nextSlotK)&&d.bar.nextSlotK>=27&&d.bar.slices.every(n=>n>=1)&&d.bar.explain&&d.bar.slotNote,'edge bar block has slot k, slice list, explanation and provisional note');
+ok(Math.abs(0.05/(27*28)-6.613756613756614e-05)<1e-12&&Math.abs(0.05/(26*27)-7.122507122507123e-05)<1e-12,'alpha_k = 0.05/(k(k+1)) matches the ledger values for k=26 and k=27');
 console.log(bad?'FAILED':'ALL PASS');process.exit(bad?1:0)
