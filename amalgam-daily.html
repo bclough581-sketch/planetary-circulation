@@ -525,8 +525,16 @@ function publishedSyms(){
   if(p.date!==(S.mdate||MARKET.asof)) return [];   /* never one session's picks beside another's prices */
   return parseSyms(p.syms.join(' '));
 }
+/* The real account size rides in the push link, never in the published file, which is public.
+   Applied before anything is sized, and saved, so later opens without the push use it too. */
+async function applyAcct(a){
+  if(!a||!(a.netLiq>0)||!(a.cash>=0)) return;
+  S.acct={netLiq:a.netLiq,cash:Math.min(a.cash,a.netLiq),sample:false};
+  await saveAcct();
+}
 async function initExt(){
   var hp=pushParse();
+  if(hp&&hp.acct) await applyAcct(hp.acct);
   if(hp){ await savePush(hp); }
   else { hp=await savedPush(); if(hp&&hp.date!==(S.mdate||MARKET.asof)) hp=null; }   /* no stale saved push */
   if(hp){ applyPush(hp); return; }
@@ -1001,13 +1009,21 @@ function pushParse(){
   var h=''; try{ h=String(location.hash||'').replace(/^#/,''); }catch(e){}
   if(!/^\d{8}-/.test(h)){ var q=''; try{ q=String(location.search||''); }catch(e){} var m=/[?&]h=([^&]+)/.exec(q); h=m?m[1]:''; }
   var t=h.split('-'); if(t.length<5||!/^\d{8}$/.test(t[0])) return null;
-  var foc=null; if(t.length>=3 && t[t.length-2]==='f'){ foc=t[t.length-1]; t=t.slice(0,-2); }
+  /* Tails, in any order: -f-SYM focuses a card, -a-NETLIQCENTS-CASHCENTS carries the real account
+     size. Tags are lowercase, so they can never be mistaken for a ticker. */
+  var foc=null, acct=null;
+  for(;;){
+    if(t.length>=4 && t[t.length-3]==='a'){ var nl=+t[t.length-2]/100, ca=+t[t.length-1]/100;
+      if(nl>0&&ca>=0) acct={netLiq:nl,cash:Math.min(ca,nl)};
+      t=t.slice(0,-3); continue; }
+    if(t.length>=3 && t[t.length-2]==='f'){ foc=t[t.length-1]; t=t.slice(0,-2); continue; }
+    break; }
   var out=[]; for(var i=1;i+3<t.length&&out.length<3;i+=4){
     var sym=t[i].replace(/9/g,'.'), sh=+t[i+1], en=+t[i+2]/100, st=+t[i+3]/100;
     if(!/^[A-Z.]{1,6}$/.test(sym)||!(sh>=1)||!(en>0)||!(st>0)||st>=en) return null;
     out.push({sym:sym,shares:sh,entry:en,stop:st,risk:sh*(en-st),cash:sh*en,pct:(en-st)/en*100}); }
   if(!out.length) return null;
-  var d=t[0]; return {date:d.slice(0,4)+'-'+d.slice(4,6)+'-'+d.slice(6,8),picks:out,focus:foc?foc.replace(/9/g,'.'):null};
+  var d=t[0]; return {date:d.slice(0,4)+'-'+d.slice(4,6)+'-'+d.slice(6,8),picks:out,focus:foc?foc.replace(/9/g,'.'):null,acct:acct};
 }
 function render(){
   var P=(S.phase==='ready'||(S.phase==='scan'&&S.extReady))?picks():[];
