@@ -110,7 +110,7 @@ button{font-family:inherit;cursor:pointer}
 var TEST = window.__TEST__ || {};
 var UNI = [['AAPL','Apple'],['MSFT','Microsoft'],['NVDA','Nvidia'],['AMZN','Amazon'],['GOOGL','Alphabet'],['META','Meta'],['AVGO','Broadcom'],['LLY','Eli Lilly'],['JPM','JPMorgan'],['V','Visa'],['XOM','Exxon Mobil'],['LMT','Lockheed Mart.'],['COST','Costco'],['UNH','UnitedHealth'],['HD','Home Depot'],['CAT','Caterpillar'],['GE','GE Aerospace'],['NFLX','Netflix'],['AMD','AMD'],['CRM','Salesforce'],['ORCL','Oracle'],['PLTR','Palantir'],['IONQ','IonQ'],['RKLB','Rocket Lab']];
 var NAMES = {}; UNI.forEach(function(u){ NAMES[u[0]] = u[1]; });
-var SERVER = 'Twelve Data';
+var SERVER = 'published data';
 var S = { dial:null, mh:5, ext:null, extSyms:[], extReady:false, extBad:[], ldText:'', ldBusy:false, phase:'boot', msg:'', prog:{n:0,t:0}, date:null, spy:null, rows:[], acct:{netLiq:3333,cash:3300,sample:true}, log:[], seen:{}, open:null, step:0, skipFor:null, ticket:null, panel:null, note:'', errors:[], notes:[], bars:{}, ibars:{}, lkM:{}, lkSym:'', lkText:'', lkBusy:'', lkErr:'', recent:[], tf:'D', chart:null, crange:20, chartErr:'', noteText:'', noteSym:'', flash:'', dbOk:false, mcpOk:false, picksDocs:[], scoreMap:{}, scoring:'' };
 var db = null, mcp = null, calls = [];
 
@@ -121,7 +121,7 @@ var LS={
   del:function(k){ try{ localStorage.removeItem(k); }catch(e){} },
   keys:function(){ var o=[]; try{ for(var i=0;i<localStorage.length;i++) o.push(localStorage.key(i)); }catch(e){} return o; }
 };
-var TDKEY='amg-cfg-tdkey', MEM={};
+var MEM={};
 function localDb(){
   function vol(p){ return p.indexOf('bars/')===0; }
   function snap(p,v){ return {exists:(v!==undefined&&v!==null), id:p, data:function(){ return v; }}; }
@@ -134,13 +134,19 @@ function localDb(){
     collection:function(c){ var b=q(c,null); return { orderBy:function(f,dir){ return q(c,f,dir); }, limit:b.limit }; }
   };
 }
-function tdMcp(){
-  var k=LS.get(TDKEY); if(!k) return null;
-  return { callTool:async function(server,tool,args){
-    var u='https://api.twelvedata.com/time_series?symbol='+encodeURIComponent(args.symbol)+'&interval='+encodeURIComponent(args.interval||'1day')+'&outputsize='+(args.outputsize||260)+'&apikey='+encodeURIComponent(k);
-    var r=await fetch(u), j=await r.json(); if(j && j.status==='error') throw new Error(String(j.message||'price service error')); return j; } };
+var MARKET=null, MARKET_P=null;
+function loadMarket(){
+  if(!MARKET_P) MARKET_P=fetch('amalgam-market.json',{cache:'no-store'}).then(function(r){ if(!r.ok) throw new Error('The market data file is not published yet'); return r.json(); }).then(function(j){ if(!j||!j.bars||!j.bars.SPY) throw new Error('The market data file is empty'); MARKET=j; return j; });
+  return MARKET_P.catch(function(e){ MARKET_P=null; throw e; });
 }
-var claude={ use:async function(n){ return n==='db'?localDb():n==='mcp'?tdMcp():null; } };
+function fileMcp(){
+  return { callTool:async function(server,tool,args){
+    if((args.interval||'1day')!=='1day') throw new Error('Intraday candles are not published');
+    var j=await loadMarket(), b=j.bars[args.symbol]; if(!b||!b.length) throw new Error('No price rows for '+args.symbol+' in the published data');
+    var rows=b.slice(-(args.outputsize||260)).reverse().map(function(r){ return {datetime:r[0],open:r[1],high:r[2],low:r[3],close:r[4],volume:r[5]}; });
+    return {values:rows,status:'ok'}; } };
+}
+var claude={ use:async function(n){ return n==='db'?localDb():n==='mcp'?fileMcp():null; } };
 
 function $(id){ return document.getElementById(id); }
 function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
@@ -212,7 +218,7 @@ async function fetchBars(sym,iv,size){
   for(var attempt=0; attempt<4; attempt++){
     var win = TEST.win||61000, now=Date.now();
     calls = calls.filter(function(t){ return now-t<win; });
-    if(calls.length>=8){ await sleep(win-(now-calls[0])+300); }
+    if(calls.length>=1e9){ await sleep(win-(now-calls[0])+300); }
     calls.push(Date.now());
     try{
       var r = await mcp.callTool(SERVER,'get_time_series',{symbol:sym,interval:iv||'1day',outputsize:size||260},{cache:false});
@@ -238,10 +244,10 @@ async function run(){
   mcp = await claude.use('mcp'); db = await claude.use('db');
   S.mcpOk=!!mcp; S.dbOk=!!db;
   if(db){ await loadAcct(); await loadRecent(); await loadLog(); }
-  if(!mcp){ try{ await initExt(); }catch(e){} if(!S.date) S.date=new Date().toISOString().slice(0,10); S.phase='ready'; render(); ensurePicksDoc(); return; }
+  if(false){ try{ await initExt(); }catch(e){} if(!S.date) S.date=new Date().toISOString().slice(0,10); S.phase='ready'; render(); ensurePicksDoc(); return; }
   try{
     S.msg='Reading the market'; render();
-    var spyBars = await fetchBars('SPY'); S.bars['SPY']=spyBars;
+    var spyBars = await fetchBars('SPY'); S.bars['SPY']=spyBars; S.mkt={asof:MARKET.asof,generated:MARKET.generated};
     var n=spyBars.length, last=spyBars[n-1]; S.date=last.d; S.mdate=last.d;
     var spy20=spyBars[n-1].c/spyBars[n-21].c-1;
     S.spy = metrics('SPY',spyBars,0); if(S.spy) S.spy.r20=spy20;
@@ -258,7 +264,7 @@ async function run(){
     S.rows=rows;
     if(db && rows.length){ try{ await db.doc('scan/'+S.mdate).set({date:S.mdate,spy:S.spy,rows:rows,ts:new Date().toISOString()}); }catch(e){ S.errors.push('Could not save today\'s scan.'); } }
     S.phase = rows.length ? 'ready' : 'fail'; render(); if(rows.length){ afterReady(); enrichPush(); }
-  }catch(e){ S.phase='fail'; S.msg=((e&&e.message)||'Could not load prices'); S.code=e&&e.code; render(); }
+  }catch(e){ S.mktErr=((e&&e.message)||'').slice(0,80); try{ await initExt(); }catch(x){} if(!S.date) S.date=new Date().toISOString().slice(0,10); S.phase='ready'; render(); ensurePicksDoc(); }
 }
 
 /* ---------- log ---------- */
@@ -402,7 +408,7 @@ async function doLookup(sym){
     if(db){ try{ await db.doc('settings/recent').set({list:S.recent}); }catch(e){} }
     S.lkBusy=''; S.panel=null; S.chart=sym; S.lkSym=sym; S.tf='D'; S.chartErr=''; S.lkText=''; render();
   }catch(e){
-    S.lkBusy=''; S.lkErr=((e&&e.message)==='short')?sym+' has too little price history to read.':'Could not read '+sym+'. Check the symbol. US stocks and ETFs work.'; render();
+    S.lkBusy=''; S.lkErr=((e&&e.message)==='short')?sym+' has too little price history to read.':sym+' is not in the published data. It holds the 24 watched names, SPY and recent picks.'; render();
   }
 }
 function standsCard(sym){
@@ -784,8 +790,8 @@ function steps(c){
     ctr: z.sized?'Sized down to '+z.sh+' shares to stay under your cash ceiling.':(z.pct>6?'Wide line, so a small position. That is the trade-off.':'A gap past the line costs more than planned. Your size already allows for it.') };
   var br=breadth();
   var c3={ head:'The backdrop.', pts:[
-    S.spy?'Market trend is '+marketState().toLowerCase():'Market data is off, so there is no backdrop reading',
-    S.spy?br.n+' of '+br.t+' watched stocks are above their 50-day averages':'Add a Twelve Data key in ACCOUNT to turn it on',
+    S.spy?'Market trend is '+marketState().toLowerCase():'The market data file did not load, so there is no backdrop reading',
+    S.spy?br.n+' of '+br.t+' watched stocks are above their 50-day averages':'The market data file did not load',
     'Earnings date not checked yet. Take ten seconds to look before you buy.' ],
     ctr:'Prices are from the last close. The real entry may differ a little.' };
   if(m.fromPush && m.rsi==null){ a={ head:'Tonight\'s scan picked this.', pts:['Ranked on the last close of '+esc(S.pdate||'')+', in an uptrend, with the entry gates passed','Entry $'+c.entry.toFixed(2)+' for '+z.sh+' shares','Open the chart for the picture (needs market data)'], ctr:'The push carries entry, stop and size. Gate detail needs market data.' }; }
@@ -845,7 +851,7 @@ function sheetHtml(P){
   if(S.chart){
     var cn=(S.rows.filter(function(r){return r.sym===S.chart;})[0]||{}).name||(NAMES[S.chart]||S.chart), ready=!!curBars(S.chart), cb=curBars(S.chart);
     h+='<div class="scrim" data-act="cclose"></div><div class="sheet" style="top:12px;padding:12px 12px 16px;gap:8px"><div class="sh"><div class="sn">'+esc(cn)+'<span>'+esc(S.chart)+'</span></div><button class="x" data-act="cclose" aria-label="Close">&#10005;</button></div>'+
-     '<div class="chips" style="grid-template-columns:repeat(4,minmax(0,1fr))">'+[['D','DAILY'],['1h','1 HOUR'],['15min','15 MIN'],['5min','5 MIN']].map(function(r){ return '<button class="chip3'+(S.tf===r[0]?' cur':'')+'" data-act="tf" data-t="'+r[0]+'">'+r[1]+'</button>'; }).join('')+'</div>'+
+     '<div class="chips" style="grid-template-columns:repeat(4,minmax(0,1fr))">'+[['D','DAILY']].map(function(r){ return '<button class="chip3'+(S.tf===r[0]?' cur':'')+'" data-act="tf" data-t="'+r[0]+'">'+r[1]+'</button>'; }).join('')+'</div>'+
      (S.tf==='D'?'<div class="chips">'+[[20,'20 DAYS'],[60,'60 DAYS'],[126,'6 MONTHS']].map(function(r){ return '<button class="chip3'+(S.crange===r[0]?' cur':'')+'" style="min-height:36px" data-act="crange" data-r="'+r[0]+'">'+r[1]+'</button>'; }).join('')+'</div>':'')+
      (ready?'<div id="rd" style="line-height:1.3;color:#c9d1dc;min-height:0;font-variant-numeric:tabular-nums">'+readout(S.chart,cb.length-1)+'</div>'+chartHtml(S.chart)+readCard(S.chart)+(S.lkSym===S.chart?standsCard(S.chart):'')+
        '<div style="display:flex;gap:10px;font-size:12px;font-weight:800;color:#8591a2;flex-wrap:wrap"><span style="color:#f2b441">&#9632; 20-'+(S.tf==='D'?'DAY':'BAR')+' AVERAGE (SHORT-TERM TREND)</span><span style="color:#9aa6b6">&#9632; 50-'+(S.tf==='D'?'DAY':'BAR')+' AVERAGE (MEDIUM-TERM TREND)</span><span style="color:#ff6b6b">&#9632; EXIT LINE (WHERE THE PLAN IS WRONG)</span></div>'+
@@ -897,7 +903,7 @@ function sheetHtml(P){
   }
   if(S.panel==='lookup'){
     h+='<div class="scrim" data-act="pclose"></div><div class="sheet" style="top:auto;min-height:50%"><div class="sh"><div class="sn">Look up a ticker</div><button class="x" data-act="pclose" aria-label="Close">&#10005;</button></div>'+
-     '<div style="font-size:13px;color:#9aa6b6;line-height:1.4">Type any US stock or ETF symbol. You get an honest reading of where it stands. Not a buy or sell call. Nothing is logged.</div>'+
+     '<div style="font-size:13px;color:#9aa6b6;line-height:1.4">Type a watched name or a recent pick. You get an honest reading of where it stands. Not a buy or sell call. Nothing is logged.</div>'+
      '<input class="nt" id="lk" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text" maxlength="6" placeholder="SYMBOL, like AAPL" style="font-size:26px;font-weight:800;letter-spacing:.08em;text-transform:uppercase" value="'+esc(S.lkText)+'">'+
      (S.lkErr?'<div class="banner" style="margin:0">'+esc(S.lkErr)+'</div>':'')+
      (S.lkBusy?'<div class="prog" style="margin:0">Reading '+esc(S.lkBusy)+'<div class="bar"><i style="width:60%"></i></div></div>':'<button class="bt buy" data-act="lkgo" style="min-height:54px">GET THE READING</button>')+
@@ -930,10 +936,7 @@ function sheetHtml(P){
   if(S.panel==='acct'){
     h+='<div class="scrim" data-act="pclose"></div><div class="sheet"><div class="sh"><div class="sn">Account figures</div><button class="x" data-act="pclose" aria-label="Close">&#10005;</button></div><div style="font-size:13px;color:#9aa6b6;line-height:1.4">Used only when you look up a name or load symbols by hand. Pushed picks arrive already sized. Nothing here is sent to Schwab.</div>'+
      '<div class="inp"><label for="nl">Net liquidation value</label><input id="nl" inputmode="decimal" value="'+S.acct.netLiq+'"></div><div class="inp"><label for="ca">Cash</label><input id="ca" inputmode="decimal" value="'+S.acct.cash+'"></div>'+
-     '<button class="bt" style="background:#ff3b3b;color:#07090c;border-color:#ff3b3b;font-size:14px" data-act="saveacct">SAVE</button>'+
-     '<div class="sec" style="margin-top:6px">MARKET DATA</div><div style="font-size:13px;color:#9aa6b6;line-height:1.4">Dials, charts, lookup and scoring read prices from Twelve Data with your own key. The key stays on this phone and is never sent anywhere else. Status: <b style="color:'+(LS.get(TDKEY)?'#2fd47a':'#f2b441')+'">'+(LS.get(TDKEY)?'KEY SET':'NOT SET')+'</b></div>'+
-     '<input class="nt" id="tdk" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Paste Twelve Data key" style="font-size:16px">'+
-     '<div class="row2"><button class="bt buy" style="min-height:46px" data-act="tdsave">SAVE KEY</button><button class="bt skip" style="min-height:46px" data-act="tdclear">REMOVE KEY</button></div></div>';
+     '<button class="bt" style="background:#ff3b3b;color:#07090c;border-color:#ff3b3b;font-size:14px" data-act="saveacct">SAVE</button></div>';
   }
   return h;
 }
@@ -963,12 +966,12 @@ function render(){
   if(S.phase==='scan'){ var pc=Math.round(S.prog.n/S.prog.t*100); h+='<div class="prog"><b>Reading today\'s market.</b> '+S.prog.n+' of '+S.prog.t+' stocks. First open of the day takes a few minutes. After that it is instant on this phone.<div class="bar"><i style="width:'+pc+'%"></i></div></div>'; }
   if(S.ldBusy && !S.panel) h+='<div class="prog">Reading the picks.</div>';
   if(S.scoring) h+='<div class="prog">'+esc(S.scoring)+'. This runs once a day in the background.</div>';
-  if(S.phase==='nomcp') h+='<div class="banner">This page needs your Twelve Data connector to read prices. Open it in the Claude app or claude.ai, signed in, with Twelve Data connected.<br><br><button class="mini2" data-act="retry">TRY AGAIN</button></div>';
   if(S.phase==='fail') h+='<div class="banner">Could not read prices'+(S.msg?': '+esc(S.msg):'')+'.<br><br><button class="mini2" data-act="retry">TRY AGAIN</button></div>';
+  if(S.phase==='ready' && S.mkt && (Date.now()-Date.parse(S.mkt.generated))>36*3600*1000) h+='<div class="banner">Market data is from '+esc(S.mkt.asof)+' and was last updated '+esc(S.mkt.generated.slice(0,16).replace('T',' '))+'. Tonight\'s update may not have run.</div>';
   if(S.phase==='ready'){
     var b=breadth(), ms=marketState(), sg=signals(), dec=S.log.filter(function(l){return l.date===S.date;}).length;
     var heat=S.spy?Math.round(S.spy.rsi):50;
-    if(!S.spy){ h+=picksBlock(P)+meterHtml()+'<div class="banner" style="border-color:#3a4658;color:#9aa6b6"><b>Market data is off.</b> The dials, market reading, charts, lookup and scoring need a Twelve Data key. Add it under ACCOUNT. Picks, BUY and SKIP, notes and the log work without it.</div>'; }
+    if(!S.spy){ h+=picksBlock(P)+meterHtml()+'<div class="banner">Could not load the market data file'+(S.mktErr?': '+esc(S.mktErr):'')+'.<br><br><button class="mini2" data-act="retry">TRY AGAIN</button></div>'; }
     else h+=hudHtml(dec,P.length,P)+picksBlock(P)+meterHtml()+'<div class="hd"><span class="sec">FULL INSTRUMENTS</span><span class="st">TAP ANY GAUGE FOR THE WHY</span></div>'+clusterHtml()+
       '<div class="hd"><span class="sec">3 WARNINGS</span></div><div class="list">'+sigRows(sg.w,true)+'</div><div class="hd"><span class="sec">3 POSITIVES</span></div><div class="list">'+sigRows(sg.p,false)+'</div>'+
       (S.errors.length?'<div class="banner" style="margin-top:12px;border-color:#3a4658;color:#9aa6b6">'+S.errors.slice(-3).map(esc).join('<br>')+'</div>':'');
@@ -1025,8 +1028,6 @@ document.addEventListener('click',function(e){
   else if(act==='crange'){ S.crange=+t.getAttribute('data-r'); }
   else if(act==='csv'){ exportCsv(); return; }
   else if(act==='csvcopy'){ copyCsv(); return; }
-  else if(act==='tdsave'){ var kv=(($('tdk')||{}).value||'').trim(); if(kv.length>=8){ LS.set(TDKEY,kv); S.panel=null; S.errors=[]; S.ext=null; S.extReady=false; S.mdate=null; run(); return; } }
-  else if(act==='tdclear'){ LS.del(TDKEY); S.panel=null; S.spy=null; S.rows=[]; S.bars={}; S.ibars={}; run(); return; }
   else if(act==='note'){ S.panel='note'; }
   else if(act==='loadp'){ S.panel='load'; }
   else if(act==='meter'){ S.panel='meter'; }
