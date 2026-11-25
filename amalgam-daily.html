@@ -515,11 +515,23 @@ async function enrichPush(){
   if(any) render();
   recordCompare();
 }
+/* ---------- tonight's picks from the published market file (no link, no typing) ----------
+   Symbols only. That file is public, and a share count or risk figure would give the account's
+   size away, because the sizing rule risks 3% of net liquidation value per trade. The page sizes
+   them here from the account it already holds, so the cards also show real gate results. */
+function publishedSyms(){
+  var p=MARKET&&MARKET.picks;
+  if(!p||!p.syms||!p.syms.length) return [];
+  if(p.date!==(S.mdate||MARKET.asof)) return [];   /* never one session's picks beside another's prices */
+  return parseSyms(p.syms.join(' '));
+}
 async function initExt(){
   var hp=pushParse();
-  if(hp){ await savePush(hp); } else { hp=await savedPush(); }
+  if(hp){ await savePush(hp); }
+  else { hp=await savedPush(); if(hp&&hp.date!==(S.mdate||MARKET.asof)) hp=null; }   /* no stale saved push */
   if(hp){ applyPush(hp); return; }
   var syms=urlSyms();
+  if(!syms.length) syms=publishedSyms();
   if(syms.length){ await saveExt(syms); }
   else if(db){ try{ var d=await db.doc('ext/'+S.date).get(); if(d.exists&&d.data().syms) syms=parseSyms(d.data().syms.join(' ')); }catch(e){} }
   if(syms.length) await loadExt(syms);
