@@ -932,6 +932,7 @@ function sheetHtml(P){
      '<div class="cp"><b>BEST VALUE BY THE NUMBERS</b><br>'+esc(best.m.name)+' ('+esc(best.m.sym)+'): '+best.z.per.toFixed(1)+' points per $100 risked, using '+money(best.z.cash)+' of cash.</div><div class="cp"><b>REMEMBER</b><br>Value is a ratio of what has happened so far. It is not a forecast. It breaks ties. It does not make the call.</div></div>';
   }
   if(S.panel==='math'){ h+=mathHtml(); }
+  if(S.panel==='race'){ h+=raceHtml(); }
   if(S.panel==='dial'){ h+=dialPanelHtml(); }
   if(S.panel==='meter'){
     var M=meterCalls(S.mh), f1=function(v){ return v===null?'-':(v>0?'+':'')+v.toFixed(1); };
@@ -1002,6 +1003,35 @@ function sheetHtml(P){
   }
   return h;
 }
+/* The shadow race: four rankers pick the same day, nothing is traded, the ledger decides later.
+   Lane 4 is a seeded random draw from the same pool, and it is the one that matters. Without it
+   every lane looks good in a rising market. Petunia scores each pick against SPY at 5, 10 and 20
+   days and publishes the running excess; the page only displays what it is given. */
+var LANE_NAME = {gates:'YOUR GATES', mom12_1:'12-MONTH MOMENTUM', pct52w:'NEAR 52-WEEK HIGH', random:'RANDOM'};
+var LANE_WHY = {gates:'The live cards. Your three gates, tie-broken by 20-day strength.',
+  mom12_1:'Last 12 months of return, skipping the most recent month.',
+  pct52w:'How close the price sits to its highest close of the past year.',
+  random:'A coin flip from the same pool. The lane every other lane has to beat.'};
+function raceHtml(){
+  var R=MARKET&&MARKET.race;
+  if(!R||R.asof!==(S.mdate||MARKET.asof))
+    return '<div class="scrim" data-act="pclose"></div><div class="sheet"><div class="sh"><div class="sn">The race</div><button class="x" data-act="pclose" aria-label="Close">&#10005;</button></div><div class="cp">No race recorded for this session yet.</div></div>';
+  function pct(v){ return v===null||v===undefined?'&ndash;':(v>0?'+':'')+v.toFixed(2); }
+  var rows=(R.lanes||[]).map(function(l){
+    var s=(R.summary||{})[l]||{}, picks=((R.slate||{})[l]||[]);
+    return '<div class="sc7" style="border-bottom:1px solid #1c232d;padding-bottom:6px">'+
+      '<div class="tl" style="text-align:left;font-weight:800;color:'+(l==='random'?'#f2b441':'#c9d1dc')+'">'+LANE_NAME[l]+'</div>'+
+      '<div class="tc">'+(s.n||0)+'</div><div class="tc">'+pct(s.x5)+'</div><div class="tc">'+pct(s.x10)+'</div>'+
+      '<div class="tc">'+pct(s.x20)+'</div><div class="tc" style="font-size:10px">'+(s.picks||0)+'</div><div class="tc"></div></div>'+
+      '<div class="ln" style="font-size:12px;color:#9aa6b6;margin:2px 0 10px">'+esc(picks.join('  '))+'<br><span style="color:#6f7b8a">'+LANE_WHY[l]+'</span></div>';
+  }).join('');
+  var closed=(R.lanes||[]).reduce(function(a,l){ return a+(((R.summary||{})[l]||{}).n||0); },0);
+  return '<div class="scrim" data-act="pclose"></div><div class="sheet"><div class="sh"><div class="sn">The race</div><button class="x" data-act="pclose" aria-label="Close">&#10005;</button></div>'+
+    '<div style="font-size:13px;color:#9aa6b6;line-height:1.4">Four ways of picking, same day, same pool, no money on any of them. Numbers are average points ahead of the market (SPY) after 5, 10 and 20 trading days. The one to watch is RANDOM. Anything that cannot beat it is not picking, it is guessing.</div>'+
+    '<div class="sc7"><div></div><div class="th">DONE</div><div class="th">5D</div><div class="th">10D</div><div class="th">20D</div><div class="th" style="font-size:9px">PICKS</div><div class="th"></div></div>'+rows+
+    '<div class="cp"><b>READ THIS FIRST</b><br>'+(closed<60?'Far too early. '+closed+' picks have finished 20 days across all four lanes, and '+R.sessions+' session'+(R.sessions===1?'':'s')+' recorded. Separating these lanes takes months, not days. Any lead you see now is noise.':'Compare every lane with RANDOM, not with each other. A lane only matters if it is clearly ahead of the coin flip.')+'</div>'+
+    noEdgeNote()+'</div>';
+}
 /* E5: the honest limit. One wording, shown under the cards and on the scoreboard. The gate
    stack failed its sealed 2018-2021 hold-out on 2026-10-15 and 26 preregistered premises have
    been tested with none passing, so the cards are a record of decisions, not proof of a method. */
@@ -1011,7 +1041,7 @@ function noEdgeNote(){
     'tested with none passing. These cards are a disciplined way to record decisions, not evidence '+
     'that the method works.</div>';
 }
-function picksBlock(P){ return '<div class="hd"><span class="sec">'+(S.ext?'TONIGHT\'S PICKS':'TODAY\'S PICKS')+'</span><span style="display:flex;gap:6px"><button class="mini2" data-act="cmp"'+(P.length?'':' disabled')+'>COMPARE</button><button class="mini2" data-act="math">HOW PICKED</button></span></div>'+
+function picksBlock(P){ return '<div class="hd"><span class="sec">'+(S.ext?'TONIGHT\'S PICKS':'TODAY\'S PICKS')+'</span><span style="display:flex;gap:6px"><button class="mini2" data-act="cmp"'+(P.length?'':' disabled')+'>COMPARE</button><button class="mini2" data-act="math">HOW PICKED</button><button class="mini2" data-act="race">RACE</button></span></div>'+
       (P.length&&P[0].met!==null&&P[0].met<3?'<div class="hp-note" style="margin:0 14px 8px"><b>NO CLEAN PICK TODAY</b><br>Card 1 passed '+P[0].met+' of 3 gates. Sim only. A real-money entry waits for 3 of 3. The cards stay so the sim keeps logging.</div>':'')+(P.length?'<div class="cards">'+P.map(cardHtml).join('')+'</div>':'<div class="nopick"><b>No clean setup today.</b><br>Nothing in the watched stocks passed the gates and fit your size. That is a real answer. Doing nothing costs nothing.</div>')+
     (S.extSyms.length?'<div class="st" style="margin:6px 2px 0;text-align:left">TONIGHT\'S LIST: '+esc(S.extSyms.join('  '))+(S.extBad.length?'. NOT SHOWN: '+esc(S.extBad.join(', ')):'')+'</div>':'')+
     '<div style="margin:8px 14px 0">'+noEdgeNote()+'</div>'; }
@@ -1152,6 +1182,7 @@ document.addEventListener('click',function(e){
   else if(act==='tback'){ S.open=S.ticket; S.step=2; S.ticket=null; }
   else if(act==='confirm'){ c=P[S.ticket]; record(c,'buy','',S.note.trim()); return; }
   else if(act==='cmppick'){ var cp=P[i]; if(cp){ var cs=(S.seen[cp.m.sym]||[false,false,false]).slice(); cs[0]=true; S.seen[cp.m.sym]=cs; S.panel=null; S.open=i; S.step=0; S.note=''; } }
+  else if(act==='race'){ S.panel='race'; }
   else if(act==='cmp'||act==='math'||act==='log'||act==='acct'||act==='score'){ S.panel=act; if(act==='cmp') recordCompare(); }
   else if(act==='pclose'){ S.panel=null; }
   else if(act==='chart'){ openChart(P[i].m.sym); return; }
