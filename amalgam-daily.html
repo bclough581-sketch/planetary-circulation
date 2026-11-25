@@ -93,6 +93,7 @@ button{font-family:inherit;cursor:pointer}
 .tc{background:#0d0f13;border:1px solid #3a1518;border-radius:10px;padding:8px 2px;text-align:center;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;min-height:44px}.tc.best{background:#ff3b3b;color:#07090c;border-color:#ff3b3b}
 .tl{font-size:10px;font-weight:800;letter-spacing:.06em;color:#9aa6b6;display:flex;align-items:center;line-height:1.2}
 .th{font-size:12px;font-weight:800;color:#ff3b3b;text-align:center}
+button.th,button.tc{font-family:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}button.th{background:none;border:0;min-height:44px;padding:0}button.tc.best{color:#07090c}
 .ln{font-size:13px;line-height:1.45;color:#c9d1dc;padding:7px 0;border-bottom:1px solid #1c232d}
 .rl{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:8px 0;border-bottom:1px solid #1c232d}.rl b{letter-spacing:.08em;font-size:11px;color:#2fd47a;flex:none}.rl b.chk{color:#f2b441}.rl b.no{color:#ff3b3b}
 .kv{display:flex;justify-content:space-between;font-size:15px;padding:7px 0;border-bottom:1px solid #1c232d}.kv span:first-child{color:#9aa6b6}.kv b{font-weight:800}
@@ -237,7 +238,8 @@ async function loadAcct(){ try{ var d=await db.doc('settings/account').get(); if
 async function loadNotes(){ try{ var q=await db.collection('notes').orderBy('ts','desc').limit(200).get(); S.notes=q.docs.map(function(d){return d.data();}); }catch(e){} }
 async function saveNote(keepSheet){ var t=S.noteText.trim(); if(!t) return; var doc={date:S.date||'',text:t,sym:S.noteSym||'',ts:new Date().toISOString(),mode:'sim'}; S.notes.unshift(doc); S.noteText=''; S.noteSym=''; if(!keepSheet) S.panel=null; render(); if(db){ try{ await db.doc('notes/'+doc.ts.replace(/[:.]/g,'-')).set(doc); }catch(e){ S.errors.push('Note not saved.'); render(); } } }
 
-async function loadLog(){ await loadNotes(); try{ var q=await db.collection('log').orderBy('ts','desc').limit(300).get(); S.log=q.docs.map(function(d){return d.data();}); }catch(e){ S.errors.push('Could not read the saved log.'); } }
+async function loadLog(){ await loadNotes(); try{ var q=await db.collection('log').orderBy('ts','desc').limit(300).get(); S.log=q.docs.map(function(d){return d.data();}); }catch(e){ S.errors.push('Could not read the saved log.'); }
+  try{ var cq=await db.collection('compare').orderBy('ts','desc').limit(300).get(); S.cmpLog=cq.docs.map(function(d){return d.data();}); }catch(e){} }
 async function afterReady(){ await ensurePicksDoc(); await scoreAll(); }
 async function run(){
   S.phase='load'; render();
@@ -469,6 +471,7 @@ async function enrichPush(){
   for(var i=0;i<S.ext.length;i++){ var c=S.ext[i]; if(!c.m.fromPush) continue;
     try{ var b=await loadBarsFor(c.m.sym), m=metrics(c.m.sym,b,sp); if(m){ c.m=m; c.met=(m.g1==='met')+(m.g2==='met')+(m.g3==='met'); c.cl=(m.g1==='close')+(m.g2==='close')+(m.g3==='close'); c.score=c.met*2+c.cl; c.z.per=m.rs/c.z.risk*100; any=true; } }catch(e){} }
   if(any) render();
+  recordCompare();
 }
 async function initExt(){
   var hp=pushParse();
@@ -859,10 +862,10 @@ function sheetHtml(P){
       :(S.chartErr?'<div class="banner">'+esc(S.chartErr)+'<br><br><button class="mini2" data-act="tf" data-t="'+S.tf+'">TRY AGAIN</button></div>':'<div class="prog">Loading candles<div class="bar"><i style="width:60%"></i></div></div>'))+'</div>';
   }
   if(S.panel==='cmp'){
-    var cm=P.map(function(c){return c;}), best=cm.slice().sort(function(a,b){return b.z.per-a.z.per;})[0];
+    var cm=P.map(function(c){return c;}), best=bestOf(P);
     h+='<div class="scrim" data-act="pclose"></div><div class="sheet"><div class="sh"><div class="sn">Compare the cards</div><button class="x" data-act="pclose" aria-label="Close">&#10005;</button></div><div style="font-size:13px;color:#9aa6b6;line-height:1.4">Same risk unit for each. Which gets the most for the money at stake. One lens. You pick.</div>'+
-     '<div class="tb"><div></div>'+cm.map(function(c){return '<div class="th">'+esc(c.m.sym)+'</div>';}).join('')+'</div>'+
-     [['CASH TIED UP',function(c){return money(c.z.cash);}],['RISK AT YOUR LINE',function(c){return money(c.z.risk);}],['BEATING MARKET, 20 DAYS',function(c){return c.m.fromPush?'-':(c.m.rs>=0?'+':'')+c.m.rs.toFixed(1);}],['STRENGTH PER $100 RISKED',function(c){return c.z.per.toFixed(1);}]].map(function(r,ri){ return '<div class="tb"><div class="tl">'+r[0]+'</div>'+cm.map(function(c){ return '<div class="tc'+(ri===3&&c===best?' best':'')+'">'+r[1](c)+'</div>'; }).join('')+'</div>'; }).join('')+
+     '<div class="tb"><div></div>'+cm.map(function(c,ci){return '<button class="th" data-act="cmppick" data-i="'+ci+'" aria-label="Open '+esc(c.m.sym)+'">'+esc(c.m.sym)+'</button>';}).join('')+'</div>'+
+     [['CASH TIED UP',function(c){return money(c.z.cash);}],['RISK AT YOUR LINE',function(c){return money(c.z.risk);}],['BEATING MARKET, 20 DAYS',function(c){return c.m.fromPush?'-':(c.m.rs>=0?'+':'')+c.m.rs.toFixed(1);}],['STRENGTH PER $100 RISKED',function(c){return c.z.per.toFixed(1);}]].map(function(r,ri){ return '<div class="tb"><div class="tl">'+r[0]+'</div>'+cm.map(function(c,ci){ return '<button class="tc'+(ri===3&&c===best?' best':'')+'" data-act="cmppick" data-i="'+ci+'" aria-label="Open '+esc(c.m.sym)+'">'+r[1](c)+'</button>'; }).join('')+'</div>'; }).join('')+
      '<div class="cp"><b>BEST VALUE BY THE NUMBERS</b><br>'+esc(best.m.name)+' ('+esc(best.m.sym)+'): '+best.z.per.toFixed(1)+' points per $100 risked, using '+money(best.z.cash)+' of cash.</div><div class="cp"><b>REMEMBER</b><br>Value is a ratio of what has happened so far. It is not a forecast. It breaks ties. It does not make the call.</div></div>';
   }
   if(S.panel==='math'){
@@ -927,8 +930,9 @@ function sheetHtml(P){
   }
   if(S.panel==='log'){
     h+='<div class="scrim" data-act="pclose"></div><div class="sheet"><div class="sh"><div class="sn">Your log</div><button class="x" data-act="pclose" aria-label="Close">&#10005;</button></div>'+
-     (function(){ var it=S.log.map(function(l){return {t:l.ts||'',k:'d',l:l};}).concat(S.notes.map(function(n){return {t:n.ts||'',k:'n',l:n};})).sort(function(a,b){return a.t<b.t?1:-1;});
-      return it.length?it.map(function(o){ var l=o.l; if(o.k==='n') return '<div class="lg"><span>'+esc(l.date)+(l.sym?' '+esc(l.sym):'')+'<div style="color:#c9d1dc;font-size:13px;margin-top:3px">'+esc(l.text)+'</div></span><b style="color:#fff">NOTE</b></div>';
+     (function(){ var it=S.log.map(function(l){return {t:l.ts||'',k:'d',l:l};}).concat(S.notes.map(function(n){return {t:n.ts||'',k:'n',l:n};})).concat((S.cmpLog||[]).map(function(c){return {t:c.ts||'',k:'c',l:c};})).sort(function(a,b){return a.t<b.t?1:-1;});
+      return it.length?it.map(function(o){ var l=o.l; if(o.k==='c') return '<div class="lg"><span>'+esc(l.date)+' COMPARE highlighted <button class="lksym" data-act="lk" data-s="'+esc(l.best)+'">'+esc(l.best)+'</button><div style="color:#9aa6b6;font-size:12px;margin-top:3px">strength per $100 risked: '+Object.keys(l.per||{}).map(function(s){ return esc(s)+' '+l.per[s]; }).join(' / ')+'</div></span><b style="color:#f2b441">BEST VALUE</b></div>';
+        if(o.k==='n') return '<div class="lg"><span>'+esc(l.date)+(l.sym?' '+esc(l.sym):'')+'<div style="color:#c9d1dc;font-size:13px;margin-top:3px">'+esc(l.text)+'</div></span><b style="color:#fff">NOTE</b></div>';
         return '<div class="lg"><span>'+esc(l.date)+' <button class="lksym" data-act="lk" data-s="'+esc(l.sym)+'">'+esc(l.sym)+'</button>'+(l.reason?' <span style="color:#8591a2">/ '+esc(l.reason)+'</span>':'')+(l.note?'<div style="color:#9aa6b6;font-size:12px;margin-top:3px">'+esc(l.note)+'</div>':'')+'</span><b style="color:'+(l.decision==='buy'?'#2fd47a':'#ff3b3b')+'">'+l.decision.toUpperCase()+'</b></div>'; }).join(''):'<div class="ln">Nothing logged yet.</div>'; })()+
 
      '<div class="row2"><button class="bt buy" style="min-height:46px" data-act="csv">EXPORT CSV</button><button class="bt" style="min-height:46px;border-color:#3a4658;color:#c9d1dc" data-act="csvcopy">COPY CSV</button></div>'+(S.flash?'<div class="st" style="text-align:center;color:#2fd47a">'+esc(S.flash)+'</div>':'')+'<div class="st" style="text-align:center">SIMULATION. SAVED ON THIS PHONE ONLY.</div></div>';
@@ -981,12 +985,24 @@ function render(){
   if(keep){ var el=$(keep); if(el && val!==undefined){ el.value=val; el.focus(); try{ el.setSelectionRange(selStart,selStart); }catch(e){} } }
 }
 
+/* ---------- COMPARE: which pick it highlights as best value, recorded without a tap ---------- */
+function bestOf(P){ return P.slice().sort(function(a,b){ return b.z.per-a.z.per; })[0]; }
+async function recordCompare(){
+  var P=picks(); if(!db||!P.length||!S.date) return;
+  if(P.some(function(c){ return c.m.fromPush; })) return;          // strength figures are not in yet: nothing real to record
+  var key='compare/'+S.date;
+  try{ var d=await db.doc(key).get(); if(d.exists) return;
+    var b=bestOf(P), doc={date:S.date,best:b.m.sym,per:{},picks:P.map(function(c){ return c.m.sym; }),ts:new Date().toISOString(),mode:'sim'};
+    P.forEach(function(c){ doc.per[c.m.sym]=Math.round(c.z.per*10)/10; });
+    await db.doc(key).set(doc); S.cmpLog=(S.cmpLog||[]).filter(function(x){ return x.date!==doc.date; }); S.cmpLog.unshift(doc); }catch(e){}
+}
 /* ---------- log export ---------- */
 function csvCell(v){ var s=(v===null||v===undefined)?'':String(v); return /[",\n\r]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; }
 function logCsv(){
   var head=['kind','saved_at','pick_date','symbol','decision','reason','shares','entry','stop','risk_at_stop','text'];
   var rows=S.log.map(function(l){ return ['decision',l.ts,l.date,l.sym,l.decision,l.reason,l.shares,l.entry,l.stop,l.risk,l.note]; })
-    .concat(S.notes.map(function(n){ return ['note',n.ts,n.date,n.sym,'','','','','','',n.text]; }));
+    .concat(S.notes.map(function(n){ return ['note',n.ts,n.date,n.sym,'','','','','','',n.text]; }))
+    .concat((S.cmpLog||[]).map(function(c){ return ['compare',c.ts,c.date,c.best,'best_value','','','','','',Object.keys(c.per||{}).map(function(s){ return s+' '+c.per[s]; }).join('; ')]; }));
   rows.sort(function(a,b){ return (a[1]||'')<(b[1]||'')?1:-1; });
   return [head].concat(rows).map(function(r){ return r.map(csvCell).join(','); }).join('\r\n')+'\r\n';
 }
@@ -1020,7 +1036,8 @@ document.addEventListener('click',function(e){
   else if(act==='why'){ c=P[S.skipFor]; record(c,'skip',t.getAttribute('data-w'),S.note.trim()); return; }
   else if(act==='tback'){ S.open=S.ticket; S.step=2; S.ticket=null; }
   else if(act==='confirm'){ c=P[S.ticket]; record(c,'buy','',S.note.trim()); return; }
-  else if(act==='cmp'||act==='math'||act==='log'||act==='acct'||act==='score'){ S.panel=act; }
+  else if(act==='cmppick'){ var cp=P[i]; if(cp){ var cs=(S.seen[cp.m.sym]||[false,false,false]).slice(); cs[0]=true; S.seen[cp.m.sym]=cs; S.panel=null; S.open=i; S.step=0; S.note=''; } }
+  else if(act==='cmp'||act==='math'||act==='log'||act==='acct'||act==='score'){ S.panel=act; if(act==='cmp') recordCompare(); }
   else if(act==='pclose'){ S.panel=null; }
   else if(act==='chart'){ openChart(P[i].m.sym); return; }
   else if(act==='cclose'){ S.chart=null; }
