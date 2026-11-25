@@ -112,6 +112,8 @@ var TEST = window.__TEST__ || {};
 var UNI = [['AAPL','Apple'],['MSFT','Microsoft'],['NVDA','Nvidia'],['AMZN','Amazon'],['GOOGL','Alphabet'],['META','Meta'],['AVGO','Broadcom'],['LLY','Eli Lilly'],['JPM','JPMorgan'],['V','Visa'],['XOM','Exxon Mobil'],['LMT','Lockheed Mart.'],['COST','Costco'],['UNH','UnitedHealth'],['HD','Home Depot'],['CAT','Caterpillar'],['GE','GE Aerospace'],['NFLX','Netflix'],['AMD','AMD'],['CRM','Salesforce'],['ORCL','Oracle'],['PLTR','Palantir'],['IONQ','IonQ'],['RKLB','Rocket Lab']];
 var NAMES = {}; UNI.forEach(function(u){ NAMES[u[0]] = u[1]; });
 var SERVER = 'published data';
+var LIVE_ORDERS = false;   /* SIM: no real orders exist. When true, the two once-a-day rails below block again, exactly as before. */
+function railGate(ok){ return ok?'OK':(LIVE_ORDERS?'NO':'INFO'); }
 var S = { dial:null, mh:5, ext:null, extSyms:[], extReady:false, extBad:[], ldText:'', ldBusy:false, phase:'boot', msg:'', prog:{n:0,t:0}, date:null, spy:null, rows:[], acct:{netLiq:3333,cash:3300,sample:true}, log:[], seen:{}, open:null, step:0, skipFor:null, ticket:null, panel:null, note:'', errors:[], notes:[], bars:{}, ibars:{}, lkM:{}, lkSym:'', lkText:'', lkBusy:'', lkErr:'', recent:[], tf:'D', chart:null, crange:20, chartErr:'', noteText:'', noteSym:'', flash:'', dbOk:false, mcpOk:false, picksDocs:[], scoreMap:{}, scoring:'' };
 var db = null, mcp = null, calls = [];
 
@@ -806,8 +808,8 @@ function railList(c){
   r.push(['Cash covers the order',S.acct.sample?'CHECK':(S.acct.cash>=z.cash?'OK':'NO')]);
   r.push(['Under the 85% deployed ceiling',z.ceil==null?'CHECK':(z.cash<=z.ceil?'OK':'NO')]);
   r.push(['Risk inside your 3% unit',z.unit==null?'CHECK':(z.risk<=z.unit+0.01?'OK':'NO')]);
-  r.push(['First order for this name today',already?'NO':'OK']);
-  r.push(['Buys today: '+bt+' of 1 (entry plus stop uses 2 of 3 orders)',bt<1?'OK':'NO']);
+  r.push(['First order for this name today'+(already?' (already logged '+already.decision.toUpperCase()+')':'')+(LIVE_ORDERS?'':' [SIM: information only]'),railGate(!already)]);
+  r.push(['Buys today: '+bt+' of 1 (entry plus stop uses 2 of 3 orders)'+(LIVE_ORDERS?'':' [SIM: information only]'),railGate(bt<1)]);
   r.push(['No working sell order on this name','SIM']);
   r.push(['Kill switch is off','OK']);
   r.push(['Earnings date: look it up yourself','CHECK']);
@@ -839,7 +841,7 @@ function sheetHtml(P){
     h+='<div class="scrim" data-act="tback"></div><div class="sheet"><div class="sh"><div class="sn">Ticket<span>'+esc(m2.sym)+'</span></div><button class="x" data-act="tback" aria-label="Back">&#10005;</button></div>'+
      [['Entry (limit)','$'+(c2.entry!=null?c2.entry:m2.close).toFixed(2)],['Shares',String(z.sh)],['Exit line (stop, placed with entry)','$'+z.stop.toFixed(2)],['Risk if stopped',money(z.risk)],['Cash used',money(z.cash)],['Cash left',S.acct.sample?'not set':money(S.acct.cash-z.cash)]].map(function(r){return '<div class="kv"><span>'+r[0]+'</span><b>'+r[1]+'</b></div>';}).join('')+
      '<div class="cp"><b>I AM WRONG IF</b><br>Wrong if '+esc(m2.sym)+' trades below $'+z.stop.toFixed(2)+'. The stop sells it there. Written for you.</div>'+
-     '<div>'+rails.map(function(r){ return '<div class="rl"><span>'+esc(r[0])+'</span><b class="'+(r[1]==='CHECK'?'chk':r[1]==='NO'?'no':'')+'">'+r[1]+'</b></div>'; }).join('')+'</div>'+
+     '<div>'+rails.map(function(r){ return '<div class="rl"><span>'+esc(r[0])+'</span><b class="'+(r[1]==='CHECK'||r[1]==='INFO'?'chk':r[1]==='NO'?'no':'')+'">'+r[1]+'</b></div>'; }).join('')+'</div>'+
      '<div class="act2"><button class="bt" style="'+(blocked?'background:transparent;color:#4a5361;border-color:#2a313c':'background:#2fd47a;color:#07090c;border-color:#2fd47a')+'" data-act="confirm"'+(blocked?' disabled':'')+'>'+(blocked?'BLOCKED':'CONFIRM BUY')+'</button><button class="bt" style="color:#9aa6b6;border-color:#3a4658" data-act="tback">BACK</button></div><div class="st" style="text-align:center">SIMULATION. NOTHING IS SENT TO SCHWAB.</div></div>';
   }
   if(S.skipFor!==null && P[S.skipFor]){
