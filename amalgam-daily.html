@@ -958,6 +958,7 @@ function sheetHtml(P){
     h+='<div class="scrim" data-act="pclose"></div><div class="sheet"><div class="sh"><div class="sn">Scoreboard</div><button class="x" data-act="pclose" aria-label="Close">&#10005;</button></div>'+
      '<div style="font-size:13px;color:#9aa6b6;line-height:1.4">Every card shown is followed after the day it appeared. Numbers are points vs the market (SPY) at 5, 10 and 20 trading days. STOP is how often the exit line was hit. R is gain or loss in units of the risk you set.</div>'+
      '<div class="sc7"><div></div><div class="th">N</div><div class="th">5D</div><div class="th">10D</div><div class="th">20D</div><div class="th">STOP</div><div class="th">R</div></div>'+rowsT+
+     noEdgeNote()+
      '<div class="cp"><b>READ THIS FIRST</b><br>'+(st.all.final<20?'Too early. Only '+st.all.final+' picks have finished 20 days. Under 20, a good or bad number is noise. Keep clicking.':'20 or more finished. Compare BOUGHT and SKIPPED. If skipped cards did as well, the cards are not adding value yet.')+'</div>'+
      '<div class="sec" style="margin-top:4px">PICK BY PICK</div><div>'+(recent||'<div class="ln">Nothing yet. The first picks are recorded today. Scores start filling in tomorrow.</div>')+'</div><div class="st" style="text-align:center">SIMULATION. ENTRY IS THE DAY\'S CLOSE.</div></div>';
   }
@@ -1001,9 +1002,19 @@ function sheetHtml(P){
   }
   return h;
 }
+/* E5: the honest limit. One wording, shown under the cards and on the scoreboard. The gate
+   stack failed its sealed 2018-2021 hold-out on 2026-10-15 and 26 preregistered premises have
+   been tested with none passing, so the cards are a record of decisions, not proof of a method. */
+function noEdgeNote(){
+  return '<div class="hp-note" style="border-color:#5a3f3f;color:#b9a3a3"><b style="color:#f2b441">NO EDGE PROVEN</b><br>'+
+    'The gates failed their out-of-sample test in October, and 26 preregistered premises have been '+
+    'tested with none passing. These cards are a disciplined way to record decisions, not evidence '+
+    'that the method works.</div>';
+}
 function picksBlock(P){ return '<div class="hd"><span class="sec">'+(S.ext?'TONIGHT\'S PICKS':'TODAY\'S PICKS')+'</span><span style="display:flex;gap:6px"><button class="mini2" data-act="cmp"'+(P.length?'':' disabled')+'>COMPARE</button><button class="mini2" data-act="math">HOW PICKED</button></span></div>'+
       (P.length&&P[0].met!==null&&P[0].met<3?'<div class="hp-note" style="margin:0 14px 8px"><b>NO CLEAN PICK TODAY</b><br>Card 1 passed '+P[0].met+' of 3 gates. Sim only. A real-money entry waits for 3 of 3. The cards stay so the sim keeps logging.</div>':'')+(P.length?'<div class="cards">'+P.map(cardHtml).join('')+'</div>':'<div class="nopick"><b>No clean setup today.</b><br>Nothing in the watched stocks passed the gates and fit your size. That is a real answer. Doing nothing costs nothing.</div>')+
-    (S.extSyms.length?'<div class="st" style="margin:6px 2px 0;text-align:left">FROM YOUR PUSH: '+esc(S.extSyms.join('  '))+(S.extBad.length?'. NOT SHOWN: '+esc(S.extBad.join(', ')):'')+'</div>':''); }
+    (S.extSyms.length?'<div class="st" style="margin:6px 2px 0;text-align:left">TONIGHT\'S LIST: '+esc(S.extSyms.join('  '))+(S.extBad.length?'. NOT SHOWN: '+esc(S.extBad.join(', ')):'')+'</div>':'')+
+    '<div style="margin:8px 14px 0">'+noEdgeNote()+'</div>'; }
 /* ---------- tonight's picks straight from the push link (no storage, prices or typing) ---------- */
 function pushParse(){
   var h=''; try{ h=String(location.hash||'').replace(/^#/,''); }catch(e){}
