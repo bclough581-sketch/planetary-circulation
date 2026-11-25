@@ -101,6 +101,45 @@ button.th,button.tc{font-family:inherit;color:inherit;cursor:pointer;-webkit-tap
 .lg{display:flex;gap:10px;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid #1c232d}.lg b{letter-spacing:.06em}
 .inp{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:14px;padding:8px 0}.inp input{width:130px;background:#0a0e13;border:1.5px solid #3a4658;border-radius:10px;color:#e6ebf2;font-size:16px;padding:10px;text-align:right}
 .pcards{display:grid;grid-template-columns:1fr;gap:10px;padding:8px 14px}.pcards .pk{text-align:left}.pcards .ps{text-align:center}.pcards .kv{padding:5px 0}
+/* HOW-PICKED visual sheet */
+.hp-note{font-size:12px;line-height:1.4;color:#9aa6b6;border:1px dashed #3a4658;border-radius:12px;padding:9px 12px}
+.hp-note b{color:#f2b441;letter-spacing:.08em;font-size:10px}
+.hp-card{background:#0a0e13;border:1px solid #1f2833;border-radius:14px;padding:12px 12px 10px;box-shadow:inset 0 0 0 1px #ffffff04}
+.hp-t{font-size:11px;font-weight:800;letter-spacing:.12em;color:#ff3b3b}
+.hp-r{font-size:13px;line-height:1.35;color:#c9d1dc;margin-top:3px}
+.hp-sub{font-size:11px;color:#8591a2;margin-top:6px;line-height:1.35}
+.hp-f{margin-top:7px}.hp-f>span{display:block;font-size:10px;font-weight:800;letter-spacing:.1em;color:#8591a2;margin-bottom:3px}
+.hp-fb{height:26px;border-radius:7px;display:flex;align-items:center;justify-content:flex-end;padding:0 9px;min-width:34px;box-shadow:0 0 12px -2px currentColor}
+.hp-fb b{font-size:15px;font-weight:800;color:#07090c}
+.hp-pills{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px}
+.hp-pill{font-size:11px;font-weight:800;letter-spacing:.06em;color:#c9d1dc;border:1.5px solid #2fd47a;border-radius:999px;padding:5px 10px}
+.hp-gt{color:#2fd47a;font-weight:800}
+.hp-g{position:relative;height:16px;margin:56px 4px 4px}
+.hp-bar{position:absolute;inset:0;border-radius:8px;overflow:hidden;background:#1c232d}
+.hp-bar i{position:absolute;top:0;bottom:0}
+.hp-g u{position:absolute;width:3px;margin-left:-1px;background:#fff;border-radius:2px;text-decoration:none;box-shadow:0 0 8px #fff}
+.hp-g u.l0{top:-6px;height:28px}.hp-g u.l1{top:-20px;height:42px}.hp-g u.l2{top:-34px;height:56px}
+.hp-g u em{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);margin-bottom:2px;font-style:normal;font-size:10px;font-weight:800;letter-spacing:.06em;color:#fff;white-space:nowrap;background:#0a0e13;padding:0 3px;border-radius:4px;z-index:5}
+.hp-k{position:relative;height:14px;margin:0 4px;font-size:10px;color:#8591a2;font-variant-numeric:tabular-nums}
+.hp-k span{position:absolute;transform:translateX(-50%)}
+.hp-lg{display:flex;gap:12px;font-size:10px;font-weight:800;letter-spacing:.08em;color:#8591a2;margin-top:8px;flex-wrap:wrap}
+.hp-lg i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+.hp-ch{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.hp-ch b{font-size:17px;font-weight:800;color:#e6ebf2}.hp-ch span{font-size:11px;font-weight:800;letter-spacing:.1em;color:#2fd47a}
+.hp-b{display:grid;grid-template-columns:88px 1fr 34px;gap:8px;align-items:center;margin-top:5px}
+.hp-b span{font-size:10px;font-weight:800;letter-spacing:.06em;color:#8591a2}
+.hp-b b{font-size:13px;text-align:right;font-variant-numeric:tabular-nums}
+.hp-bt{height:12px;background:#1c232d;border-radius:6px;overflow:hidden}.hp-bt i{display:block;height:100%;background:#3a4658;border-radius:6px}.hp-bt i.w{background:#ff3b3b;box-shadow:0 0 10px #ff3b3b}
+.hp-ft{font-size:11px;line-height:1.4;color:#9aa6b6;margin-top:8px;font-variant-numeric:tabular-nums}
+.hp-tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.hp-tile{background:#0d1218;border:1px solid #1f2833;border-radius:12px;padding:9px 10px}
+.hp-tile span{display:block;font-size:10px;font-weight:800;letter-spacing:.08em;color:#8591a2}
+.hp-tile b{font-size:19px;font-weight:800;color:#e6ebf2;font-variant-numeric:tabular-nums}
+.hp-tile.r b{color:#ff6b6b}.hp-tile.a b{color:#f2b441}
+.hp-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;align-items:flex-start}
+.hp-chip{font-size:11px;font-weight:800;letter-spacing:.06em;border-radius:8px;padding:6px 9px;border:1.5px solid #3a4658;color:#c9d1dc}
+.hp-chip.m{border-color:#2fd47a;color:#2fd47a}.hp-chip.c{border-color:#f2b441;color:#f2b441}.hp-chip.x{border-style:dashed;color:#5b6676}
+.hp-flow{display:flex;align-items:center;gap:8px;margin-top:8px}.hp-flow .hp-chip{flex:1;text-align:center}.hp-flow>b{color:#ff3b3b;font-size:16px}
 </style>
 </head>
 <body>
@@ -870,13 +909,7 @@ function sheetHtml(P){
      [['CASH TIED UP',function(c){return money(c.z.cash);}],['RISK AT YOUR LINE',function(c){return money(c.z.risk);}],['BEATING MARKET, 20 DAYS',function(c){return c.m.fromPush?'-':(c.m.rs>=0?'+':'')+c.m.rs.toFixed(1);}],['STRENGTH PER $100 RISKED',function(c){return c.z.per.toFixed(1);}]].map(function(r,ri){ return '<div class="tb"><div class="tl">'+r[0]+'</div>'+cm.map(function(c,ci){ return '<button class="tc'+(ri===3&&c===best?' best':'')+'" data-act="cmppick" data-i="'+ci+'" aria-label="Open '+esc(c.m.sym)+'">'+r[1](c)+'</button>'; }).join('')+'</div>'; }).join('')+
      '<div class="cp"><b>BEST VALUE BY THE NUMBERS</b><br>'+esc(best.m.name)+' ('+esc(best.m.sym)+'): '+best.z.per.toFixed(1)+' points per $100 risked, using '+money(best.z.cash)+' of cash.</div><div class="cp"><b>REMEMBER</b><br>Value is a ratio of what has happened so far. It is not a forecast. It breaks ties. It does not make the call.</div></div>';
   }
-  if(S.panel==='math'){
-    var all2=candidates(), lines=['PICKING. '+S.rows.length+' liquid stocks are read once a day from the last close. A name needs an uptrend (50-day above 200-day, price above the 50) and no failed gate.','GATE 1. Range: not in the top 15% of its 6-month range (close up to 90%).','GATE 2. RSI between 40 and 65 (close at 30-40 or 65-70, fail above 70).','GATE 3. Volume: an up day on 1.5x the 20-day average volume. Close if that happened in the last 5 days.','REMOVED. A name never reaches your cards if a gate fails, there is no uptrend, or it cannot be sized inside your cash and risk limits.','EXIT LINE. 2 x the 10-day average true range below the last close.','SIZE. Shares = the lesser of (risk unit / distance to the exit line) and (cash ceiling / price), rounded down.','ACCOUNT. Net liq '+money(S.acct.netLiq)+', cash '+money(S.acct.cash)+(S.acct.sample?' (SAMPLE, set yours in ACCOUNT)':'')+'. Risk unit 3% = '+money(0.03*S.acct.netLiq)+'. 85% ceiling = '+money(0.85*S.acct.netLiq)+'.','ORDER. More gates met first, then more strength vs the market.','NOT BUILT YET. Earnings dates, news links, live Schwab balances.'];
-    var shown=picks(); lines.push(S.ext?'YOUR CARDS TODAY. These '+shown.length+' came from the push. Sizing for each:':'CANDIDATES TODAY. '+all2.length+' passed; top '+Math.min(3,all2.length)+' shown.');
-    shown.forEach(function(c){ lines.push(c.m.sym+'. $'+c.m.close.toFixed(2)+' - $'+c.z.stop.toFixed(2)+' = $'+c.z.dist.toFixed(2)+' per share. Risk allows '+c.z.byRisk+' shares, ceiling allows '+c.z.byCash+'. Using '+c.z.sh+(c.z.sized?' (sized down)':'')+'. Risk '+money(c.z.risk)+'. Cash '+money(c.z.cash)+'.'); });
-    if(S.ext){ lines.unshift('SOURCE. These cards came from the symbols loaded from the push. The page read each one and applied its own sizing. The gate rules below are the page\'s own.'); lines.push('FOR COMPARISON. The page\'s own scan of your 24 watched names passed: '+(all2.length?all2.slice(0,3).map(function(c){return c.m.sym;}).join(', '):'none')+'. That list is separate from your cards.'); }
-    h+='<div class="scrim" data-act="pclose"></div><div class="sheet"><div class="sh"><div class="sn">How these were picked</div><button class="x" data-act="pclose" aria-label="Close">&#10005;</button></div><div>'+lines.map(function(l){return '<div class="ln">'+esc(l)+'</div>';}).join('')+'</div></div>';
-  }
+  if(S.panel==='math'){ h+=mathHtml(); }
   if(S.panel==='dial'){ h+=dialPanelHtml(); }
   if(S.panel==='meter'){
     var M=meterCalls(S.mh), f1=function(v){ return v===null?'-':(v>0?'+':'')+v.toFixed(1); };
@@ -988,6 +1021,45 @@ function render(){
 }
 
 /* ---------- COMPARE: which pick it highlights as best value, recorded without a tap ---------- */
+function hpGauge(title,rule,segs,ticks,marks,legend){
+  var o='<div class="hp-card"><div class="hp-t">'+title+'</div><div class="hp-r">'+rule+'</div><div class="hp-g"><div class="hp-bar">';
+  segs.forEach(function(s){ o+='<i style="left:'+s[0]+'%;width:'+(s[1]-s[0])+'%;background:'+s[2]+'"></i>'; });
+  o+='</div>';
+  marks.slice().sort(function(a,b){return a[1]-b[1];}).forEach(function(k,i){ o+='<u class="l'+(i%3)+'" style="left:'+Math.max(2,Math.min(98,k[1]))+'%"><em>'+esc(k[0])+'</em></u>'; });
+  o+='</div><div class="hp-k">'+ticks.map(function(t){ return '<span style="left:'+t+'%">'+t+'</span>'; }).join('')+'</div>'+legend+'</div>';
+  return o;
+}
+function hpBar(label,n,mx,win){ return '<div class="hp-b"><span>'+label+'</span><div class="hp-bt"><i class="'+(win?'w':'')+'" style="width:'+Math.max(3,Math.round(n/mx*100))+'%"></i></div><b>'+n+'</b></div>'; }
+function mathHtml(){
+  var rows=S.rows||[], all2=candidates(), shown=picks(), tot=rows.length;
+  var up=rows.filter(function(m){return m.trend;});
+  var pass=up.filter(function(m){return m.g1!=='fail'&&m.g2!=='fail';});
+  var fn=[['WATCHED',tot,'#3a4658'],['IN AN UPTREND',up.length,'#4b6a8f'],['NO FAILED GATE',pass.length,'#f2b441'],['FITS YOUR CASH + RISK',all2.length,'#ff8a3d'],[S.ext?'ON YOUR CARDS (FROM THE PUSH)':'ON YOUR CARDS',shown.length,'#2fd47a']];
+  var prev=100, o='';
+  if(S.ext){ o+='<div class="hp-note"><b>SOURCE</b><br>Your cards came from tonight\'s push. The page re-read each one and applied its own sizing. The funnel below is the page\'s own scan of your watched names.</div>'; }
+  o+='<div class="hp-card"><div class="hp-t">THE FUNNEL</div><div class="hp-r">Read once a day from the last close.</div>';
+  fn.forEach(function(r){ var w=tot?Math.max(10,Math.round(r[1]/tot*100)):10; w=Math.min(w,prev); prev=w; o+='<div class="hp-f"><span>'+r[0]+'</span><div class="hp-fb" style="width:'+w+'%;background:'+r[2]+';color:'+r[2]+'"><b>'+r[1]+'</b></div></div>'; });
+  o+='<div class="hp-sub">UPTREND TEST</div><div class="hp-pills" style="margin-top:4px"><span class="hp-pill">PRICE</span><span class="hp-gt">&gt;</span><span class="hp-pill">50-DAY</span><span class="hp-gt">&gt;</span><span class="hp-pill">200-DAY</span></div></div>';
+  var mk1=[], mk2=[]; shown.forEach(function(c){ if(c.m.pos!=null&&!isNaN(c.m.pos)) mk1.push([c.m.sym,c.m.pos*100]); if(c.m.rsi!=null&&!isNaN(c.m.rsi)) mk2.push([c.m.sym,c.m.rsi]); });
+  var lg1='<div class="hp-lg"><span><i style="background:#2fd47a"></i>PASS</span><span><i style="background:#f2b441"></i>CLOSE</span><span><i style="background:#ff3b3b"></i>FAIL</span></div>';
+  o+=hpGauge('GATE 1 &middot; RANGE','Not hugging the top of its 6-month range. Where the close sits, low to high.',[[0,85,'#2fd47a'],[85,90,'#f2b441'],[90,100,'#ff3b3b']],[0,85,90,100],mk1,lg1+(mk1.length?'':'<div class="hp-sub">Needs market data to place your cards.</div>'));
+  o+=hpGauge('GATE 2 &middot; RSI','Strong, not stretched. Passes between 40 and 65.',[[0,30,'#ff3b3b'],[30,40,'#f2b441'],[40,65,'#2fd47a'],[65,70,'#f2b441'],[70,100,'#ff3b3b']],[30,40,65,70],mk2,lg1+(mk2.length?'':'<div class="hp-sub">Needs market data to place your cards.</div>'));
+  var vb=[[10,.8],[50,.9],[90,.7],[130,1.9],[170,1.0]], sv='<svg viewBox="0 0 210 74" width="100%" style="display:block;margin-top:8px" aria-hidden="true"><line x1="0" x2="210" y1="50" y2="50" stroke="#5b6676" stroke-width="1"/><line x1="0" x2="210" y1="27" y2="27" stroke="#f2b441" stroke-width="1" stroke-dasharray="4 3"/><text x="2" y="23" fill="#f2b441" font-size="6.5" font-weight="800">1.5x NORMAL</text><text x="2" y="62" fill="#8591a2" font-size="6.5" font-weight="800">20-DAY AVERAGE</text>';
+  vb.forEach(function(b,i){ var h=b[1]*20; sv+='<rect x="'+b[0]+'" y="'+(50-h)+'" width="26" height="'+h+'" rx="3" fill="'+(i===3?'#2fd47a':'#3a4658')+'"'+(i===3?' style="filter:drop-shadow(0 0 5px #2fd47a)"':'')+'/>'; });
+  sv+='</svg>';
+  o+='<div class="hp-card"><div class="hp-t">GATE 3 &middot; VOLUME</div><div class="hp-r">An up day on 1.5x the 20-day average volume. Sketch of what it looks for.</div>'+sv+'<div class="hp-chips">'+shown.map(function(c){ var g=c.m.g3; return '<span class="hp-chip '+(g==='met'?'m':g==='close'?'c':'x')+'">'+esc(c.m.sym)+' '+(g==='met'?'TODAY':g==='close'?'LAST 5 DAYS':g==='miss'?'NONE':'NO DATA')+'</span>'; }).join('')+'</div></div>';
+  var t=shown[0], cl=t?'$'+t.m.close.toFixed(2):'LAST CLOSE', sl=t?'$'+t.z.stop.toFixed(2):'EXIT LINE';
+  o+='<div class="hp-card"><div class="hp-t">THE EXIT LINE</div><div class="hp-r">2 x the 10-day average true range below the last close. Where the plan is wrong.</div><svg viewBox="0 0 340 130" width="100%" style="display:block;margin-top:8px" aria-hidden="true"><polyline points="8,96 38,88 68,94 98,72 128,78 158,58 188,66 218,46 248,52 278,34 304,30" fill="none" stroke="#9aa6b6" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/><circle cx="304" cy="30" r="5" fill="#fff"/><text x="294" y="18" text-anchor="end" fill="#fff" font-size="11" font-weight="800">'+esc(t?t.m.sym+' ':'')+cl+'</text><line x1="150" x2="334" y1="104" y2="104" stroke="#ff3b3b" stroke-width="2" stroke-dasharray="6 4"/><path d="M322 32V102" stroke="#ff8080" stroke-width="1.5"/><path d="M318 32h8M318 102h8" stroke="#ff8080" stroke-width="1.5"/><text x="316" y="72" text-anchor="end" fill="#ff8080" font-size="10" font-weight="800">2 x AVG SWING</text><text x="150" y="122" fill="#ff3b3b" font-size="11" font-weight="800">EXIT '+sl+'</text></svg></div>';
+  o+='<div class="hp-card"><div class="hp-t">THE SIZE</div><div class="hp-r">Shares = the smaller of what your risk allows and what your cash allows. The red bar wins.</div></div>';
+  shown.forEach(function(c){ var z=c.z, mx=Math.max(z.byRisk,z.byCash,1); o+='<div class="hp-card"><div class="hp-ch"><b>'+esc(c.m.sym)+'</b><span>'+z.sh+' SHARE'+(z.sh>1?'S':'')+(z.sized?' &middot; SIZED DOWN':'')+'</span></div>'+hpBar('RISK ALLOWS',z.byRisk,mx,z.byRisk<=z.byCash)+hpBar('CASH ALLOWS',z.byCash,mx,z.byCash<z.byRisk)+'<div class="hp-ft">$'+c.m.close.toFixed(2)+' &rarr; exit $'+z.stop.toFixed(2)+' ($'+z.dist.toFixed(2)+' a share). Risk '+money(z.risk)+'. Cash '+money(z.cash)+'.</div></div>'; });
+  var A=S.acct;
+  o+='<div class="hp-card"><div class="hp-t">YOUR ACCOUNT'+(A.sample?' &middot; <span style="color:#f2b441">SAMPLE FIGURES</span>':'')+'</div><div class="hp-tiles"><div class="hp-tile"><span>NET LIQ</span><b>'+money(A.netLiq)+'</b></div><div class="hp-tile"><span>CASH</span><b>'+money(A.cash)+'</b></div><div class="hp-tile r"><span>RISK UNIT &middot; 3%</span><b>'+money(0.03*A.netLiq)+'</b></div><div class="hp-tile a"><span>CASH CEILING &middot; 85%</span><b>'+money(0.85*A.netLiq)+'</b></div></div>'+(A.sample?'<div class="hp-sub">Set yours in ACCOUNT.</div>':'')+'</div>';
+  o+='<div class="hp-card"><div class="hp-t">THE ORDER</div><div class="hp-flow"><span class="hp-chip m">MOST GATES MET</span><b>&rarr;</b><span class="hp-chip m">STRONGEST VS MARKET</span></div><div class="hp-sub" style="margin-top:10px">NOT BUILT YET</div><div class="hp-chips" style="margin-top:4px"><span class="hp-chip x">EARNINGS DATES</span><span class="hp-chip x">NEWS LINKS</span><span class="hp-chip x">LIVE SCHWAB BALANCES</span></div></div>';
+  if(S.ext){ o+='<div class="hp-note"><b>FOR COMPARISON</b><br>The page\'s own scan of your '+tot+' watched names passed: '+(all2.length?all2.slice(0,3).map(function(c){return esc(c.m.sym);}).join(', '):'none')+'. Separate from your cards.</div>'; }
+  else { o+='<div class="hp-note"><b>CANDIDATES TODAY</b><br>'+all2.length+' passed; top '+Math.min(3,all2.length)+' shown.</div>'; }
+  return '<div class="scrim" data-act="pclose"></div><div class="sheet"><div class="sh"><div class="sn">How these were picked</div><button class="x" data-act="pclose" aria-label="Close">&#10005;</button></div>'+o+'</div>';
+}
+
 function bestOf(P){ return P.slice().sort(function(a,b){ return b.z.per-a.z.per; })[0]; }
 async function recordCompare(){
   var P=picks(); if(!db||!P.length||!S.date) return;
