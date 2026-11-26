@@ -1,0 +1,216 @@
+/* Amalgam neon layer. Everything here is scoped to html.tron, so removing one class returns the
+   app exactly to what it was. No new hues: the existing red, amber and green do the work, and the
+   depth comes from bloom, a receding grid and lit edges. Built for a phone, so no backdrop-filter
+   and no per-element blur filters, which are the two things that melt mobile GPUs. */
+
+html.tron{
+  --ink:#040507;        /* deeper than the base black, so the glow has somewhere to fall off to */
+  --red:#ff3b3b;
+  --amber:#f2b441;
+  --green:#2fd47a;
+  --cool:#5b8cff;
+  --edge:#1a2230;
+  --bloom-tight:0 0 4px;
+  --bloom-wide:0 0 18px;
+}
+html.tron body{background:var(--ink)}
+
+/* ---- backdrop: canvas grid sits behind everything, then scanlines, then a vignette ---- */
+/* width and height are not optional here. A canvas is a replaced element, so with width:auto
+   it keeps its intrinsic 300x150 and simply ignores right and bottom. */
+#tron-grid{position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none;display:block}
+html:not(.tron) #tron-grid{display:none}
+html.tron #app{position:relative;z-index:1}
+html.tron body::after{
+  content:"";position:fixed;inset:0;z-index:2;pointer-events:none;
+  background:
+    repeating-linear-gradient(to bottom, rgba(255,255,255,.028) 0 1px, transparent 1px 3px),
+    radial-gradient(130% 90% at 50% 8%, transparent 38%, rgba(0,0,0,.62) 100%);
+}
+/* On a wide window the app is a 430px column and the grid is most of what you see, so the
+   vignette pulls back and the darkening concentrates behind the column instead. */
+@media (min-width:900px){
+  html.tron body::after{
+    background:
+      repeating-linear-gradient(to bottom, rgba(255,255,255,.02) 0 1px, transparent 1px 3px),
+      radial-gradient(60% 100% at 50% 50%, transparent 0%, transparent 55%, rgba(0,0,0,.45) 100%);
+  }
+  /* the column is a lit object standing on the grid, not a dim hole cut out of it */
+  html.tron #app{
+    background:#05070b;
+    box-shadow:0 0 0 1px #ff3b3b33, 0 0 40px #000, 0 0 90px #ff3b3b14, inset 0 1px 0 #ffffff0a;
+  }
+  html.tron #app::before,html.tron #app::after{
+    content:"";position:absolute;top:0;bottom:0;width:2px;
+    background:linear-gradient(180deg,transparent,#ff3b3b 14%,#ff3b3b66 58%,transparent);
+    box-shadow:0 0 14px #ff3b3b99;
+  }
+  html.tron #app::before{left:-14px}
+  html.tron #app::after{right:-14px}
+}
+
+/* ---- type: geometric, wider tracking on labels, tabular figures everywhere it matters ---- */
+html.tron body{font-family:"Eurostile","Bahnschrift","DIN Alternate",ui-sans-serif,system-ui,sans-serif}
+html.tron .sec,html.tron .gl,html.tron .tl2,html.tron .st,html.tron .th{letter-spacing:.26em}
+html.tron .gv,html.tron .dbig,html.tron .tv{font-variant-numeric:tabular-nums}
+
+/* ---- the wordmark: layered bloom, and a flicker slow enough not to annoy ---- */
+html.tron .wm{
+  color:#fff;
+  text-shadow:0 0 2px #fff, var(--bloom-tight) var(--red), 0 0 14px var(--red), 0 0 34px #ff3b3b88;
+  animation:tron-flicker 7s infinite steps(1);
+}
+@keyframes tron-flicker{0%,97%,100%{opacity:1}97.6%{opacity:.72}98.2%{opacity:1}98.8%{opacity:.85}}
+
+/* ---- the cockpit block: lit rim, dark well, a light bar running the top edge ---- */
+html.tron .cl{
+  background:linear-gradient(180deg,#0a0c11 0%,#06070a 60%);
+  border-color:#6a2126;
+  box-shadow:inset 0 0 30px #ff3b3b14, 0 0 0 1px #ff3b3b22, 0 0 26px #ff3b3b10;
+  position:relative;overflow:hidden;
+}
+html.tron .cl::before{
+  content:"";position:absolute;top:0;left:0;height:1px;width:38%;
+  background:linear-gradient(90deg,transparent,var(--red),transparent);
+  box-shadow:0 0 10px var(--red);
+  animation:tron-sweep 6s linear infinite;
+}
+@keyframes tron-sweep{0%{transform:translateX(-100%)}100%{transform:translateX(330%)}}
+
+/* ---- gauges: the big number is the light source ---- */
+html.tron .gg{border-top-color:#212b3a}
+html.tron .gg .gv{text-shadow:0 0 1px currentColor, 0 0 12px currentColor, 0 0 30px rgba(255,255,255,.07)}
+html.tron .gg .gs{text-shadow:0 0 10px currentColor}
+html.tron .mast{
+  background:#070a0e;border-color:#4a1b1f;
+  box-shadow:inset 0 1px 0 #ffffff0d, 0 0 14px #ff3b3b0f;
+}
+html.tron .mast .mt{text-shadow:0 0 12px currentColor}
+html.tron .mast .lm i{box-shadow:0 0 8px currentColor, inset 0 0 6px #00000080}
+
+/* ---- pick cards: lightcycle ribbons. notched corners, lit rim, the PICK card brighter ---- */
+html.tron .pk{
+  position:relative;
+  background:linear-gradient(180deg,#0b0e13,#06080b);
+  border:1px solid #2b3647;
+  clip-path:polygon(9px 0,100% 0,100% calc(100% - 9px),calc(100% - 9px) 100%,0 100%,0 9px);
+  box-shadow:inset 0 1px 0 #ffffff0e;
+  transition:box-shadow .18s ease, border-color .18s ease;
+}
+html.tron .pk::after{
+  content:"";position:absolute;left:0;top:9px;bottom:0;width:2px;
+  background:linear-gradient(180deg,transparent,#2b3647,transparent);
+}
+html.tron .pk:has(.pickr){
+  border-color:var(--red);
+  box-shadow:inset 0 1px 0 #ffffff14, 0 0 0 1px #ff3b3b40, 0 0 22px #ff3b3b33;
+}
+html.tron .pk:has(.pickr)::after{background:linear-gradient(180deg,transparent,var(--red),transparent);box-shadow:0 0 10px var(--red)}
+html.tron .pk .role{text-shadow:0 0 10px currentColor}
+html.tron .pk .ps{text-shadow:0 0 12px currentColor}
+html.tron .dot.on{box-shadow:0 0 8px currentColor}
+
+/* ---- buttons: thin ribbon, glow on contact ---- */
+html.tron .bt{
+  clip-path:polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px);
+  transition:box-shadow .15s ease, transform .08s ease;
+}
+html.tron .bt:active{transform:translateY(1px)}
+/* Only the outlined buttons get the dark well. BUY is a filled slab in the app, green with
+   near-black type, so a blanket dark background here made the most important button in the
+   whole app unreadable. It stays filled, and gets brighter rather than darker. */
+html.tron .bt.skip,html.tron .bt.dim{background:#080b10}
+html.tron .bt.buy{
+  background:linear-gradient(180deg,#4ae996,#21b866);
+  color:#03050a;border-color:#7df6b8;
+  box-shadow:0 0 20px #2fd47a99, inset 0 1px 0 #ffffff66;
+}
+html.tron .bt.skip{box-shadow:inset 0 0 14px #ff3b3b1a, 0 0 12px #ff3b3b33}
+html.tron .bt.on{box-shadow:0 0 0 2px #fff, 0 0 26px currentColor}
+html.tron .chip{box-shadow:0 0 10px #f2b44122, inset 0 0 10px #f2b4410f;text-shadow:0 0 8px currentColor}
+
+/* ---- sheets and panels: a lit top edge, deeper well ---- */
+html.tron .sheet{
+  background:linear-gradient(180deg,#0a0d12,#05070a 40%);
+  border-top:1px solid var(--red);
+  box-shadow:0 -1px 26px #ff3b3b2e;
+}
+html.tron .scrim{background:#000000cc}
+html.tron .sn{text-shadow:0 0 12px var(--red)}
+html.tron .cp,html.tron .hp-note{border-style:solid;border-color:#243044;background:#070a0e99}
+html.tron .th{text-shadow:0 0 10px currentColor}
+
+/* ---- the HUD svg: let the strokes bloom ---- */
+html.tron .hud svg{filter:drop-shadow(0 0 3px rgba(255,59,59,.45))}
+html.tron .tug{background:#070a0e;border-color:#3f171b;box-shadow:inset 0 0 18px #ff3b3b0d}
+html.tron .tug svg{filter:drop-shadow(0 0 2px rgba(242,180,65,.4))}
+
+/* ---- someone who asked for less motion gets none of it ---- */
+@media (prefers-reduced-motion:reduce){
+  html.tron .wm{animation:none}
+  html.tron .cl::before{animation:none;opacity:.5}
+}
+
+/* ---- arrival: the view flies in from the vanishing point once, then sits flat ----
+   The 3D lives in the entrance, not in the resting state. Text that stays transformed gets
+   rasterised on a composited layer and goes soft, and raked tap targets on a phone are a real
+   cost in accuracy. So every element lands on transform:none and reads like plain type. */
+html.tron #app{perspective:1100px;perspective-origin:50% 0%}
+@keyframes tron-arrive{
+  from{opacity:0;transform:translate3d(0,54px,-420px) rotateX(16deg)}
+  60%{opacity:1}
+  to{opacity:1;transform:none}
+}
+html.tron .cl,html.tron .chiprow,html.tron .cards>.pk,html.tron .hd,html.tron .hp-note,html.tron .sc7{
+  animation:tron-arrive .72s cubic-bezier(.16,.84,.3,1) both;
+  transform-origin:50% 100%;
+}
+html.tron .top{animation:tron-arrive .6s cubic-bezier(.16,.84,.3,1) both}
+html.tron .chiprow{animation-delay:.06s}
+html.tron .cl{animation-delay:.12s}
+html.tron .hd{animation-delay:.2s}
+html.tron .cards>.pk:nth-child(1){animation-delay:.26s}
+html.tron .cards>.pk:nth-child(2){animation-delay:.32s}
+html.tron .cards>.pk:nth-child(3){animation-delay:.38s}
+html.tron .hp-note{animation-delay:.44s}
+/* the sheets fly up off the grid when they open */
+@keyframes tron-sheet{from{opacity:0;transform:translate3d(0,80px,-300px)}to{opacity:1;transform:none}}
+html.tron .sheet{animation:tron-sheet .34s cubic-bezier(.16,.84,.3,1) both}
+
+/* ---- raked chrome: the geometry is slanted, the words are not ---- */
+html.tron .hd{position:relative}
+html.tron .hd::after{
+  content:"";position:absolute;left:16px;right:16px;bottom:-5px;height:1px;
+  background:linear-gradient(90deg,#ff3b3b88,transparent 62%);
+  transform:skewY(-.9deg);box-shadow:0 0 8px #ff3b3b55;
+}
+html.tron .sec{position:relative}
+html.tron .sec::before{
+  content:"";position:absolute;left:-10px;top:2px;bottom:2px;width:3px;
+  background:var(--red);box-shadow:0 0 10px var(--red);transform:skewY(-8deg);
+}
+
+/* ---- canopy: raked frame edges, top and bottom, so the screen reads as a windshield ---- */
+html.tron body::before{
+  content:"";position:fixed;left:0;right:0;top:0;height:46px;z-index:3;pointer-events:none;
+  background:linear-gradient(180deg,#000 0%,#000000cc 42%,transparent 100%);
+  clip-path:polygon(0 0,100% 0,100% 58%,0 100%);
+  border-bottom:0;
+}
+html.tron #tron-canopy{
+  position:fixed;left:0;right:0;top:0;height:48px;z-index:4;pointer-events:none;
+  background:linear-gradient(180deg,transparent 60%,#ff3b3b 98%,transparent);
+  clip-path:polygon(0 0,100% 0,100% 58%,0 100%);opacity:.55;
+}
+
+/* a phone has no room to spare, so the frame is edge only and the grid keeps the middle */
+@media (max-width:899px){
+  html.tron #app{background:transparent}
+  html.tron .cl{background:linear-gradient(180deg,#0a0c11f2,#06070af2)}
+  html.tron .pk{background:linear-gradient(180deg,#0b0e13f2,#06080bf2)}
+}
+
+@media (prefers-reduced-motion:reduce){
+  html.tron .cl,html.tron .chiprow,html.tron .cards>.pk,html.tron .hd,html.tron .hp-note,
+  html.tron .sc7,html.tron .top,html.tron .sheet{animation:none}
+}

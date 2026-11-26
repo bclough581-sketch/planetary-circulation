@@ -1,0 +1,88 @@
+"""Build amalgam-daily.html from amalgam-daily.src.html plus the layer files.
+
+Edit the SOURCE and the LAYERS, never the built page: this script overwrites it.
+
+Repeatable: it always starts from amalgam-daily.html.before_hud, so the layer files stay the
+single source of truth and a copy edit never has to be made twice."""
+import pathlib
+HERE = pathlib.Path(__file__).parent
+base = HERE / "amalgam-daily.src.html"
+s = base.read_text(encoding="utf-8")
+def need(old):
+    assert s.count(old) == 1, "anchor count %d: %.70s" % (s.count(old), old)
+    return old
+rd = lambda f: (HERE / f).read_text(encoding="utf-8")
+
+s = s.replace(need('<html lang="en">'), '<html lang="en" class="tron">', 1)
+
+css = ("\n/* ================= tron.css ================= */\n" + rd("tron.css")
+     + "\n/* ================= wide.css ================= */\n" + rd("wide.css")
+     + "\n/* ================= hud.css  ================= */\n" + rd("hud.css")
+     + """
+/* A section header holds its label and up to three buttons on one line with no wrapping,
+   which overflows the right edge of a 390px phone and clips the last button. Unscoped,
+   because it is a fault in the app rather than in the neon layer. */
+@media (max-width:560px){
+  .hd{flex-wrap:wrap;row-gap:6px}
+  .hd > span:last-child{margin-left:auto}
+}
+""")
+s = s.replace(need("</style>\n</head>"), css + "</style>\n</head>", 1)
+s = s.replace(need("<script>\n(function(){"), "<script>\n(function(){\n" + rd("hud.js") + "\n", 1)
+s = s.replace(need("</script>\n</body>"), "</script>\n<script>\n" + rd("tron.js") + "\n</script>\n</body>", 1)
+
+a = need("    else h+='<section class=\"z z-hud\">'+hudHtml(dec,P.length,P)+'</section>'+")
+s = s.replace(a, "    else h+='<div class=\"zgrid\">'+\n"
+                 "      '<section class=\"z z-hud\">'+hudHtml(dec,P.length,P)+'</section>'+", 1)
+b = need("      '<section class=\"z z-picks\">'+picksBlock(P)+'</section>'+")
+s = s.replace(b, b + "\n      raceSection()+", 1)
+c = need("      '<section class=\"z z-sig\"><div class=\"hd\"><span class=\"sec\">3 WARNINGS</span></div><div class=\"list\">'+sigRows(sg.w,true)+'</div><div class=\"hd\"><span class=\"sec\">3 POSITIVES</span></div><div class=\"list\">'+sigRows(sg.p,false)+'</div></section>'+")
+s = s.replace(c, c + "\n      '</div>'+", 1)
+
+start, end = s.index("function raceHtml(){"), s.index("/* E5: the honest limit.")
+assert "sc7" in s[start:end]
+s = s[:start] + '''/* The race lives in two places now: always on in the right column of a wide screen, and
+   behind its button on a phone. Both call raceInline, so there is exactly one renderer and
+   the two can never disagree about what the ledger says. */
+function raceForToday(){
+  var R = MARKET && MARKET.race;
+  return (R && R.asof === (S.mdate || MARKET.asof)) ? R : null;
+}
+function raceState(){
+  var R = raceForToday();
+  if(!R) return 'NO SLATE THIS SESSION';
+  var d = R.closed_sessions || 0;
+  return d ? d + ' SCORED SESSIONS' : 'LIVE \\u00b7 NOTHING SCORED';
+}
+function raceSection(){
+  return '<section class="z z-race"><div class="hd"><span class="sec">THE RACE</span>' +
+    '<span class="st">' + raceState() + '</span></div>' +
+    (raceForToday() ? raceInline(raceForToday())
+                    : '<div class="cp" style="margin:0 18px">No race recorded for this session yet.</div>') +
+    '</section>';
+}
+function raceHtml(){
+  var R = raceForToday();
+  var sheet = '<div class="scrim" data-act="pclose"></div><div class="sheet"><div class="sh">' +
+              '<div class="sn">The race</div><button class="x" data-act="pclose" aria-label="Close">&#10005;</button></div>';
+  if(!R) return sheet + '<div class="cp">No race recorded for this session yet.</div></div>';
+
+  /* The chart is the same one the wide layout shows. What the sheet adds is the roster:
+     which names each lane actually picked tonight, which does not fit beside the chart. */
+  var roster = (R.lanes || []).map(function(l){
+    var m = RACE_LANES[l] || {full:l}, picks = (R.cards || {})[l] || [];
+    return '<div class="cp" style="margin-top:8px"><b style="color:' + (l === 'random' ? '#f2b441' : '#c9d1dc') + '">' +
+      (m.full || l) + '</b><br>' + esc(picks.join('  ')) +
+      '<div style="color:#6f7b8a;margin-top:3px">' + LANE_WHY[l] + '</div></div>';
+  }).join('');
+
+  return sheet + raceInline(R) +
+    '<div class="hd" style="padding:0"><span class="sec">TONIGHT\\'S TOP THREE IN EACH LANE</span></div>' +
+    '<div class="st" style="margin:0 0 4px;text-align:left">Each lane is scored on ' + (R.basket_n || 20) +
+    ' names; the symbols listed are just the top three, the ones you see as cards.</div>' + roster +
+    noEdgeNote() + '</div>';
+}
+''' + s[end:]
+
+(HERE / "amalgam-daily.html").write_text(s, encoding="utf-8")
+print("integrated:", len(s), "bytes")

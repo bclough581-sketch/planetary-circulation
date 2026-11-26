@@ -1,0 +1,122 @@
+/* Amalgam HUD layer. Scoped to html.tron like the neon layer, so one class still turns
+   everything off. This layer is about hierarchy rather than glow: a type scale, a colour
+   contract, a two-column desktop band, and the race drawn as a chart instead of a table.
+
+   Colour contract, and the reason for it:
+     red    is structure and identity. It is the chrome. It NEVER means "bad", because the
+            whole frame is red and a red loss figure would disappear into it.
+     green  means go, and a result better than the benchmark.
+     amber  means caution, and marks the benchmark lanes you have to beat.
+     slate  means a result worse than the benchmark. Cold, not alarming.
+   Anything that breaks this contract is a bug, not a taste difference. */
+
+html.tron{
+  --ink0:#04060a; --ink1:#080b11; --ink2:#0c1118;
+  --txt:#e6edf5; --dim:#7b899b; --faint:#4a5768;
+  --go:#2fd47a; --warn:#f2b441; --chrome:#ff3b3b; --loss:#7f93ad;
+
+  /* one scale, seven steps. the app currently ships seventeen ad-hoc sizes. */
+  --t0:10px; --t1:11px; --t2:13px; --t3:15px; --t4:20px; --t5:30px; --t6:46px;
+  --trk-label:.22em; --trk-display:-.01em;
+}
+
+/* ---- labels and display share a system ---- */
+html.tron .sec,html.tron .th,html.tron .st,html.tron .gl,html.tron .tag{
+  letter-spacing:var(--trk-label); font-size:var(--t1); font-weight:800;
+}
+html.tron .gv,html.tron .ps,html.tron .dbig,html.tron .tv,html.tron .tc{
+  font-variant-numeric:tabular-nums; letter-spacing:var(--trk-display);
+}
+
+/* ---- THE BUY HIERARCHY FIX ----------------------------------------------------------
+   A filled green slab is the app telling you to act. Only a card that passed 3 of 3 gates
+   has earned that. Every other card gets an outline: still tappable, visibly subordinate.
+   Before this, three cards with three different verdicts had three identical green slabs. */
+html.tron .pk.watch .bt.buy,
+html.tron .pk:has(.watchr) .bt.buy{
+  background:#07100c;
+  color:#2fd47a;
+  border-color:#1e6b45;
+  box-shadow:none;
+  font-weight:800;
+}
+html.tron .pk.watch .bt.buy:active,
+html.tron .pk:has(.watchr) .bt.buy:active{background:#0a1a12}
+/* the ready card keeps the lit slab and gains a little more separation */
+html.tron .pk:has(.pickr) .bt.buy{box-shadow:0 0 24px #2fd47a80, inset 0 1px 0 #ffffff66}
+
+/* ---- two-column band on a real screen -----------------------------------------------
+   .zgrid is display:contents on a phone, so the five regions stay direct flex children of
+   #app and the phone layout is byte-identical. Above 1280 it becomes the grid. The race
+   spans two rows so its height is driven by the left column, never the other way round. */
+.zgrid{display:contents}
+
+@media (min-width:1280px){
+  #app{max-width:1500px}
+  /* six buttons justified across 1500px read as six unrelated things. grouped, they read
+     as one control strip. */
+  html.tron .chiprow{justify-content:flex-start;gap:8px;flex-wrap:wrap}
+  html.tron .top .wm{font-size:var(--t4);letter-spacing:.42em}
+
+  .zgrid{
+    display:grid; width:100%;
+    grid-template-columns:minmax(0,1.34fr) minmax(0,1fr);
+    grid-template-areas:
+      "hud   race"
+      "picks race"
+      "meter inst"
+      "sig   inst";
+    column-gap:26px; align-items:start;
+  }
+  .z-hud{grid-area:hud} .z-picks{grid-area:picks} .z-race{grid-area:race}
+  .z-meter{grid-area:meter} .z-inst{grid-area:inst} .z-sig{grid-area:sig}
+  .z-race{display:block}
+  /* the RACE button only makes sense where the race is not already on screen */
+  .z-picks [data-act="race"]{display:none}
+}
+/* below 1280 the race stays behind its button, because a phone has no room for it.
+   Written as a max-width query rather than a bare rule, so it cannot sit after the rule
+   that reveals it and silently win on equal specificity. */
+@media (max-width:1279px){ .z-race{display:none} }
+
+/* ---- the race panel ---- */
+html.tron .rc{
+  margin:0 18px; background:linear-gradient(180deg,#0a0d13,#05070b 70%);
+  border:1px solid #243044; border-radius:14px; padding:12px 14px 14px;
+  box-shadow:inset 0 1px 0 #ffffff0d, 0 0 26px #ff3b3b10;
+}
+html.tron .rc-head{font-size:var(--t2);line-height:1.45;color:var(--txt);margin-bottom:2px}
+html.tron .rc-head b{color:var(--warn);font-weight:800}
+html.tron .rc-sub{font-size:var(--t1);color:var(--dim);letter-spacing:.04em;line-height:1.5;margin-bottom:10px}
+html.tron .rc svg{display:block;width:100%;height:auto;overflow:visible}
+html.tron .rc-tab{
+  width:100%;border-collapse:collapse;margin-top:10px;
+  font-size:var(--t1);font-variant-numeric:tabular-nums;letter-spacing:.02em;
+}
+html.tron .rc-tab th{
+  text-align:right;font-size:var(--t0);letter-spacing:var(--trk-label);
+  color:var(--faint);font-weight:800;padding:0 0 4px;
+}
+html.tron .rc-tab td{text-align:right;padding:3px 0;border-top:1px solid #141c27;font-weight:800}
+html.tron .rc-tab td:first-child,html.tron .rc-tab th:first-child{
+  text-align:left;color:var(--dim);font-weight:800;letter-spacing:.08em;
+}
+html.tron .rc-tab td.nil{color:#2f3a49}
+html.tron .rc-foot{
+  margin-top:10px;padding-top:10px;border-top:1px solid #1a2230;
+  font-size:var(--t1);color:var(--dim);line-height:1.5;letter-spacing:.03em;
+}
+html.tron .rc-bar{height:4px;background:#121a25;border-radius:3px;overflow:hidden;margin:7px 0}
+html.tron .rc-bar i{display:block;height:100%;background:linear-gradient(90deg,#ff3b3b,#f2b441);box-shadow:0 0 10px #ff3b3b88}
+
+/* ---- the empty state is a first-class design, not a fallback ---- */
+html.tron .rc-empty{
+  text-align:center;padding:10px 6px 2px;
+  font-size:var(--t1);letter-spacing:var(--trk-label);color:var(--faint);font-weight:800;
+}
+html.tron .rc-empty b{display:block;font-size:var(--t4);letter-spacing:.1em;color:#5d6b7e;margin-bottom:6px}
+
+@media (prefers-reduced-motion:no-preference){
+  html.tron .rc-ln{stroke-dasharray:1 0;animation:rc-draw 1.1s cubic-bezier(.3,.8,.3,1) both}
+  @keyframes rc-draw{from{opacity:0}to{opacity:1}}
+}

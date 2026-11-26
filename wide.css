@@ -1,0 +1,45 @@
+/* Wide-screen layer. Every rule sits inside a min-width query, so the phone is untouched.
+   Pairs with tron.css but does not require it.
+
+   Phase 1 deliberately keeps ONE column and makes it wide, rather than splitting into a grid.
+   The render emits its regions as flat siblings, so a two-column grid would either couple the
+   row heights of unrelated blocks or need the DOM reordered, which changes the phone. The real
+   multi-pane HUD needs the panels to stop being modals anyway, and that is Phase 2 work. */
+
+#app > .z{display:contents}          /* phone: the region wrappers vanish from layout entirely */
+
+@media (min-width:1000px){
+  #app{max-width:1080px}
+  #app > .z{display:block}
+
+  /* the cards stop being thumbnails. at 430px each card was about 130px wide, which is why
+     everything interesting had to hide behind a drill-down. here they get about 330px. */
+  .cards{gap:14px;padding:0 18px}
+  .pk{padding-bottom:4px}
+  .pk .pn{font-size:15px}
+  .pk .ps{font-size:30px}
+  .pk .tag{font-size:11px}
+  .bt{min-height:56px;font-size:15px}
+
+  /* the cockpit can breathe */
+  .cl{margin:0 18px 12px;padding:12px 12px 6px}
+  .gg .gv{font-size:42px}
+  .gg .gl{font-size:12px}
+  .mast .mt{font-size:16px}
+
+  .hd{padding:0 20px}
+  .hp-note,.cp{font-size:13px}
+
+  /* panels were sized for a thumb. on a desktop they are a reading surface. */
+  .sheet{max-width:860px;border-radius:18px;top:40px;bottom:40px;padding:20px 22px 24px}
+  .sk{max-width:860px}
+  .sc7{grid-template-columns:2fr .7fr 1fr 1fr 1fr 1fr .9fr}
+  .sc7 .tl{font-size:12px}
+  .sc7 .tc{font-size:14px}
+}
+
+@media (min-width:1500px){
+  #app{max-width:1180px}
+  .cards{gap:18px}
+  .pk .ps{font-size:34px}
+}
