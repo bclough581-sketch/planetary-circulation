@@ -1,5 +1,9 @@
 'use strict';
 // Offline-entry regression: after one visit, reopening the root with the server gone must still reach the Explorer.
+// STALE as of 2026-11-26, and it needs playwright, so it has not run in a while. Two things moved
+// under it: index.html now redirects to amalgam-daily.html rather than the Explorer, and sw.js no
+// longer precaches the Explorer, journal, scoreboard and map cluster (they are cached on first
+// visit instead). Rewrite it against the daily app before trusting it again.
 const {startPreview}=require('./browser_preview.cjs');
 const {chromium}=require('playwright');
 const assert=require('node:assert/strict');

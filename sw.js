@@ -1,4 +1,8 @@
-const SHELL='pc-shell-v51', FILES=['./','index.html','amalgam-daily.html','ring-engine-lab.html','amalgam-theme.css','blue-steele.css','ring-evidence.js','delta-context.js','delta-company-evidence.js','product-data/delta-company-evidence.json','galaxy-ring.svg','apple-touch-icon.png','star-hero.js','intelligence/data/delta-quarterly-curated.json','decision-journal.html','journal-core.js','journal-legacy.js','journal.html','scoreboard.html','scoreboard.json','map.html','land.json','manifest.webmanifest','icon-192.png','icon-512.png','gates.js','check.js','game.html','privacy.html','d9-home.html','d9-market.html','d9-company.html','d9-score.html','d9-home.css','d9-home.js','d9-market.js','d9-star-ring.png'];
+// Precache the app and nothing else. v51 eagerly downloaded 1.95 MB at install, most of it
+// the d9 theme art and a 376 KB icon, before a phone could show a single stock. Everything
+// else is still cached the first time it is opened, by the fetch handler below, so the other
+// pages keep working offline once visited. Bumping SHELL drops the old oversized cache.
+const SHELL='pc-shell-v52', FILES=['./','index.html','amalgam-daily.html','manifest.webmanifest','apple-touch-icon.png','icon-192.png'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(SHELL).then(c=>c.addAll(FILES)).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==SHELL).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});
 self.addEventListener('fetch',e=>{
