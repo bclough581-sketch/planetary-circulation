@@ -4,12 +4,23 @@ const fs = require('fs'), assert = require('assert');
 const html = fs.readFileSync(__dirname + '/../amalgam-daily.html', 'utf8');
 let n = 0; const ok = (c, m) => { assert.ok(c, m); n++; };
 
-/* 1. A filled green BUY is the app telling you to act, and only a 3-of-3 card has earned it.
-      Before this rule, three cards with three different verdicts had three identical slabs. */
-ok(/\.pk\.watch \.bt\.buy,[\s\S]{0,80}\.watchr\) \.bt\.buy\{[\s\S]{0,200}?background:#07100c/.test(html),
-   'watch-only cards must not get the filled BUY slab');
-ok(/:has\(\.pickr\) \.bt\.buy\{box-shadow/.test(html),
-   'the 3-of-3 card keeps the lit slab');
+/* 1. The filled green BUY is the app telling you to act, so it follows the only rule the
+      system can defend: all three gates cleared. It used to follow rank, and rank is decided
+      by a 20-day strength tiebreak with no measured edge. */
+ok(/html\.tron \.pk \.bt\.buy\{[\s\S]{0,160}?background:#07100c/.test(html),
+   'a card that did not clear every gate gets the outline BUY');
+ok(/html\.tron \.pk\.g3 \.bt\.buy\{[\s\S]{0,200}?linear-gradient/.test(html),
+   'a 3-of-3 card gets the filled slab');
+ok(!/:has\(\.pickr\) \.bt\.buy/.test(html),
+   'the slab must not key on the PICK badge, which is rank and not a gate result');
+ok(/var clean = \(c\.met === 3\);/.test(html) && /\(clean \? ' g3' : ''\)/.test(html),
+   'the g3 class comes from the gate count');
+
+/* A name that cleared every gate but lost the tiebreak is not "watch only". */
+ok(/clean\s*\?\s*'<div class="role rankr">RANK '/.test(html),
+   'a 3-of-3 card that is not rank 1 is labelled by its rank, not dismissed');
+ok(/: '<div class="role watchr">WATCH ONLY<\/div>'/.test(html),
+   'WATCH ONLY survives for a card that genuinely missed a gate');
 
 /* 2. One renderer. Two copies of the race would eventually disagree about the ledger. */
 ok(/function raceInline\(/.test(html), 'raceInline exists');

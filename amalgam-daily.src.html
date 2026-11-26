@@ -888,8 +888,11 @@ function cardHtml(c,i){
   var buyCls='bt buy'+(d&&d.decision==='buy'?' on':(d?' dim':'')), skipCls='bt skip'+(d&&d.decision==='skip'?' on':(d?' dim':''));
   var st=d?(d.decision==='buy'?'BOUGHT':'SKIPPED'):(all?'READY':'REVIEW '+sn.filter(Boolean).length+' OF 3');
   var tag='<div class="tag" style="text-align:center">'+(c.met===null?'FROM PUSH':c.met+' OF 3 GATES')+'</div>';
-  var role=i===0?'<div class="role pickr">PICK</div>':'<div class="role watchr">WATCH ONLY</div>';
-  return '<div class="pk" style="'+(d?(d.decision==='buy'?'border-color:#2fd47a':'border-color:#ff3b3b'):'')+'">'+role+'<div class="pn">'+esc(m.name)+'</div><button class="ps psb" data-act="chart" data-i="'+i+'" aria-label="Open chart for '+esc(m.name)+'">'+esc(m.sym)+'<i>&#8250;</i></button>'+tag+
+  var clean = (c.met === 3);
+  var role = i === 0 ? '<div class="role pickr">PICK</div>'
+           : clean  ? '<div class="role rankr">RANK ' + (i + 1) + '</div>'
+                    : '<div class="role watchr">WATCH ONLY</div>';
+  return '<div class="pk' + (clean ? ' g3' : '') + '" style="'+(d?(d.decision==='buy'?'border-color:#2fd47a':'border-color:#ff3b3b'):'')+'">'+role+'<div class="pn">'+esc(m.name)+'</div><button class="ps psb" data-act="chart" data-i="'+i+'" aria-label="Open chart for '+esc(m.name)+'">'+esc(m.sym)+'<i>&#8250;</i></button>'+tag+
    '<div class="dots">'+sn.map(function(x){return '<i class="dot'+(x?' on':'')+'"></i>';}).join('')+'</div>'+
    '<div class="row2"><button class="'+buyCls+'" data-act="buy" data-i="'+i+'" aria-label="Buy '+esc(m.name)+'">BUY</button><button class="'+skipCls+'" data-act="skip" data-i="'+i+'" aria-label="Skip '+esc(m.name)+'">SKIP</button></div><div class="st">'+st+'</div></div>';
 }
@@ -1051,6 +1054,10 @@ function noEdgeNote(){
     'that the method works.</div>';
 }
 function picksBlock(P){ return '<div class="hd"><span class="sec">'+(S.ext?'TONIGHT\'S PICKS':'TODAY\'S PICKS')+'</span><span style="display:flex;gap:6px"><button class="mini2" data-act="cmp"'+(P.length?'':' disabled')+'>COMPARE</button><button class="mini2" data-act="math">HOW PICKED</button><button class="mini2" data-act="race">RACE</button></span></div>'+
+      (P.filter(function(c){return c.met===3;}).length>1
+        ?'<div class="st" style="margin:0 16px 6px;text-align:left;color:#8591a2">'
+         +P.filter(function(c){return c.met===3;}).length+' CARDS CLEARED ALL 3 GATES. '
+         +'RANK 1 WON ON 20-DAY STRENGTH, WHICH HAS NO MEASURED EDGE.</div>':'')+
       (P.length&&P[0].met!==null&&P[0].met<3?'<div class="hp-note" style="margin:0 14px 8px"><b>NO CLEAN PICK TODAY</b><br>Card 1 passed '+P[0].met+' of 3 gates. Sim only. A real-money entry waits for 3 of 3. The cards stay so the sim keeps logging.</div>':'')+(P.length?'<div class="cards">'+P.map(cardHtml).join('')+'</div>':'<div class="nopick"><b>No clean setup today.</b><br>Nothing in the watched stocks passed the gates and fit your size. That is a real answer. Doing nothing costs nothing.</div>')+
     (S.extSyms.length?'<div class="st" style="margin:6px 2px 0;text-align:left">TONIGHT\'S LIST: '+esc(S.extSyms.join('  '))+(S.extBad.length?'. NOT SHOWN: '+esc(S.extBad.join(', ')):'')+'</div>':'')+
     '<div style="margin:8px 14px 0">'+noEdgeNote()+'</div>'; }

@@ -28,22 +28,25 @@ html.tron .gv,html.tron .ps,html.tron .dbig,html.tron .tv,html.tron .tc{
   font-variant-numeric:tabular-nums; letter-spacing:var(--trk-display);
 }
 
-/* ---- THE BUY HIERARCHY FIX ----------------------------------------------------------
-   A filled green slab is the app telling you to act. Only a card that passed 3 of 3 gates
-   has earned that. Every other card gets an outline: still tappable, visibly subordinate.
-   Before this, three cards with three different verdicts had three identical green slabs. */
-html.tron .pk.watch .bt.buy,
-html.tron .pk:has(.watchr) .bt.buy{
-  background:#07100c;
-  color:#2fd47a;
-  border-color:#1e6b45;
-  box-shadow:none;
-  font-weight:800;
+/* ---- THE BUY HIERARCHY ---------------------------------------------------------------
+   A filled green slab is the app telling you to act, so it has to follow the only rule the
+   system can defend: whether the name cleared all three gates. It used to follow rank, which
+   is decided by 20-day relative strength once the gate scores tie, and that tiebreak has no
+   measured edge. On 2026-11-25 all three cards read 3 OF 3 and only the first was lit. */
+html.tron .pk .bt.buy{
+  background:#07100c; color:#2fd47a; border-color:#1e6b45;
+  box-shadow:none; font-weight:800;
 }
-html.tron .pk.watch .bt.buy:active,
-html.tron .pk:has(.watchr) .bt.buy:active{background:#0a1a12}
-/* the ready card keeps the lit slab and gains a little more separation */
-html.tron .pk:has(.pickr) .bt.buy{box-shadow:0 0 24px #2fd47a80, inset 0 1px 0 #ffffff66}
+html.tron .pk .bt.buy:active{background:#0a1a12}
+html.tron .pk.g3 .bt.buy{
+  background:linear-gradient(180deg,#4ae996,#21b866);
+  color:#03050a; border-color:#7df6b8;
+  box-shadow:0 0 24px #2fd47a80, inset 0 1px 0 #ffffff66;
+}
+
+/* A card that cleared every gate but did not win the tiebreak is not "watch only". It gets
+   its rank, in the same weight as the PICK badge rather than the dismissed grey. */
+html.tron .rankr{border:1px solid #4a5768;color:#c9d1dc;background:#0d1219}
 
 /* ---- two-column band on a real screen -----------------------------------------------
    .zgrid is display:contents on a phone, so the five regions stay direct flex children of
