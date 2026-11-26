@@ -227,7 +227,7 @@ function heldInline(held, acct){
         ' outside it entirely, with no stop order.' : '') + '</div>'
     : '<div class="hd-sub">No account size yet, so the risk budget cannot be drawn. Open tonight’s push link.</div>';
 
-  return '<div class="hd">' +
+  return '<div class="bk">' +
     '<div class="hd-head">' + head + '</div>' + bar +
     '<div class="hd-grid">' + tiles + '</div>' +
     '<div class="hd-foot">R is how far a trade has come from its entry, in units of what it risked. ' +

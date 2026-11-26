@@ -12,7 +12,7 @@
 
 html.tron{
   --ink0:#04060a; --ink1:#080b11; --ink2:#0c1118;
-  --txt:#e6edf5; --dim:#7b899b; --faint:#4a5768;
+  --txt:#e6edf5; --dim:#9eacbe; --faint:#4a5768;
   --go:#2fd47a; --warn:#f2b441; --chrome:#ff3b3b; --loss:#7f93ad;
 
   /* one scale, seven steps. the app currently ships seventeen ad-hoc sizes. */

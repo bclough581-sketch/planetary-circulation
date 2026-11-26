@@ -37,8 +37,12 @@ html.tron .ht-foot{
 }
 @media (max-width:1279px){ .z-heat{display:none} }
 
-/* ---- the held book ---- */
-html.tron .hd{
+/* ---- the held book ----
+   Its own class. The app already owns .hd for section header bars, where it means
+   display:flex, and borrowing it laid the book's four blocks out in a row on top of
+   each other. Found 2026-11-26 from a screenshot. */
+html.tron .bk{
+  display:block;
   margin:0 18px; background:linear-gradient(180deg,#0a0d13,#05070b 70%);
   border:1px solid #243044; border-radius:14px; padding:12px 14px 14px;
   box-shadow:inset 0 1px 0 #ffffff0d, 0 0 26px #5b8cff10;
@@ -101,3 +105,15 @@ html.tron .vs-foot{
 html.tron .vs-stale{
   display:block;margin-top:7px;color:#f2b441;font-size:var(--t1);letter-spacing:.04em;line-height:1.5;
 }
+
+/* ---- the top bar reads over the background art ---------------------- */
+html.tron .top{
+  position:relative;z-index:3;
+  background:linear-gradient(180deg,#05070b 55%,#05070bdd 80%,#05070b00);
+  padding-bottom:14px;
+}
+html.tron .top .wm{
+  color:#ff3b3b;text-shadow:0 0 14px #ff3b3b66;
+  -webkit-text-stroke:0;opacity:1;
+}
+html.tron .chiprow{position:relative;z-index:3}
