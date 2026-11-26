@@ -8,3 +8,4 @@ dark-state/
 # amalgam-daily.src.html by integrate_hud.py; these are not sources.
 amalgam-daily.html.before_*
 amalgam_*_preview.html
+heat_preview.html

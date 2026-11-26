@@ -2,7 +2,7 @@
 
 Edit the SOURCE and the LAYERS, never the built page: this script overwrites it.
 
-Repeatable: it always starts from amalgam-daily.html.before_hud, so the layer files stay the
+Repeatable: it always starts from amalgam-daily.src.html, so the layer files stay the
 single source of truth and a copy edit never has to be made twice."""
 import pathlib
 HERE = pathlib.Path(__file__).parent
@@ -18,6 +18,7 @@ s = s.replace(need('<html lang="en">'), '<html lang="en" class="tron">', 1)
 css = ("\n/* ================= tron.css ================= */\n" + rd("tron.css")
      + "\n/* ================= wide.css ================= */\n" + rd("wide.css")
      + "\n/* ================= hud.css  ================= */\n" + rd("hud.css")
+     + "\n/* ================= heat.css ================= */\n" + rd("heat.css")
      + """
 /* A section header holds its label and up to three buttons on one line with no wrapping,
    which overflows the right edge of a 390px phone and clips the last button. Unscoped,
@@ -28,14 +29,14 @@ css = ("\n/* ================= tron.css ================= */\n" + rd("tron.css")
 }
 """)
 s = s.replace(need("</style>\n</head>"), css + "</style>\n</head>", 1)
-s = s.replace(need("<script>\n(function(){"), "<script>\n(function(){\n" + rd("hud.js") + "\n", 1)
+s = s.replace(need("<script>\n(function(){"), "<script>\n(function(){\n" + rd("hud.js") + "\n" + rd("heat.js") + "\n", 1)
 s = s.replace(need("</script>\n</body>"), "</script>\n<script>\n" + rd("tron.js") + "\n</script>\n</body>", 1)
 
 a = need("    else h+='<section class=\"z z-hud\">'+hudHtml(dec,P.length,P)+'</section>'+")
 s = s.replace(a, "    else h+='<div class=\"zgrid\">'+\n"
                  "      '<section class=\"z z-hud\">'+hudHtml(dec,P.length,P)+'</section>'+", 1)
 b = need("      '<section class=\"z z-picks\">'+picksBlock(P)+'</section>'+")
-s = s.replace(b, b + "\n      raceSection()+", 1)
+s = s.replace(b, b + "\n      raceSection()+\n      heatSection()+", 1)
 c = need("      '<section class=\"z z-sig\"><div class=\"hd\"><span class=\"sec\">3 WARNINGS</span></div><div class=\"list\">'+sigRows(sg.w,true)+'</div><div class=\"hd\"><span class=\"sec\">3 POSITIVES</span></div><div class=\"list\">'+sigRows(sg.p,false)+'</div></section>'+")
 s = s.replace(c, c + "\n      '</div>'+", 1)
 
@@ -83,6 +84,38 @@ function raceHtml(){
     noEdgeNote() + '</div>';
 }
 ''' + s[end:]
+
+
+
+# ---- heat map wiring -------------------------------------------------------------------
+# The map is a sibling of the race: inline in the wide band, behind a button on a phone.
+d = need('<button class="mini2" data-act="race">RACE</button>')
+s = s.replace(d, d + '<button class="mini2" data-act="heat">HEAT</button>', 1)
+
+e = need("  if(S.panel==='race'){ h+=raceHtml(); }")
+s = s.replace(e, e + "\n  if(S.panel==='heat'){ h+=heatHtml(); }", 1)
+
+f = need("  else if(act==='race'){ S.panel='race'; }")
+s = s.replace(f, f + """
+  else if(act==='heat'){ S.panel='heat'; }
+  else if(act==='hwin'){ S.hwin=+t.getAttribute('data-h'); }""", 1)
+
+g = need("function raceSection(){")
+s = s.replace(g, """function heatForToday(){ return (MARKET && MARKET.bars && MARKET.bars.SPY) ? MARKET : null; }
+function heatSection(){
+  return '<section class="z z-heat"><div class="hd"><span class="sec">THE HEAT MAP</span>' +
+    '<span class="st">' + (heatForToday() ? esc(MARKET.asof) : 'NO DATA') + '</span></div>' +
+    (heatForToday() ? heatInline(MARKET, S.hwin || 20)
+                    : '<div class="cp" style="margin:0 18px">No market data loaded yet.</div>') +
+    '</section>';
+}
+function heatHtml(){
+  var sheet = '<div class="scrim" data-act="pclose"></div><div class="sheet"><div class="sh">' +
+              '<div class="sn">The heat map</div><button class="x" data-act="pclose" aria-label="Close">&#10005;</button></div>';
+  if(!heatForToday()) return sheet + '<div class="cp">No market data loaded yet.</div></div>';
+  return sheet + heatInline(MARKET, S.hwin || 20) + '</div>';
+}
+""" + g, 1)
 
 (HERE / "amalgam-daily.html").write_text(s, encoding="utf-8")
 print("integrated:", len(s), "bytes")

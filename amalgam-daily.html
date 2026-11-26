@@ -534,6 +534,42 @@ html.tron .rc-empty b{display:block;font-size:var(--t4);letter-spacing:.1em;colo
   @keyframes rc-draw{from{opacity:0}to{opacity:1}}
 }
 
+/* ================= heat.css ================= */
+/* ---- the heat map ----------------------------------------------------------------
+   Same frame as the race panel, because they are siblings: both are the app telling
+   Brent what happened, neither is the app telling him what to do. */
+html.tron .ht{
+  margin:0 18px; background:linear-gradient(180deg,#0a0d13,#05070b 70%);
+  border:1px solid #243044; border-radius:14px; padding:12px 14px 14px;
+  box-shadow:inset 0 1px 0 #ffffff0d, 0 0 26px #ff3b3b10;
+}
+html.tron .ht-head{font-size:var(--t2);line-height:1.45;color:var(--txt);margin-bottom:2px}
+html.tron .ht-head b{color:var(--warn);font-weight:800}
+html.tron .ht-sub{font-size:var(--t1);color:var(--dim);letter-spacing:.04em;line-height:1.5}
+html.tron .ht-btns{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 8px}
+html.tron .ht-btns .mini2.on{border-color:#ff3b3b;color:#ff3b3b}
+html.tron .ht svg{display:block;width:100%;height:auto;border-radius:8px;background:#05070b}
+html.tron .ht-foot{
+  font-size:var(--t1);color:var(--dim);letter-spacing:.04em;line-height:1.55;margin-top:10px;
+  border-top:1px solid #16202d;padding-top:9px;
+}
+
+/* The map wants width more than anything else, so on a wide screen it takes the whole
+   band under the two columns rather than sharing a column with the race. */
+@media (min-width:1280px){
+  .zgrid{
+    grid-template-areas:
+      "hud   race"
+      "picks race"
+      "heat  heat"
+      "meter inst"
+      "sig   inst";
+  }
+  .z-heat{grid-area:heat;display:block;margin-top:22px}
+  .z-picks [data-act="heat"]{display:none}
+}
+@media (max-width:1279px){ .z-heat{display:none} }
+
 /* A section header holds its label and up to three buttons on one line with no wrapping,
    which overflows the right edge of a 390px phone and clips the last button. Unscoped,
    because it is a fault in the app rather than in the neon layer. */
@@ -701,6 +737,155 @@ function raceInline(R, opts){
                    : 'Compare every lane with RANDOM, not with each other. ')+
       'The lane to watch is RANDOM. Anything that cannot beat a coin flip from the same pool '+
       'is not picking, it is guessing.</div>'+
+    '</div>';
+}
+
+/* Amalgam heat map.
+   Brent reads a market faster from a block of coloured tiles than from any table, so this is
+   the thinkorswim view built from the data the app already publishes.
+
+   Area is 20-day average dollar volume, so the tiles that are physically big are the ones the
+   market is actually trading. Colour is the return over the chosen window, red down, green up,
+   against a near-black neutral. Those are the same two colours the rest of the app uses for
+   loss and gain, so a tile means here exactly what a number means elsewhere.
+
+   The scale saturates at a cap that grows with the window (3% for a day, 12% for twenty). A
+   fixed cap would make every tile look identical at one day and identical at twenty. */
+
+var HEAT_WINS = [1, 5, 20, 60];
+var HEAT_CAP  = {1:0.03, 5:0.06, 20:0.12, 60:0.25};
+
+/* Squarified treemap (Bruls, Huizing, van Wijk 2000). Items must arrive sorted by v desc. */
+function heatSquarify(items, x, y, w, h){
+  var out = [];
+  if(!items.length || w <= 0 || h <= 0) return out;
+  var total = 0, i;
+  for(i = 0; i < items.length; i++) total += items[i].v;
+  if(total <= 0) return out;
+  var scale = (w * h) / total, row = [], rowSum = 0, side = Math.min(w, h);
+  function worst(extra){
+    var mx = 0, mn = Infinity, sum = rowSum + (extra || 0), k, a;
+    for(k = 0; k < row.length; k++){ a = row[k].v * scale; if(a > mx) mx = a; if(a < mn) mn = a; }
+    if(extra){ a = extra * scale; if(a > mx) mx = a; if(a < mn) mn = a; }
+    sum *= scale;
+    if(sum <= 0 || mn <= 0 || side <= 0) return Infinity;
+    return Math.max(side * side * mx / (sum * sum), sum * sum / (side * side * mn));
+  }
+  i = 0;
+  while(i < items.length){
+    if(!row.length || worst(items[i].v) <= worst(0)){
+      row.push(items[i]); rowSum += items[i].v; i++;
+    } else {
+      var len = (rowSum * scale) / side, off = 0, k2;
+      for(k2 = 0; k2 < row.length; k2++){
+        var a2 = row[k2].v * scale, s2 = a2 / len;
+        if(w >= h) out.push({it:row[k2], x:x, y:y + off, w:len, h:s2});
+        else       out.push({it:row[k2], x:x + off, y:y, w:s2, h:len});
+        off += s2;
+      }
+      if(w >= h){ x += len; w -= len; } else { y += len; h -= len; }
+      side = Math.min(w, h); row = []; rowSum = 0;
+    }
+  }
+  if(row.length && rowSum > 0){
+    var off2 = 0, full = (w >= h) ? h : w, k3;
+    for(k3 = 0; k3 < row.length; k3++){
+      var sz = full * (row[k3].v / rowSum);
+      if(w >= h) out.push({it:row[k3], x:x, y:y + off2, w:w, h:sz});
+      else       out.push({it:row[k3], x:x + off2, y:y, w:sz, h:h});
+      off2 += sz;
+    }
+  }
+  return out;
+}
+
+/* Close-to-close return over `win` sessions, and the 20-day average dollar volume. */
+function heatStat(bars, win){
+  if(!bars || bars.length < win + 1) return null;
+  var n = bars.length, last = bars[n - 1], prev = bars[n - 1 - win];
+  if(!last || !prev || !prev[4] || !last[4]) return null;
+  var dv = 0, k = 0, i;
+  for(i = Math.max(0, n - 20); i < n; i++){ dv += bars[i][4] * bars[i][5]; k++; }
+  return { c:last[4], r:last[4] / prev[4] - 1, dv:k ? dv / k : 0 };
+}
+
+function heatColor(r, cap){
+  var t = Math.max(-1, Math.min(1, r / cap));
+  var tgt = t >= 0 ? [47, 212, 122] : [255, 59, 59];
+  var a = Math.pow(Math.abs(t), 0.62);          /* small moves still read, instead of all black */
+  var c = [0, 1, 2].map(function(i){ return Math.round(26 + (tgt[i] - 26) * a); });
+  return 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')';
+}
+
+function heatPct(r){
+  var s = (r * 100).toFixed(Math.abs(r) < 0.1 ? 1 : 0);
+  return (r < 0 ? '−' + s.replace('-', '') : '+' + s) + '%';
+}
+
+/* Returns the whole panel. Safe on missing or short data. */
+function heatInline(M, win){
+  win = win || 20;
+  var cap = HEAT_CAP[win] || 0.12;
+  var uni = (M && M.universe) || [], bars = (M && M.bars) || {};
+  var picks = (M && M.picks && M.picks.syms) || [];
+  var pickSet = {}; picks.forEach(function(s){ pickSet[s] = 1; });
+
+  var items = [], skipped = 0;
+  uni.forEach(function(sym){
+    var st = heatStat(bars[sym], win);
+    if(!st || st.dv <= 0){ skipped++; return; }
+    items.push({ sym:sym, v:st.dv, r:st.r, c:st.c });
+  });
+  if(!items.length)
+    return '<div class="ht"><div class="ht-head">No price data loaded yet.</div></div>';
+  items.sort(function(a, b){ return b.v - a.v; });
+
+  var W = 1000, H = 520;
+  var rects = heatSquarify(items, 0, 0, W, H);
+  var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Heat map of the universe by ' + win + '-day return">';
+  rects.forEach(function(q){
+    var it = q.it, pick = pickSet[it.sym];
+    s += '<rect x="' + q.x.toFixed(1) + '" y="' + q.y.toFixed(1) + '" width="' + Math.max(0, q.w - 2).toFixed(1) +
+         '" height="' + Math.max(0, q.h - 2).toFixed(1) + '" rx="3" fill="' + heatColor(it.r, cap) + '"' +
+         (pick ? ' stroke="#e6edf5" stroke-width="2.5"' : ' stroke="#05070b" stroke-width="1"') + '/>';
+    var m = Math.min(q.w, q.h);
+    if(m < 26) return;                                   /* a label that does not fit is noise */
+    var fs = Math.max(9, Math.min(26, m * 0.27));
+    var cx = (q.x + q.w / 2).toFixed(1), cy = q.y + q.h / 2;
+    s += '<text x="' + cx + '" y="' + (cy - fs * 0.08).toFixed(1) + '" text-anchor="middle" fill="#f2f7fc" ' +
+         'font-size="' + fs.toFixed(1) + '" font-weight="800" letter-spacing="0.5">' + esc(it.sym) + '</text>';
+    if(m >= 44)
+      s += '<text x="' + cx + '" y="' + (cy + fs * 0.95).toFixed(1) + '" text-anchor="middle" fill="#f2f7fcc4" ' +
+           'font-size="' + (fs * 0.62).toFixed(1) + '" font-weight="700">' + heatPct(it.r) + '</text>';
+  });
+  s += '</svg>';
+
+  var spy = heatStat(bars.SPY, win);
+  var up = items.filter(function(i){ return i.r > 0; }).length;
+  var head;
+  if(spy) head = '<b>SPY is ' + heatPct(spy.r) + ' over ' + win + ' session' + (win > 1 ? 's' : '') + '.</b> ' +
+                 up + ' of ' + items.length + ' names are up over the same stretch.';
+  else    head = '<b>' + up + ' of ' + items.length + ' names are up over ' + win + ' sessions.</b>';
+
+  var btns = HEAT_WINS.map(function(h){
+    return '<button class="mini2' + (h === win ? ' on' : '') + '" data-act="hwin" data-h="' + h + '">' +
+           (h === 1 ? '1 DAY' : h + ' DAYS') + '</button>';
+  }).join('');
+
+  var pickLine = picks.length
+    ? 'Tonight’s picks are outlined in white' +
+      (picks.filter(function(p){ return uni.indexOf(p) >= 0; }).length ? '.' :
+       ', and none of them is in this map: the picks come from the whole market, this map is the 24 names the app tracks closely.')
+    : 'No picks tonight.';
+
+  return '<div class="ht">' +
+    '<div class="ht-head">' + head + '</div>' +
+    '<div class="ht-sub">Tile size is how many dollars a day actually trade. Colour is the ' + win +
+      '-session return, saturating at ' + Math.round(cap * 100) + '%.</div>' +
+    '<div class="ht-btns">' + btns + '</div>' + s +
+    '<div class="ht-foot">' + pickLine +
+      (skipped ? ' ' + skipped + ' name' + (skipped > 1 ? 's have' : ' has') + ' too little history for this window.' : '') +
+      '<br>This is what has already happened. Nothing on it is a signal, a rank or a reason to buy.</div>' +
     '</div>';
 }
 
@@ -1500,6 +1685,7 @@ function sheetHtml(P){
   }
   if(S.panel==='math'){ h+=mathHtml(); }
   if(S.panel==='race'){ h+=raceHtml(); }
+  if(S.panel==='heat'){ h+=heatHtml(); }
   if(S.panel==='dial'){ h+=dialPanelHtml(); }
   if(S.panel==='meter'){
     var M=meterCalls(S.mh), f1=function(v){ return v===null?'-':(v>0?'+':'')+v.toFixed(1); };
@@ -1592,6 +1778,20 @@ function raceState(){
   var d = R.closed_sessions || 0;
   return d ? d + ' SCORED SESSIONS' : 'LIVE \u00b7 NOTHING SCORED';
 }
+function heatForToday(){ return (MARKET && MARKET.bars && MARKET.bars.SPY) ? MARKET : null; }
+function heatSection(){
+  return '<section class="z z-heat"><div class="hd"><span class="sec">THE HEAT MAP</span>' +
+    '<span class="st">' + (heatForToday() ? esc(MARKET.asof) : 'NO DATA') + '</span></div>' +
+    (heatForToday() ? heatInline(MARKET, S.hwin || 20)
+                    : '<div class="cp" style="margin:0 18px">No market data loaded yet.</div>') +
+    '</section>';
+}
+function heatHtml(){
+  var sheet = '<div class="scrim" data-act="pclose"></div><div class="sheet"><div class="sh">' +
+              '<div class="sn">The heat map</div><button class="x" data-act="pclose" aria-label="Close">&#10005;</button></div>';
+  if(!heatForToday()) return sheet + '<div class="cp">No market data loaded yet.</div></div>';
+  return sheet + heatInline(MARKET, S.hwin || 20) + '</div>';
+}
 function raceSection(){
   return '<section class="z z-race"><div class="hd"><span class="sec">THE RACE</span>' +
     '<span class="st">' + raceState() + '</span></div>' +
@@ -1655,7 +1855,7 @@ function basketNote(P){
     ' would risk ' + all.toFixed(1) + '%, which is ' + (all / each).toFixed(1) + ' times one trade.' +
     '</div>';
 }
-function picksBlock(P){ return '<div class="hd"><span class="sec">'+(S.ext?'TONIGHT\'S PICKS':'TODAY\'S PICKS')+'</span><span style="display:flex;gap:6px"><button class="mini2" data-act="cmp"'+(P.length?'':' disabled')+'>COMPARE</button><button class="mini2" data-act="math">HOW PICKED</button><button class="mini2" data-act="race">RACE</button></span></div>'+
+function picksBlock(P){ return '<div class="hd"><span class="sec">'+(S.ext?'TONIGHT\'S PICKS':'TODAY\'S PICKS')+'</span><span style="display:flex;gap:6px"><button class="mini2" data-act="cmp"'+(P.length?'':' disabled')+'>COMPARE</button><button class="mini2" data-act="math">HOW PICKED</button><button class="mini2" data-act="race">RACE</button><button class="mini2" data-act="heat">HEAT</button></span></div>'+
       (P.filter(function(c){return c.met===3;}).length>1
         ?'<div class="st" style="margin:0 16px 6px;text-align:left;color:#8591a2">'
          +P.filter(function(c){return c.met===3;}).length+' CARDS CLEARED ALL 3 GATES. '
@@ -1707,6 +1907,7 @@ function render(){
       '<section class="z z-hud">'+hudHtml(dec,P.length,P)+'</section>'+
       '<section class="z z-picks">'+picksBlock(P)+'</section>'+
       raceSection()+
+      heatSection()+
       '<section class="z z-meter">'+meterHtml()+'</section>'+
       '<section class="z z-inst"><div class="hd"><span class="sec">FULL INSTRUMENTS</span><span class="st">TAP ANY GAUGE FOR THE WHY</span></div>'+clusterHtml()+'</section>'+
       '<section class="z z-sig"><div class="hd"><span class="sec">3 WARNINGS</span></div><div class="list">'+sigRows(sg.w,true)+'</div><div class="hd"><span class="sec">3 POSITIVES</span></div><div class="list">'+sigRows(sg.p,false)+'</div></section>'+
@@ -1810,6 +2011,8 @@ document.addEventListener('click',function(e){
   else if(act==='confirm'){ c=P[S.ticket]; record(c,'buy','',S.note.trim()); return; }
   else if(act==='cmppick'){ var cp=P[i]; if(cp){ var cs=(S.seen[cp.m.sym]||[false,false,false]).slice(); cs[0]=true; S.seen[cp.m.sym]=cs; S.panel=null; S.open=i; S.step=0; S.note=''; } }
   else if(act==='race'){ S.panel='race'; }
+  else if(act==='heat'){ S.panel='heat'; }
+  else if(act==='hwin'){ S.hwin=+t.getAttribute('data-h'); }
   else if(act==='cmp'||act==='math'||act==='log'||act==='acct'||act==='score'){ S.panel=act; if(act==='cmp') recordCompare(); }
   else if(act==='pclose'){ S.panel=null; }
   else if(act==='chart'){ openChart(P[i].m.sym); return; }

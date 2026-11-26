@@ -1,0 +1,34 @@
+/* ---- the heat map ----------------------------------------------------------------
+   Same frame as the race panel, because they are siblings: both are the app telling
+   Brent what happened, neither is the app telling him what to do. */
+html.tron .ht{
+  margin:0 18px; background:linear-gradient(180deg,#0a0d13,#05070b 70%);
+  border:1px solid #243044; border-radius:14px; padding:12px 14px 14px;
+  box-shadow:inset 0 1px 0 #ffffff0d, 0 0 26px #ff3b3b10;
+}
+html.tron .ht-head{font-size:var(--t2);line-height:1.45;color:var(--txt);margin-bottom:2px}
+html.tron .ht-head b{color:var(--warn);font-weight:800}
+html.tron .ht-sub{font-size:var(--t1);color:var(--dim);letter-spacing:.04em;line-height:1.5}
+html.tron .ht-btns{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 8px}
+html.tron .ht-btns .mini2.on{border-color:#ff3b3b;color:#ff3b3b}
+html.tron .ht svg{display:block;width:100%;height:auto;border-radius:8px;background:#05070b}
+html.tron .ht-foot{
+  font-size:var(--t1);color:var(--dim);letter-spacing:.04em;line-height:1.55;margin-top:10px;
+  border-top:1px solid #16202d;padding-top:9px;
+}
+
+/* The map wants width more than anything else, so on a wide screen it takes the whole
+   band under the two columns rather than sharing a column with the race. */
+@media (min-width:1280px){
+  .zgrid{
+    grid-template-areas:
+      "hud   race"
+      "picks race"
+      "heat  heat"
+      "meter inst"
+      "sig   inst";
+  }
+  .z-heat{grid-area:heat;display:block;margin-top:22px}
+  .z-picks [data-act="heat"]{display:none}
+}
+@media (max-width:1279px){ .z-heat{display:none} }
