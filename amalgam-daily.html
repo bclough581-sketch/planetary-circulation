@@ -1629,11 +1629,38 @@ function noEdgeNote(){
     'tested with none passing. These cards are a disciplined way to record decisions, not evidence '+
     'that the method works.</div>';
 }
+/* Every card is sized on its own to risk about 3% of equity. Nothing on screen said what
+   they come to together, which did not matter while only one card carried a lit BUY. Now
+   that the slab follows the gates, several cards can be lit at once, and on a small account
+   their combined cost can exceed available cash while their combined risk is a multiple of
+   one trade. The app does that addition rather than leaving it to the reader. Figures are
+   computed at render time and never written into this file, which is published. */
+function basketNote(P){
+  var a = S.acct;
+  if(!a || a.sample || !(a.netLiq > 0)) return '';
+  var live = P.filter(function(c){ return c.met === 3 && c.z && c.z.sh > 0 && !decided(c.m.sym); });
+  if(live.length < 2) return '';
+  var cost = live.reduce(function(t,c){ return t + c.z.cash; }, 0);
+  var risk = live.reduce(function(t,c){ return t + c.z.risk; }, 0);
+  var each = Math.max.apply(null, live.map(function(c){ return c.z.risk; })) / a.netLiq * 100;
+  var all  = risk / a.netLiq * 100;
+  var over = cost > a.cash;
+  var m = function(v){ return '$' + Math.round(v).toLocaleString(); };
+  return '<div class="hp-note" style="margin:0 14px 8px;border-color:' + (over ? '#7a2a2f' : '#3a4658') + '">' +
+    '<b style="color:' + (over ? '#ff6a6a' : '#f2b441') + '">' +
+      (over ? 'YOU CANNOT TAKE ALL ' + live.length : 'ALL ' + live.length + ' TOGETHER') + '</b><br>' +
+    'Together they cost ' + m(cost) + ' against ' + m(a.cash) + ' of cash' +
+    (over ? ', short by ' + m(cost - a.cash) + '. ' : '. ') +
+    'Each is sized to risk about ' + each.toFixed(1) + '% on its own. All ' + live.length +
+    ' would risk ' + all.toFixed(1) + '%, which is ' + (all / each).toFixed(1) + ' times one trade.' +
+    '</div>';
+}
 function picksBlock(P){ return '<div class="hd"><span class="sec">'+(S.ext?'TONIGHT\'S PICKS':'TODAY\'S PICKS')+'</span><span style="display:flex;gap:6px"><button class="mini2" data-act="cmp"'+(P.length?'':' disabled')+'>COMPARE</button><button class="mini2" data-act="math">HOW PICKED</button><button class="mini2" data-act="race">RACE</button></span></div>'+
       (P.filter(function(c){return c.met===3;}).length>1
         ?'<div class="st" style="margin:0 16px 6px;text-align:left;color:#8591a2">'
          +P.filter(function(c){return c.met===3;}).length+' CARDS CLEARED ALL 3 GATES. '
          +'RANK 1 WON ON 20-DAY STRENGTH, WHICH HAS NO MEASURED EDGE.</div>':'')+
+      basketNote(P)+
       (P.length&&P[0].met!==null&&P[0].met<3?'<div class="hp-note" style="margin:0 14px 8px"><b>NO CLEAN PICK TODAY</b><br>Card 1 passed '+P[0].met+' of 3 gates. Sim only. A real-money entry waits for 3 of 3. The cards stay so the sim keeps logging.</div>':'')+(P.length?'<div class="cards">'+P.map(cardHtml).join('')+'</div>':'<div class="nopick"><b>No clean setup today.</b><br>Nothing in the watched stocks passed the gates and fit your size. That is a real answer. Doing nothing costs nothing.</div>')+
     (S.extSyms.length?'<div class="st" style="margin:6px 2px 0;text-align:left">TONIGHT\'S LIST: '+esc(S.extSyms.join('  '))+(S.extBad.length?'. NOT SHOWN: '+esc(S.extBad.join(', ')):'')+'</div>':'')+
     '<div style="margin:8px 14px 0">'+noEdgeNote()+'</div>'; }
