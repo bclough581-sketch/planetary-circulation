@@ -2,7 +2,7 @@
 // the d9 theme art and a 376 KB icon, before a phone could show a single stock. Everything
 // else is still cached the first time it is opened, by the fetch handler below, so the other
 // pages keep working offline once visited. Bumping SHELL drops the old oversized cache.
-const SHELL='pc-shell-v52', FILES=['./','index.html','amalgam-daily.html','manifest.webmanifest','apple-touch-icon.png','icon-192.png'];
+const SHELL='pc-shell-v53', FILES=['./','index.html','amalgam-daily.html','manifest.webmanifest','apple-touch-icon.png','icon-192.png'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(SHELL).then(c=>c.addAll(FILES)).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==SHELL).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});
 self.addEventListener('fetch',e=>{

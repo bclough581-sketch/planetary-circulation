@@ -287,7 +287,7 @@ async function run(){
   S.phase='load'; render();
   mcp = await claude.use('mcp'); db = await claude.use('db');
   S.mcpOk=!!mcp; S.dbOk=!!db;
-  if(db){ await loadAcct(); await loadRecent(); await loadLog(); }
+  if(db){ await loadAcct(); await loadBook(); await loadRecent(); await loadLog(); }
   if(false){ try{ await initExt(); }catch(e){} if(!S.date) S.date=new Date().toISOString().slice(0,10); S.phase='ready'; render(); ensurePicksDoc(); return; }
   try{
     S.msg='Reading the market'; render();
@@ -506,7 +506,15 @@ function synthCard(p){
   return {m:m,z:z,entry:p.entry,met:null,cl:0,score:0};
 }
 function applyPush(hp){ S.pdate=hp.date; S.date=hp.date; S.pfocus=hp.focus; S.ext=hp.picks.map(synthCard); S.extReady=true; S.extSyms=hp.picks.map(function(p){return p.sym;}); S.extBad=[]; }
-async function savePush(hp){ if(!db) return; try{ var d={date:hp.date,picks:hp.picks,ts:new Date().toISOString()}; await db.doc('push/'+hp.date).set(d); await db.doc('push/latest').set(d); }catch(e){} }
+async function savePush(hp){ if(!db) return; try{ var d={date:hp.date,picks:hp.picks,ts:new Date().toISOString()}; await db.doc('push/'+hp.date).set(d); await db.doc('push/latest').set(d); }catch(e){}
+  /* The book and the scoreboard are about his account, not about today's signal, so unlike the
+     picks they are not thrown away when the market date moves on. They are kept with their own
+     date and the panels say how old they are, which is the difference between an honest stale
+     number and a wrong fresh-looking one. */
+  if(!(hp.held&&hp.held.length)&&!(hp.vs&&hp.vs.length)) return;
+  try{ await db.doc('settings/book').set({date:hp.date,held:hp.held||[],vs:hp.vs||[],ts:new Date().toISOString()}); }catch(e){} }
+async function loadBook(){ if(!db) return; try{ var d=await db.doc('settings/book').get(); if(!d.exists) return; var x=d.data();
+  if(x.held&&x.held.length) S.held=x.held; if(x.vs&&x.vs.length) S.vs=x.vs; if(x.date) S.bookDate=x.date; }catch(e){} }
 async function savedPush(){ if(!db) return null; try{ var d=await db.doc('push/latest').get(); if(d.exists&&d.data().picks&&d.data().picks.length) return {date:d.data().date,picks:d.data().picks,focus:null}; }catch(e){} return null; }
 async function enrichPush(){
   if(!S.ext||!mcp||!S.bars['SPY']) return; var spy=S.bars['SPY'], sp=spy[spy.length-1].c/spy[spy.length-21].c-1, any=false;
@@ -535,7 +543,8 @@ async function applyAcct(a){
 async function initExt(){
   var hp=pushParse();
   if(hp&&hp.acct) await applyAcct(hp.acct);
-  if(hp&&hp.held&&hp.held.length) S.held=hp.held;
+  if(hp&&hp.held&&hp.held.length){ S.held=hp.held; S.bookDate=hp.date; }
+  if(hp&&hp.vs&&hp.vs.length){ S.vs=hp.vs; S.bookDate=hp.date; }
   if(hp){ await savePush(hp); }
   else { hp=await savedPush(); if(hp&&hp.date!==(S.mdate||MARKET.asof)) hp=null; }   /* no stale saved push */
   if(hp){ applyPush(hp); return; }
@@ -1097,7 +1106,7 @@ function pushParse(){
   /* Tails, in any order: -f-SYM focuses a card, -a-NETLIQCENTS-CASHCENTS carries the real account
      size, and each -h-SYM-QTY-PRICEC-STOPC-COSTC carries one held position, stop 0 meaning no
      working stop order. Tags are lowercase, so they can never be mistaken for a ticker. */
-  var foc=null, acct=null, held=[];
+  var foc=null, acct=null, held=[], vs=[];
   for(;;){
     if(t.length>=7 && t[t.length-6]==='h'){
       var hs=t[t.length-5].replace(/9/g,'.'), hq=+t[t.length-4],
@@ -1105,18 +1114,26 @@ function pushParse(){
       if(/^[A-Z.]{1,6}$/.test(hs)&&hq>=1&&hp>0&&hc>0&&ht>=0&&ht<hp)
         held.push({sym:hs,qty:hq,price:hp,stop:ht||null,cost:hc});
       t=t.slice(0,-6); continue; }
+    if(t.length>=6 && t[t.length-5]==='s'){
+      /* One scoreboard window. Returns ride as basis points plus 50000 so that a loss carries no
+         minus sign, which is the hash's own separator. */
+      var vc=t[t.length-4], vy=+t[t.length-3]-50000, vb=+t[t.length-2]-50000, vd=+t[t.length-1];
+      if(/^(wk|mo|qt|al)$/.test(vc)&&isFinite(vy)&&isFinite(vb)&&vd>=0&&vd<=9999
+         &&Math.abs(vy)<=50000&&Math.abs(vb)<=50000)
+        vs.push({code:vc,you:vy/100,bench:vb/100,days:vd});
+      t=t.slice(0,-5); continue; }
     if(t.length>=4 && t[t.length-3]==='a'){ var nl=+t[t.length-2]/100, ca=+t[t.length-1]/100;
       if(nl>0&&ca>=0) acct={netLiq:nl,cash:Math.min(ca,nl)};
       t=t.slice(0,-3); continue; }
     if(t.length>=3 && t[t.length-2]==='f'){ foc=t[t.length-1]; t=t.slice(0,-2); continue; }
     break; }
-  held.reverse();                       /* tails come off the end, so put them back in link order */
+  held.reverse(); vs.reverse();         /* tails come off the end, so put them back in link order */
   var out=[]; for(var i=1;i+3<t.length&&out.length<3;i+=4){
     var sym=t[i].replace(/9/g,'.'), sh=+t[i+1], en=+t[i+2]/100, st=+t[i+3]/100;
     if(!/^[A-Z.]{1,6}$/.test(sym)||!(sh>=1)||!(en>0)||!(st>0)||st>=en) return null;
     out.push({sym:sym,shares:sh,entry:en,stop:st,risk:sh*(en-st),cash:sh*en,pct:(en-st)/en*100}); }
   if(!out.length) return null;
-  var d=t[0]; return {date:d.slice(0,4)+'-'+d.slice(4,6)+'-'+d.slice(6,8),picks:out,focus:foc?foc.replace(/9/g,'.'):null,acct:acct,held:held};
+  var d=t[0]; return {date:d.slice(0,4)+'-'+d.slice(4,6)+'-'+d.slice(6,8),picks:out,focus:foc?foc.replace(/9/g,'.'):null,acct:acct,held:held,vs:vs};
 }
 function render(){
   var P=(S.phase==='ready'||(S.phase==='scan'&&S.extReady))?picks():[];

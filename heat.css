@@ -25,11 +25,13 @@ html.tron .ht-foot{
       "hud   race"
       "picks race"
       "book  book"
+      "vs    vs"
       "heat  heat"
       "meter inst"
       "sig   inst";
   }
   .z-book{grid-area:book;margin-top:22px}
+  .z-vs{grid-area:vs;margin-top:22px}
   .z-heat{grid-area:heat;display:block;margin-top:22px}
   .z-picks [data-act="heat"]{display:none}
 }
@@ -62,3 +64,40 @@ html.tron .hd-m{font-size:9.5px;color:#f2f7fcb0;letter-spacing:.03em;margin-top:
 html.tron .hd-a{font-size:9px;font-weight:800;letter-spacing:.09em;color:#ff8a8a}
 
 html.tron .z-book .hd2{display:flex;align-items:baseline;justify-content:space-between;padding:0 18px 8px}
+
+/* ---- You against SPY: the scoreboard ---------------------------------- */
+html.tron .vs{margin:0 18px}
+html.tron .vs-head{
+  font-size:var(--t2);color:var(--ink);letter-spacing:.03em;line-height:1.5;margin-bottom:12px;
+}
+html.tron .vs-rows{display:flex;flex-direction:column;gap:11px}
+html.tron .vs-r{
+  display:grid;grid-template-columns:1fr 46% auto;grid-template-areas:"l b n" "s s s";
+  align-items:center;column-gap:10px;row-gap:3px;
+}
+html.tron .vs-l{
+  grid-area:l;font-size:var(--t1);color:var(--dim);letter-spacing:.12em;font-weight:800;
+}
+html.tron .vs-b{
+  grid-area:b;position:relative;height:12px;background:#0b1118;border:1px solid #16202d;
+  border-radius:3px;overflow:hidden;
+}
+html.tron .vs-z{position:absolute;left:50%;top:0;bottom:0;width:1px;background:#2b3a4d}
+html.tron .vs-f{position:absolute;top:0;bottom:0;border-radius:2px}
+html.tron .vs-n{
+  grid-area:n;font-size:var(--t2);font-weight:800;font-variant-numeric:tabular-nums;
+  min-width:52px;text-align:right;
+}
+html.tron .vs-dim{color:var(--dim);font-weight:700}
+html.tron .vs-sub{
+  grid-area:s;font-size:var(--t1);color:var(--dim);letter-spacing:.03em;
+  font-variant-numeric:tabular-nums;
+}
+html.tron .vs-warn{color:#f2b441}
+html.tron .vs-foot{
+  font-size:var(--t1);color:var(--dim);letter-spacing:.04em;line-height:1.55;margin-top:13px;
+  border-top:1px solid #16202d;padding-top:9px;
+}
+html.tron .vs-stale{
+  display:block;margin-top:7px;color:#f2b441;font-size:var(--t1);letter-spacing:.04em;line-height:1.5;
+}

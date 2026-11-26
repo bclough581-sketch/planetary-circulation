@@ -235,3 +235,95 @@ function heldInline(held, acct){
     'A bright border is a thing to act on, which is not the same as being down.</div>' +
     '</div>';
 }
+
+/* ---- You against SPY ---------------------------------------------------
+   The scoreboard. Time-weighted return against SPY bought and held over the
+   same two dates, so a deposit or a withdrawal cannot flatter the number.
+   Tron blue is ahead of SPY. Tron red is behind. The bar is the spread in
+   percentage points, centred on zero, and the number beside it is the truth
+   whether or not the bar has run out of room. */
+var VS_CAP = 10;                      /* points of spread that fill the bar */
+var VS_ORDER = ['wk', 'mo', 'qt', 'al'];
+var VS_LABEL = {wk: 'THIS WEEK', mo: 'THIS MONTH', qt: 'THREE MONTHS', al: 'SINCE SEPT 23'};
+var VS_EXPECT = {wk: 5, mo: 21, qt: 63};   /* trading days each window asks for */
+var VS_STALE_DAYS = 4;                /* past this the panel says how old it is */
+
+function vsColor(sp){
+  if(sp === null || isNaN(sp)) return 'rgb(26,26,26)';
+  var t = Math.max(-1, Math.min(1, sp / VS_CAP)), e = Math.pow(Math.abs(t), 0.62);
+  var a = [26, 26, 26], b = t >= 0 ? [91, 140, 255] : [255, 59, 59];
+  return 'rgb(' + a.map(function(c, i){ return Math.round(c + (b[i] - c) * e); }).join(',') + ')';
+}
+function vsSign(v, d){ return (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(d === undefined ? 1 : d); }
+
+/* left and width as percentages of a bar whose centre is zero. */
+function vsBar(sp){
+  var w = 50 * Math.min(1, Math.abs(sp) / VS_CAP);
+  return sp >= 0 ? {left: 50, width: w} : {left: 50 - w, width: w};
+}
+
+/* Whole days between an ISO date and today, or null if the date is unusable. */
+function vsAge(asof){
+  if(!asof) return null;
+  var t = Date.parse(asof + 'T00:00:00');
+  if(isNaN(t)) return null;
+  var now = new Date();
+  var today = Date.parse(now.toISOString().slice(0, 10) + 'T00:00:00');
+  return Math.round((today - t) / 86400000);
+}
+
+function vsInline(vs, asof){
+  if(!vs || !vs.length)
+    return '<div class="vs"><div class="vs-head">No scoreboard yet. It arrives with tonight’s ' +
+           'push link, once the run has a day of account history to compare.</div></div>';
+
+  var by = {};
+  vs.forEach(function(r){ by[r.code] = r; });
+
+  var all = by.al, head;
+  if(all){
+    var sp = all.you - all.bench;
+    head = '<b style="color:' + (sp >= 0 ? '#5b8cff' : '#ff3b3b') + '">' + vsSign(sp) +
+           ' points ' + (sp >= 0 ? 'ahead of' : 'behind') + ' SPY</b> since you started.';
+  } else {
+    head = '<b>Not enough history yet.</b>';
+  }
+
+  var rows = '';
+  VS_ORDER.forEach(function(code){
+    var r = by[code];
+    if(!r){
+      rows += '<div class="vs-r"><div class="vs-l">' + VS_LABEL[code] + '</div>' +
+              '<div class="vs-b"><i class="vs-z"></i></div>' +
+              '<div class="vs-n vs-dim">short</div></div>';
+      return;
+    }
+    var sp = r.you - r.bench, g = vsBar(sp), exp = VS_EXPECT[code];
+    var off = (exp && Math.abs(r.days - exp) > 1)
+      ? ' <span class="vs-warn">' + r.days + ' trading days, not ' + exp + '</span>' : '';
+    rows += '<div class="vs-r">' +
+      '<div class="vs-l">' + VS_LABEL[code] + '</div>' +
+      '<div class="vs-b"><i class="vs-z"></i>' +
+        '<i class="vs-f" style="left:' + g.left.toFixed(1) + '%;width:' + g.width.toFixed(1) +
+        '%;background:' + vsColor(sp) + '"></i></div>' +
+      '<div class="vs-n" style="color:' + (sp >= 0 ? '#5b8cff' : '#ff3b3b') + '">' + vsSign(sp) + '</div>' +
+      '<div class="vs-sub">you ' + vsSign(r.you) + '% · SPY ' + vsSign(r.bench) + '%' + off + '</div>' +
+      '</div>';
+  });
+
+  /* Kept from the last push, so it can be old. An old spread shown with no date reads as
+     today's, which is the one way this panel could make him act on a stale number. */
+  var age = vsAge(asof), stale = '';
+  if(age !== null && age > VS_STALE_DAYS)
+    stale = '<div class="vs-stale">Measured to ' + esc(asof) + ', ' + age +
+            ' days ago. Nothing since then is in it.</div>';
+
+  return '<div class="vs">' +
+    '<div class="vs-head">' + head + stale + '</div>' +
+    '<div class="vs-rows">' + rows + '</div>' +
+    '<div class="vs-foot">Your return here is time-weighted, so money you add or take out ' +
+    'does not move it. SPY is bought and held between the same two dates. ' +
+    'Blue is ahead of SPY and red is behind, which is not the same as up or down: ' +
+    'in a falling market you can be blue and still be down money.</div>' +
+    '</div>';
+}

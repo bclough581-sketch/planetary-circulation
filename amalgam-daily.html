@@ -562,11 +562,13 @@ html.tron .ht-foot{
       "hud   race"
       "picks race"
       "book  book"
+      "vs    vs"
       "heat  heat"
       "meter inst"
       "sig   inst";
   }
   .z-book{grid-area:book;margin-top:22px}
+  .z-vs{grid-area:vs;margin-top:22px}
   .z-heat{grid-area:heat;display:block;margin-top:22px}
   .z-picks [data-act="heat"]{display:none}
 }
@@ -599,6 +601,43 @@ html.tron .hd-m{font-size:9.5px;color:#f2f7fcb0;letter-spacing:.03em;margin-top:
 html.tron .hd-a{font-size:9px;font-weight:800;letter-spacing:.09em;color:#ff8a8a}
 
 html.tron .z-book .hd2{display:flex;align-items:baseline;justify-content:space-between;padding:0 18px 8px}
+
+/* ---- You against SPY: the scoreboard ---------------------------------- */
+html.tron .vs{margin:0 18px}
+html.tron .vs-head{
+  font-size:var(--t2);color:var(--ink);letter-spacing:.03em;line-height:1.5;margin-bottom:12px;
+}
+html.tron .vs-rows{display:flex;flex-direction:column;gap:11px}
+html.tron .vs-r{
+  display:grid;grid-template-columns:1fr 46% auto;grid-template-areas:"l b n" "s s s";
+  align-items:center;column-gap:10px;row-gap:3px;
+}
+html.tron .vs-l{
+  grid-area:l;font-size:var(--t1);color:var(--dim);letter-spacing:.12em;font-weight:800;
+}
+html.tron .vs-b{
+  grid-area:b;position:relative;height:12px;background:#0b1118;border:1px solid #16202d;
+  border-radius:3px;overflow:hidden;
+}
+html.tron .vs-z{position:absolute;left:50%;top:0;bottom:0;width:1px;background:#2b3a4d}
+html.tron .vs-f{position:absolute;top:0;bottom:0;border-radius:2px}
+html.tron .vs-n{
+  grid-area:n;font-size:var(--t2);font-weight:800;font-variant-numeric:tabular-nums;
+  min-width:52px;text-align:right;
+}
+html.tron .vs-dim{color:var(--dim);font-weight:700}
+html.tron .vs-sub{
+  grid-area:s;font-size:var(--t1);color:var(--dim);letter-spacing:.03em;
+  font-variant-numeric:tabular-nums;
+}
+html.tron .vs-warn{color:#f2b441}
+html.tron .vs-foot{
+  font-size:var(--t1);color:var(--dim);letter-spacing:.04em;line-height:1.55;margin-top:13px;
+  border-top:1px solid #16202d;padding-top:9px;
+}
+html.tron .vs-stale{
+  display:block;margin-top:7px;color:#f2b441;font-size:var(--t1);letter-spacing:.04em;line-height:1.5;
+}
 
 /* A section header holds its label and up to three buttons on one line with no wrapping,
    which overflows the right edge of a 390px phone and clips the last button. Unscoped,
@@ -1008,6 +1047,98 @@ function heldInline(held, acct){
     '</div>';
 }
 
+/* ---- You against SPY ---------------------------------------------------
+   The scoreboard. Time-weighted return against SPY bought and held over the
+   same two dates, so a deposit or a withdrawal cannot flatter the number.
+   Tron blue is ahead of SPY. Tron red is behind. The bar is the spread in
+   percentage points, centred on zero, and the number beside it is the truth
+   whether or not the bar has run out of room. */
+var VS_CAP = 10;                      /* points of spread that fill the bar */
+var VS_ORDER = ['wk', 'mo', 'qt', 'al'];
+var VS_LABEL = {wk: 'THIS WEEK', mo: 'THIS MONTH', qt: 'THREE MONTHS', al: 'SINCE SEPT 23'};
+var VS_EXPECT = {wk: 5, mo: 21, qt: 63};   /* trading days each window asks for */
+var VS_STALE_DAYS = 4;                /* past this the panel says how old it is */
+
+function vsColor(sp){
+  if(sp === null || isNaN(sp)) return 'rgb(26,26,26)';
+  var t = Math.max(-1, Math.min(1, sp / VS_CAP)), e = Math.pow(Math.abs(t), 0.62);
+  var a = [26, 26, 26], b = t >= 0 ? [91, 140, 255] : [255, 59, 59];
+  return 'rgb(' + a.map(function(c, i){ return Math.round(c + (b[i] - c) * e); }).join(',') + ')';
+}
+function vsSign(v, d){ return (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(d === undefined ? 1 : d); }
+
+/* left and width as percentages of a bar whose centre is zero. */
+function vsBar(sp){
+  var w = 50 * Math.min(1, Math.abs(sp) / VS_CAP);
+  return sp >= 0 ? {left: 50, width: w} : {left: 50 - w, width: w};
+}
+
+/* Whole days between an ISO date and today, or null if the date is unusable. */
+function vsAge(asof){
+  if(!asof) return null;
+  var t = Date.parse(asof + 'T00:00:00');
+  if(isNaN(t)) return null;
+  var now = new Date();
+  var today = Date.parse(now.toISOString().slice(0, 10) + 'T00:00:00');
+  return Math.round((today - t) / 86400000);
+}
+
+function vsInline(vs, asof){
+  if(!vs || !vs.length)
+    return '<div class="vs"><div class="vs-head">No scoreboard yet. It arrives with tonight’s ' +
+           'push link, once the run has a day of account history to compare.</div></div>';
+
+  var by = {};
+  vs.forEach(function(r){ by[r.code] = r; });
+
+  var all = by.al, head;
+  if(all){
+    var sp = all.you - all.bench;
+    head = '<b style="color:' + (sp >= 0 ? '#5b8cff' : '#ff3b3b') + '">' + vsSign(sp) +
+           ' points ' + (sp >= 0 ? 'ahead of' : 'behind') + ' SPY</b> since you started.';
+  } else {
+    head = '<b>Not enough history yet.</b>';
+  }
+
+  var rows = '';
+  VS_ORDER.forEach(function(code){
+    var r = by[code];
+    if(!r){
+      rows += '<div class="vs-r"><div class="vs-l">' + VS_LABEL[code] + '</div>' +
+              '<div class="vs-b"><i class="vs-z"></i></div>' +
+              '<div class="vs-n vs-dim">short</div></div>';
+      return;
+    }
+    var sp = r.you - r.bench, g = vsBar(sp), exp = VS_EXPECT[code];
+    var off = (exp && Math.abs(r.days - exp) > 1)
+      ? ' <span class="vs-warn">' + r.days + ' trading days, not ' + exp + '</span>' : '';
+    rows += '<div class="vs-r">' +
+      '<div class="vs-l">' + VS_LABEL[code] + '</div>' +
+      '<div class="vs-b"><i class="vs-z"></i>' +
+        '<i class="vs-f" style="left:' + g.left.toFixed(1) + '%;width:' + g.width.toFixed(1) +
+        '%;background:' + vsColor(sp) + '"></i></div>' +
+      '<div class="vs-n" style="color:' + (sp >= 0 ? '#5b8cff' : '#ff3b3b') + '">' + vsSign(sp) + '</div>' +
+      '<div class="vs-sub">you ' + vsSign(r.you) + '% · SPY ' + vsSign(r.bench) + '%' + off + '</div>' +
+      '</div>';
+  });
+
+  /* Kept from the last push, so it can be old. An old spread shown with no date reads as
+     today's, which is the one way this panel could make him act on a stale number. */
+  var age = vsAge(asof), stale = '';
+  if(age !== null && age > VS_STALE_DAYS)
+    stale = '<div class="vs-stale">Measured to ' + esc(asof) + ', ' + age +
+            ' days ago. Nothing since then is in it.</div>';
+
+  return '<div class="vs">' +
+    '<div class="vs-head">' + head + stale + '</div>' +
+    '<div class="vs-rows">' + rows + '</div>' +
+    '<div class="vs-foot">Your return here is time-weighted, so money you add or take out ' +
+    'does not move it. SPY is bought and held between the same two dates. ' +
+    'Blue is ahead of SPY and red is behind, which is not the same as up or down: ' +
+    'in a falling market you can be blue and still be down money.</div>' +
+    '</div>';
+}
+
 
 'use strict';
 var TEST = window.__TEST__ || {};
@@ -1149,7 +1280,7 @@ async function run(){
   S.phase='load'; render();
   mcp = await claude.use('mcp'); db = await claude.use('db');
   S.mcpOk=!!mcp; S.dbOk=!!db;
-  if(db){ await loadAcct(); await loadRecent(); await loadLog(); }
+  if(db){ await loadAcct(); await loadBook(); await loadRecent(); await loadLog(); }
   if(false){ try{ await initExt(); }catch(e){} if(!S.date) S.date=new Date().toISOString().slice(0,10); S.phase='ready'; render(); ensurePicksDoc(); return; }
   try{
     S.msg='Reading the market'; render();
@@ -1368,7 +1499,15 @@ function synthCard(p){
   return {m:m,z:z,entry:p.entry,met:null,cl:0,score:0};
 }
 function applyPush(hp){ S.pdate=hp.date; S.date=hp.date; S.pfocus=hp.focus; S.ext=hp.picks.map(synthCard); S.extReady=true; S.extSyms=hp.picks.map(function(p){return p.sym;}); S.extBad=[]; }
-async function savePush(hp){ if(!db) return; try{ var d={date:hp.date,picks:hp.picks,ts:new Date().toISOString()}; await db.doc('push/'+hp.date).set(d); await db.doc('push/latest').set(d); }catch(e){} }
+async function savePush(hp){ if(!db) return; try{ var d={date:hp.date,picks:hp.picks,ts:new Date().toISOString()}; await db.doc('push/'+hp.date).set(d); await db.doc('push/latest').set(d); }catch(e){}
+  /* The book and the scoreboard are about his account, not about today's signal, so unlike the
+     picks they are not thrown away when the market date moves on. They are kept with their own
+     date and the panels say how old they are, which is the difference between an honest stale
+     number and a wrong fresh-looking one. */
+  if(!(hp.held&&hp.held.length)&&!(hp.vs&&hp.vs.length)) return;
+  try{ await db.doc('settings/book').set({date:hp.date,held:hp.held||[],vs:hp.vs||[],ts:new Date().toISOString()}); }catch(e){} }
+async function loadBook(){ if(!db) return; try{ var d=await db.doc('settings/book').get(); if(!d.exists) return; var x=d.data();
+  if(x.held&&x.held.length) S.held=x.held; if(x.vs&&x.vs.length) S.vs=x.vs; if(x.date) S.bookDate=x.date; }catch(e){} }
 async function savedPush(){ if(!db) return null; try{ var d=await db.doc('push/latest').get(); if(d.exists&&d.data().picks&&d.data().picks.length) return {date:d.data().date,picks:d.data().picks,focus:null}; }catch(e){} return null; }
 async function enrichPush(){
   if(!S.ext||!mcp||!S.bars['SPY']) return; var spy=S.bars['SPY'], sp=spy[spy.length-1].c/spy[spy.length-21].c-1, any=false;
@@ -1397,7 +1536,8 @@ async function applyAcct(a){
 async function initExt(){
   var hp=pushParse();
   if(hp&&hp.acct) await applyAcct(hp.acct);
-  if(hp&&hp.held&&hp.held.length) S.held=hp.held;
+  if(hp&&hp.held&&hp.held.length){ S.held=hp.held; S.bookDate=hp.date; }
+  if(hp&&hp.vs&&hp.vs.length){ S.vs=hp.vs; S.bookDate=hp.date; }
   if(hp){ await savePush(hp); }
   else { hp=await savedPush(); if(hp&&hp.date!==(S.mdate||MARKET.asof)) hp=null; }   /* no stale saved push */
   if(hp){ applyPush(hp); return; }
@@ -1898,10 +2038,15 @@ function raceState(){
   var d = R.closed_sessions || 0;
   return d ? d + ' SCORED SESSIONS' : 'LIVE \u00b7 NOTHING SCORED';
 }
+function vsSection(){
+  return '<section class="z z-vs"><div class="hd2"><span class="sec">VS SPY</span>' +
+    '<span class="st">' + ((S.vs && S.vs.length) ? (S.bookDate ? esc(S.bookDate) : 'TIME-WEIGHTED') : 'NO DATA') + '</span></div>' +
+    vsInline(S.vs || [], S.bookDate || null) + '</section>';
+}
 function heldSection(){
   var A = (S.acct && !S.acct.sample) ? S.acct : null;   /* never draw a budget off the sample figures */
   return '<section class="z z-book"><div class="hd2"><span class="sec">YOUR BOOK</span>' +
-    '<span class="st">' + ((S.held && S.held.length) ? S.held.length + ' OF 5 OPEN' : 'NOTHING OPEN') + '</span></div>' +
+    '<span class="st">' + ((S.held && S.held.length) ? S.held.length + ' OF 5 OPEN' + (S.bookDate ? ' · ' + esc(S.bookDate) : '') : 'NOTHING OPEN') + '</span></div>' +
     heldInline(S.held || [], A) + '</section>';
 }
 function heatForToday(){ return (MARKET && MARKET.bars && MARKET.bars.SPY) ? MARKET : null; }
@@ -1998,7 +2143,7 @@ function pushParse(){
   /* Tails, in any order: -f-SYM focuses a card, -a-NETLIQCENTS-CASHCENTS carries the real account
      size, and each -h-SYM-QTY-PRICEC-STOPC-COSTC carries one held position, stop 0 meaning no
      working stop order. Tags are lowercase, so they can never be mistaken for a ticker. */
-  var foc=null, acct=null, held=[];
+  var foc=null, acct=null, held=[], vs=[];
   for(;;){
     if(t.length>=7 && t[t.length-6]==='h'){
       var hs=t[t.length-5].replace(/9/g,'.'), hq=+t[t.length-4],
@@ -2006,18 +2151,26 @@ function pushParse(){
       if(/^[A-Z.]{1,6}$/.test(hs)&&hq>=1&&hp>0&&hc>0&&ht>=0&&ht<hp)
         held.push({sym:hs,qty:hq,price:hp,stop:ht||null,cost:hc});
       t=t.slice(0,-6); continue; }
+    if(t.length>=6 && t[t.length-5]==='s'){
+      /* One scoreboard window. Returns ride as basis points plus 50000 so that a loss carries no
+         minus sign, which is the hash's own separator. */
+      var vc=t[t.length-4], vy=+t[t.length-3]-50000, vb=+t[t.length-2]-50000, vd=+t[t.length-1];
+      if(/^(wk|mo|qt|al)$/.test(vc)&&isFinite(vy)&&isFinite(vb)&&vd>=0&&vd<=9999
+         &&Math.abs(vy)<=50000&&Math.abs(vb)<=50000)
+        vs.push({code:vc,you:vy/100,bench:vb/100,days:vd});
+      t=t.slice(0,-5); continue; }
     if(t.length>=4 && t[t.length-3]==='a'){ var nl=+t[t.length-2]/100, ca=+t[t.length-1]/100;
       if(nl>0&&ca>=0) acct={netLiq:nl,cash:Math.min(ca,nl)};
       t=t.slice(0,-3); continue; }
     if(t.length>=3 && t[t.length-2]==='f'){ foc=t[t.length-1]; t=t.slice(0,-2); continue; }
     break; }
-  held.reverse();                       /* tails come off the end, so put them back in link order */
+  held.reverse(); vs.reverse();         /* tails come off the end, so put them back in link order */
   var out=[]; for(var i=1;i+3<t.length&&out.length<3;i+=4){
     var sym=t[i].replace(/9/g,'.'), sh=+t[i+1], en=+t[i+2]/100, st=+t[i+3]/100;
     if(!/^[A-Z.]{1,6}$/.test(sym)||!(sh>=1)||!(en>0)||!(st>0)||st>=en) return null;
     out.push({sym:sym,shares:sh,entry:en,stop:st,risk:sh*(en-st),cash:sh*en,pct:(en-st)/en*100}); }
   if(!out.length) return null;
-  var d=t[0]; return {date:d.slice(0,4)+'-'+d.slice(4,6)+'-'+d.slice(6,8),picks:out,focus:foc?foc.replace(/9/g,'.'):null,acct:acct,held:held};
+  var d=t[0]; return {date:d.slice(0,4)+'-'+d.slice(4,6)+'-'+d.slice(6,8),picks:out,focus:foc?foc.replace(/9/g,'.'):null,acct:acct,held:held,vs:vs};
 }
 function render(){
   var P=(S.phase==='ready'||(S.phase==='scan'&&S.extReady))?picks():[];
@@ -2041,6 +2194,7 @@ function render(){
       '<section class="z z-hud">'+hudHtml(dec,P.length,P)+'</section>'+
       '<section class="z z-picks">'+picksBlock(P)+'</section>'+
       heldSection()+
+      vsSection()+
       raceSection()+
       heatSection()+
       '<section class="z z-meter">'+meterHtml()+'</section>'+
