@@ -3,3 +3,8 @@ __pycache__/
 body.html
 product-data/ucdp-conflict-summary.json
 dark-state/
+
+# Build outputs and hand-made backups. amalgam-daily.html is built from
+# amalgam-daily.src.html by integrate_hud.py; these are not sources.
+amalgam-daily.html.before_*
+amalgam_*_preview.html
