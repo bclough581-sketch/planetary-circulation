@@ -36,7 +36,7 @@ a = need("    else h+='<section class=\"z z-hud\">'+hudHtml(dec,P.length,P)+'</s
 s = s.replace(a, "    else h+='<div class=\"zgrid\">'+\n"
                  "      '<section class=\"z z-hud\">'+hudHtml(dec,P.length,P)+'</section>'+", 1)
 b = need("      '<section class=\"z z-picks\">'+picksBlock(P)+'</section>'+")
-s = s.replace(b, b + "\n      raceSection()+\n      heatSection()+", 1)
+s = s.replace(b, b + "\n      heldSection()+\n      raceSection()+\n      heatSection()+", 1)
 c = need("      '<section class=\"z z-sig\"><div class=\"hd\"><span class=\"sec\">3 WARNINGS</span></div><div class=\"list\">'+sigRows(sg.w,true)+'</div><div class=\"hd\"><span class=\"sec\">3 POSITIVES</span></div><div class=\"list\">'+sigRows(sg.p,false)+'</div></section>'+")
 s = s.replace(c, c + "\n      '</div>'+", 1)
 
@@ -101,6 +101,15 @@ s = s.replace(f, f + """
   else if(act==='hwin'){ S.hwin=+t.getAttribute('data-h'); }""", 1)
 
 g = need("function raceSection(){")
+# The held book is the only panel about Brent's own money, so unlike the race and the market map
+# it is never hidden behind a button. It is five small tiles and it is the thing he should see.
+s = s.replace(g, """function heldSection(){
+  var A = (S.acct && !S.acct.sample) ? S.acct : null;   /* never draw a budget off the sample figures */
+  return '<section class="z z-book"><div class="hd2"><span class="sec">YOUR BOOK</span>' +
+    '<span class="st">' + ((S.held && S.held.length) ? S.held.length + ' OF 5 OPEN' : 'NOTHING OPEN') + '</span></div>' +
+    heldInline(S.held || [], A) + '</section>';
+}
+""" + g, 1)
 s = s.replace(g, """function heatForToday(){ return (MARKET && MARKET.bars && MARKET.bars.SPY) ? MARKET : null; }
 function heatSection(){
   return '<section class="z z-heat"><div class="hd"><span class="sec">THE HEAT MAP</span>' +

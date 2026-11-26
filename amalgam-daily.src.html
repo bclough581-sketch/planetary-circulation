@@ -535,6 +535,7 @@ async function applyAcct(a){
 async function initExt(){
   var hp=pushParse();
   if(hp&&hp.acct) await applyAcct(hp.acct);
+  if(hp&&hp.held&&hp.held.length) S.held=hp.held;
   if(hp){ await savePush(hp); }
   else { hp=await savedPush(); if(hp&&hp.date!==(S.mdate||MARKET.asof)) hp=null; }   /* no stale saved push */
   if(hp){ applyPush(hp); return; }
@@ -1094,20 +1095,28 @@ function pushParse(){
   if(!/^\d{8}-/.test(h)){ var q=''; try{ q=String(location.search||''); }catch(e){} var m=/[?&]h=([^&]+)/.exec(q); h=m?m[1]:''; }
   var t=h.split('-'); if(t.length<5||!/^\d{8}$/.test(t[0])) return null;
   /* Tails, in any order: -f-SYM focuses a card, -a-NETLIQCENTS-CASHCENTS carries the real account
-     size. Tags are lowercase, so they can never be mistaken for a ticker. */
-  var foc=null, acct=null;
+     size, and each -h-SYM-QTY-PRICEC-STOPC-COSTC carries one held position, stop 0 meaning no
+     working stop order. Tags are lowercase, so they can never be mistaken for a ticker. */
+  var foc=null, acct=null, held=[];
   for(;;){
+    if(t.length>=7 && t[t.length-6]==='h'){
+      var hs=t[t.length-5].replace(/9/g,'.'), hq=+t[t.length-4],
+          hp=+t[t.length-3]/100, ht=+t[t.length-2]/100, hc=+t[t.length-1]/100;
+      if(/^[A-Z.]{1,6}$/.test(hs)&&hq>=1&&hp>0&&hc>0&&ht>=0&&ht<hp)
+        held.push({sym:hs,qty:hq,price:hp,stop:ht||null,cost:hc});
+      t=t.slice(0,-6); continue; }
     if(t.length>=4 && t[t.length-3]==='a'){ var nl=+t[t.length-2]/100, ca=+t[t.length-1]/100;
       if(nl>0&&ca>=0) acct={netLiq:nl,cash:Math.min(ca,nl)};
       t=t.slice(0,-3); continue; }
     if(t.length>=3 && t[t.length-2]==='f'){ foc=t[t.length-1]; t=t.slice(0,-2); continue; }
     break; }
+  held.reverse();                       /* tails come off the end, so put them back in link order */
   var out=[]; for(var i=1;i+3<t.length&&out.length<3;i+=4){
     var sym=t[i].replace(/9/g,'.'), sh=+t[i+1], en=+t[i+2]/100, st=+t[i+3]/100;
     if(!/^[A-Z.]{1,6}$/.test(sym)||!(sh>=1)||!(en>0)||!(st>0)||st>=en) return null;
     out.push({sym:sym,shares:sh,entry:en,stop:st,risk:sh*(en-st),cash:sh*en,pct:(en-st)/en*100}); }
   if(!out.length) return null;
-  var d=t[0]; return {date:d.slice(0,4)+'-'+d.slice(4,6)+'-'+d.slice(6,8),picks:out,focus:foc?foc.replace(/9/g,'.'):null,acct:acct};
+  var d=t[0]; return {date:d.slice(0,4)+'-'+d.slice(4,6)+'-'+d.slice(6,8),picks:out,focus:foc?foc.replace(/9/g,'.'):null,acct:acct,held:held};
 }
 function render(){
   var P=(S.phase==='ready'||(S.phase==='scan'&&S.extReady))?picks():[];

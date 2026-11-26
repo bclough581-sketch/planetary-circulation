@@ -561,14 +561,44 @@ html.tron .ht-foot{
     grid-template-areas:
       "hud   race"
       "picks race"
+      "book  book"
       "heat  heat"
       "meter inst"
       "sig   inst";
   }
+  .z-book{grid-area:book;margin-top:22px}
   .z-heat{grid-area:heat;display:block;margin-top:22px}
   .z-picks [data-act="heat"]{display:none}
 }
 @media (max-width:1279px){ .z-heat{display:none} }
+
+/* ---- the held book ---- */
+html.tron .hd{
+  margin:0 18px; background:linear-gradient(180deg,#0a0d13,#05070b 70%);
+  border:1px solid #243044; border-radius:14px; padding:12px 14px 14px;
+  box-shadow:inset 0 1px 0 #ffffff0d, 0 0 26px #5b8cff10;
+}
+html.tron .hd-head{font-size:var(--t2);line-height:1.45;color:var(--txt)}
+html.tron .hd-head b{color:var(--warn);font-weight:800}
+html.tron .hd-sub,html.tron .hd-foot{font-size:var(--t1);color:var(--dim);letter-spacing:.04em;line-height:1.5}
+html.tron .hd-foot{margin-top:10px;border-top:1px solid #16202d;padding-top:9px}
+html.tron .hd-bar{height:5px;background:#131b26;border-radius:3px;overflow:hidden;margin:9px 0 6px}
+html.tron .hd-bar i{display:block;height:100%;background:linear-gradient(90deg,#5b8cff,#ff3b3b)}
+html.tron .hd-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;margin:10px 0 2px}
+@media (max-width:560px){ html.tron .hd-grid{grid-template-columns:repeat(2,minmax(0,1fr))} }
+html.tron .hd-t{
+  border-radius:9px;padding:9px 8px;min-height:84px;display:flex;flex-direction:column;gap:2px;
+  border:1px solid #05070b;
+}
+html.tron .hd-e{background:none;border:1px dashed #243044}
+html.tron .hd-e .hd-s{color:#3a4658}
+html.tron .hd-al{border-color:#ff3b3b;box-shadow:0 0 0 1px #ff3b3b, 0 0 14px #ff3b3b55}
+html.tron .hd-s{font-size:12px;font-weight:800;letter-spacing:.1em;color:#f2f7fc}
+html.tron .hd-r{font-size:19px;font-weight:800;color:#f2f7fc;line-height:1.1}
+html.tron .hd-m{font-size:9.5px;color:#f2f7fcb0;letter-spacing:.03em;margin-top:auto}
+html.tron .hd-a{font-size:9px;font-weight:800;letter-spacing:.09em;color:#ff8a8a}
+
+html.tron .z-book .hd2{display:flex;align-items:baseline;justify-content:space-between;padding:0 18px 8px}
 
 /* A section header holds its label and up to three buttons on one line with no wrapping,
    which overflows the right edge of a 390px phone and clips the last button. Unscoped,
@@ -886,6 +916,95 @@ function heatInline(M, win){
     '<div class="ht-foot">' + pickLine +
       (skipped ? ' ' + skipped + ' name' + (skipped > 1 ? 's have' : ' has') + ' too little history for this window.' : '') +
       '<br>This is what has already happened. Nothing on it is a signal, a rank or a reason to buy.</div>' +
+    '</div>';
+}
+
+/* ---- the held book -----------------------------------------------------------------------
+   The market map answers what the market did. This one answers what Brent's own money is doing,
+   and it is the one that should make him act.
+
+   Five slots, because that is what the 1% risk unit and the 5% open-risk cap were sized for on
+   2026-11-26. Empty slots are drawn, so the shape of the book is visible rather than implied.
+
+   Colour is the R-multiple: how far the trade has come from its entry, measured in the risk it
+   was taken with. R = (price - cost) / (cost - stop). Minus one R is the stop, zero is break
+   even, plus two R is a good trade. The same scale as the market map, red bad to blue good, so
+   red never means two different things in this app.
+
+   An alert is NOT a colour. A position can be down and fine, or flat with no stop order and be
+   an emergency, and those must not be the same shade of anything. Alerts get a bright border and
+   a reason printed on the tile. */
+
+var HELD_SLOTS = 5;
+var HELD_CAP_PCT = 5.0;          // mirrors sizing.MAX_OPEN_RISK_PCT on Petunia
+
+function heldR(h){
+  if(!h.stop || h.cost <= h.stop) return null;      // no stop, or a stop above the entry
+  return (h.price - h.cost) / (h.cost - h.stop);
+}
+
+function heldColor(r){
+  if(r === null) return 'rgb(26,26,26)';
+  var t = r < 0 ? Math.max(-1, r) : Math.min(1, r / 2);     // -1R to +2R
+  var tgt = t >= 0 ? [91, 140, 255] : [255, 59, 59];        // tron blue, tron red
+  var a = Math.pow(Math.abs(t), 0.6);
+  var c = [0, 1, 2].map(function(i){ return Math.round(26 + (tgt[i] - 26) * a); });
+  return 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')';
+}
+
+/* What the tile says is wrong, in the order it matters. Null when nothing is. */
+function heldAlert(h, r){
+  if(!h.stop) return 'NO STOP ORDER';
+  if(r !== null && r <= -0.75) return 'NEAR THE STOP';
+  if(h.cost <= h.stop) return 'STOP ABOVE ENTRY';
+  return null;
+}
+
+function heldInline(held, acct){
+  held = (held || []).slice(0, HELD_SLOTS);
+  var netLiq = (acct && acct.netLiq) || 0;
+  var risk = 0, alerts = 0, unstopped = 0;
+  held.forEach(function(h){
+    if(h.stop) risk += h.qty * (h.price - h.stop); else unstopped++;
+  });
+  var budget = netLiq * HELD_CAP_PCT / 100;
+  var used = budget > 0 ? Math.min(1, risk / budget) : 0;
+
+  var tiles = '';
+  held.forEach(function(h){
+    var r = heldR(h), al = heldAlert(h, r);
+    if(al) alerts++;
+    var at = h.stop ? h.qty * (h.price - h.stop) : h.qty * h.price;
+    tiles += '<div class="hd-t' + (al ? ' hd-al' : '') + '" style="background:' + heldColor(r) + '">' +
+      '<div class="hd-s">' + esc(h.sym) + '</div>' +
+      '<div class="hd-r">' + (r === null ? '&ndash;' : (r >= 0 ? '+' : '−') + Math.abs(r).toFixed(1) + 'R') + '</div>' +
+      '<div class="hd-m">$' + at.toFixed(0) + (netLiq ? ' · ' + (at / netLiq * 100).toFixed(1) + '%' : '') +
+        (h.stop ? ' at risk' : ' exposed') + '</div>' +
+      (al ? '<div class="hd-a">' + al + '</div>' : '') + '</div>';
+  });
+  for(var i = held.length; i < HELD_SLOTS; i++)
+    tiles += '<div class="hd-t hd-e"><div class="hd-s">OPEN</div></div>';
+
+  var head;
+  if(!held.length) head = '<b>Nothing open.</b> Five slots, and the whole risk budget is free.';
+  else if(alerts) head = '<b>' + alerts + ' of ' + held.length + ' position' + (held.length > 1 ? 's need' : ' needs') +
+                         ' a look.</b> The reason is on the tile.';
+  else head = '<b>' + held.length + ' of ' + HELD_SLOTS + ' slots open, nothing flagged.</b>';
+
+  var bar = netLiq
+    ? '<div class="hd-bar"><i style="width:' + (used * 100).toFixed(1) + '%"></i></div>' +
+      '<div class="hd-sub">$' + risk.toFixed(0) + ' of the $' + budget.toFixed(0) + ' risk budget used, ' +
+      (used * 100).toFixed(0) + '%. The budget is ' + HELD_CAP_PCT + '% of the account, half the kill switch.' +
+      (unstopped ? ' ' + unstopped + ' position' + (unstopped > 1 ? 's sit' : ' sits') +
+        ' outside it entirely, with no stop order.' : '') + '</div>'
+    : '<div class="hd-sub">No account size yet, so the risk budget cannot be drawn. Open tonight’s push link.</div>';
+
+  return '<div class="hd">' +
+    '<div class="hd-head">' + head + '</div>' + bar +
+    '<div class="hd-grid">' + tiles + '</div>' +
+    '<div class="hd-foot">R is how far a trade has come from its entry, in units of what it risked. ' +
+    '−1R is the stop, +2R is a good trade. Colour is that number and nothing else. ' +
+    'A bright border is a thing to act on, which is not the same as being down.</div>' +
     '</div>';
 }
 
@@ -1278,6 +1397,7 @@ async function applyAcct(a){
 async function initExt(){
   var hp=pushParse();
   if(hp&&hp.acct) await applyAcct(hp.acct);
+  if(hp&&hp.held&&hp.held.length) S.held=hp.held;
   if(hp){ await savePush(hp); }
   else { hp=await savedPush(); if(hp&&hp.date!==(S.mdate||MARKET.asof)) hp=null; }   /* no stale saved push */
   if(hp){ applyPush(hp); return; }
@@ -1778,6 +1898,12 @@ function raceState(){
   var d = R.closed_sessions || 0;
   return d ? d + ' SCORED SESSIONS' : 'LIVE \u00b7 NOTHING SCORED';
 }
+function heldSection(){
+  var A = (S.acct && !S.acct.sample) ? S.acct : null;   /* never draw a budget off the sample figures */
+  return '<section class="z z-book"><div class="hd2"><span class="sec">YOUR BOOK</span>' +
+    '<span class="st">' + ((S.held && S.held.length) ? S.held.length + ' OF 5 OPEN' : 'NOTHING OPEN') + '</span></div>' +
+    heldInline(S.held || [], A) + '</section>';
+}
 function heatForToday(){ return (MARKET && MARKET.bars && MARKET.bars.SPY) ? MARKET : null; }
 function heatSection(){
   return '<section class="z z-heat"><div class="hd"><span class="sec">THE HEAT MAP</span>' +
@@ -1870,20 +1996,28 @@ function pushParse(){
   if(!/^\d{8}-/.test(h)){ var q=''; try{ q=String(location.search||''); }catch(e){} var m=/[?&]h=([^&]+)/.exec(q); h=m?m[1]:''; }
   var t=h.split('-'); if(t.length<5||!/^\d{8}$/.test(t[0])) return null;
   /* Tails, in any order: -f-SYM focuses a card, -a-NETLIQCENTS-CASHCENTS carries the real account
-     size. Tags are lowercase, so they can never be mistaken for a ticker. */
-  var foc=null, acct=null;
+     size, and each -h-SYM-QTY-PRICEC-STOPC-COSTC carries one held position, stop 0 meaning no
+     working stop order. Tags are lowercase, so they can never be mistaken for a ticker. */
+  var foc=null, acct=null, held=[];
   for(;;){
+    if(t.length>=7 && t[t.length-6]==='h'){
+      var hs=t[t.length-5].replace(/9/g,'.'), hq=+t[t.length-4],
+          hp=+t[t.length-3]/100, ht=+t[t.length-2]/100, hc=+t[t.length-1]/100;
+      if(/^[A-Z.]{1,6}$/.test(hs)&&hq>=1&&hp>0&&hc>0&&ht>=0&&ht<hp)
+        held.push({sym:hs,qty:hq,price:hp,stop:ht||null,cost:hc});
+      t=t.slice(0,-6); continue; }
     if(t.length>=4 && t[t.length-3]==='a'){ var nl=+t[t.length-2]/100, ca=+t[t.length-1]/100;
       if(nl>0&&ca>=0) acct={netLiq:nl,cash:Math.min(ca,nl)};
       t=t.slice(0,-3); continue; }
     if(t.length>=3 && t[t.length-2]==='f'){ foc=t[t.length-1]; t=t.slice(0,-2); continue; }
     break; }
+  held.reverse();                       /* tails come off the end, so put them back in link order */
   var out=[]; for(var i=1;i+3<t.length&&out.length<3;i+=4){
     var sym=t[i].replace(/9/g,'.'), sh=+t[i+1], en=+t[i+2]/100, st=+t[i+3]/100;
     if(!/^[A-Z.]{1,6}$/.test(sym)||!(sh>=1)||!(en>0)||!(st>0)||st>=en) return null;
     out.push({sym:sym,shares:sh,entry:en,stop:st,risk:sh*(en-st),cash:sh*en,pct:(en-st)/en*100}); }
   if(!out.length) return null;
-  var d=t[0]; return {date:d.slice(0,4)+'-'+d.slice(4,6)+'-'+d.slice(6,8),picks:out,focus:foc?foc.replace(/9/g,'.'):null,acct:acct};
+  var d=t[0]; return {date:d.slice(0,4)+'-'+d.slice(4,6)+'-'+d.slice(6,8),picks:out,focus:foc?foc.replace(/9/g,'.'):null,acct:acct,held:held};
 }
 function render(){
   var P=(S.phase==='ready'||(S.phase==='scan'&&S.extReady))?picks():[];
@@ -1906,6 +2040,7 @@ function render(){
     else h+='<div class="zgrid">'+
       '<section class="z z-hud">'+hudHtml(dec,P.length,P)+'</section>'+
       '<section class="z z-picks">'+picksBlock(P)+'</section>'+
+      heldSection()+
       raceSection()+
       heatSection()+
       '<section class="z z-meter">'+meterHtml()+'</section>'+

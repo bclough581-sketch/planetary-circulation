@@ -35,8 +35,20 @@ def consts():
 
 css_a = SRC.index("/* ---- the heat map")
 css_b = SRC.index("</style>", css_a)
-js = consts() + "\n" + "\n".join(extract(n) for n in
-                                 ("esc", "heatSquarify", "heatStat", "heatColor", "heatPct", "heatInline"))
+def held_consts():
+    a = SRC.index("var HELD_SLOTS")
+    return SRC[a:SRC.index(";", SRC.index("var HELD_CAP_PCT")) + 1]
+
+
+js = consts() + "\n" + held_consts() + "\n" + "\n".join(extract(n) for n in
+    ("esc", "heatSquarify", "heatStat", "heatColor", "heatPct", "heatInline",
+     "heldR", "heldColor", "heldAlert", "heldInline"))
+
+# Invented positions. The real book never goes in a file that can be committed: the account is
+# sensitive in the code, the tests and the commit messages, not only in the published data.
+BOOK = [{"sym": "AXTA", "qty": 47, "price": 5.40, "stop": 4.85, "cost": 5.00},
+        {"sym": "UNFI", "qty": 14, "price": 19.10, "stop": 18.40, "cost": 20.00},
+        {"sym": "ZGN", "qty": 22, "price": 11.60, "stop": None, "cost": 11.00}]
 market = json.loads((HERE / "amalgam-market.json").read_text(encoding="utf-8"))
 slim = {k: market[k] for k in ("asof", "generated", "universe", "picks")}
 slim["bars"] = {k: v[-70:] for k, v in market["bars"].items()}        # 60-day window needs 61
@@ -53,19 +65,25 @@ h1{font-size:13px;letter-spacing:.34em;color:#ff3b3b;font-weight:800;margin:0 0 
   padding:5px 11px;font-size:10px;font-weight:800;letter-spacing:.14em;cursor:pointer}
 %s
 </style></head><body><div class="wrap">
-<h1>AMALGAM HEAT MAP</h1><div class="note">Preview built from the live data file. Click a window.</div>
+<h1>YOUR BOOK</h1><div class="note">Invented positions, so the shape can be seen. Five slots, colour is the R-multiple.</div>
+<div id="b"></div>
+<h1 style="margin-top:34px">AMALGAM HEAT MAP</h1><div class="note">Real data from the live file. Click a window.</div>
 <div id="m"></div></div>
 <script>
-var MARKET=%s, S={hwin:20};
+var MARKET=%s, BOOK=%s, ACCT={netLiq:10000}, S={hwin:20};
 %s
-function draw(){ document.getElementById('m').innerHTML = heatInline(MARKET, S.hwin); }
+function draw(){
+  document.getElementById('m').innerHTML = heatInline(MARKET, S.hwin);
+  document.getElementById('b').innerHTML = heldInline(BOOK, ACCT);
+}
 document.addEventListener('click', function(e){
   var b=e.target.closest('[data-act="hwin"]'); if(!b) return;
   S.hwin=+b.getAttribute('data-h'); draw();
 });
 draw();
 </script></body></html>
-""" % (SRC[css_a:css_b], json.dumps(slim, separators=(",", ":")), js)
+""" % (SRC[css_a:css_b], json.dumps(slim, separators=(",", ":")),
+           json.dumps(BOOK, separators=(",", ":")), js)
 
 path = HERE / "heat_preview.html"
 path.write_text(out, encoding="utf-8")

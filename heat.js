@@ -146,3 +146,92 @@ function heatInline(M, win){
       '<br>This is what has already happened. Nothing on it is a signal, a rank or a reason to buy.</div>' +
     '</div>';
 }
+
+/* ---- the held book -----------------------------------------------------------------------
+   The market map answers what the market did. This one answers what Brent's own money is doing,
+   and it is the one that should make him act.
+
+   Five slots, because that is what the 1% risk unit and the 5% open-risk cap were sized for on
+   2026-11-26. Empty slots are drawn, so the shape of the book is visible rather than implied.
+
+   Colour is the R-multiple: how far the trade has come from its entry, measured in the risk it
+   was taken with. R = (price - cost) / (cost - stop). Minus one R is the stop, zero is break
+   even, plus two R is a good trade. The same scale as the market map, red bad to blue good, so
+   red never means two different things in this app.
+
+   An alert is NOT a colour. A position can be down and fine, or flat with no stop order and be
+   an emergency, and those must not be the same shade of anything. Alerts get a bright border and
+   a reason printed on the tile. */
+
+var HELD_SLOTS = 5;
+var HELD_CAP_PCT = 5.0;          // mirrors sizing.MAX_OPEN_RISK_PCT on Petunia
+
+function heldR(h){
+  if(!h.stop || h.cost <= h.stop) return null;      // no stop, or a stop above the entry
+  return (h.price - h.cost) / (h.cost - h.stop);
+}
+
+function heldColor(r){
+  if(r === null) return 'rgb(26,26,26)';
+  var t = r < 0 ? Math.max(-1, r) : Math.min(1, r / 2);     // -1R to +2R
+  var tgt = t >= 0 ? [91, 140, 255] : [255, 59, 59];        // tron blue, tron red
+  var a = Math.pow(Math.abs(t), 0.6);
+  var c = [0, 1, 2].map(function(i){ return Math.round(26 + (tgt[i] - 26) * a); });
+  return 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')';
+}
+
+/* What the tile says is wrong, in the order it matters. Null when nothing is. */
+function heldAlert(h, r){
+  if(!h.stop) return 'NO STOP ORDER';
+  if(r !== null && r <= -0.75) return 'NEAR THE STOP';
+  if(h.cost <= h.stop) return 'STOP ABOVE ENTRY';
+  return null;
+}
+
+function heldInline(held, acct){
+  held = (held || []).slice(0, HELD_SLOTS);
+  var netLiq = (acct && acct.netLiq) || 0;
+  var risk = 0, alerts = 0, unstopped = 0;
+  held.forEach(function(h){
+    if(h.stop) risk += h.qty * (h.price - h.stop); else unstopped++;
+  });
+  var budget = netLiq * HELD_CAP_PCT / 100;
+  var used = budget > 0 ? Math.min(1, risk / budget) : 0;
+
+  var tiles = '';
+  held.forEach(function(h){
+    var r = heldR(h), al = heldAlert(h, r);
+    if(al) alerts++;
+    var at = h.stop ? h.qty * (h.price - h.stop) : h.qty * h.price;
+    tiles += '<div class="hd-t' + (al ? ' hd-al' : '') + '" style="background:' + heldColor(r) + '">' +
+      '<div class="hd-s">' + esc(h.sym) + '</div>' +
+      '<div class="hd-r">' + (r === null ? '&ndash;' : (r >= 0 ? '+' : '−') + Math.abs(r).toFixed(1) + 'R') + '</div>' +
+      '<div class="hd-m">$' + at.toFixed(0) + (netLiq ? ' · ' + (at / netLiq * 100).toFixed(1) + '%' : '') +
+        (h.stop ? ' at risk' : ' exposed') + '</div>' +
+      (al ? '<div class="hd-a">' + al + '</div>' : '') + '</div>';
+  });
+  for(var i = held.length; i < HELD_SLOTS; i++)
+    tiles += '<div class="hd-t hd-e"><div class="hd-s">OPEN</div></div>';
+
+  var head;
+  if(!held.length) head = '<b>Nothing open.</b> Five slots, and the whole risk budget is free.';
+  else if(alerts) head = '<b>' + alerts + ' of ' + held.length + ' position' + (held.length > 1 ? 's need' : ' needs') +
+                         ' a look.</b> The reason is on the tile.';
+  else head = '<b>' + held.length + ' of ' + HELD_SLOTS + ' slots open, nothing flagged.</b>';
+
+  var bar = netLiq
+    ? '<div class="hd-bar"><i style="width:' + (used * 100).toFixed(1) + '%"></i></div>' +
+      '<div class="hd-sub">$' + risk.toFixed(0) + ' of the $' + budget.toFixed(0) + ' risk budget used, ' +
+      (used * 100).toFixed(0) + '%. The budget is ' + HELD_CAP_PCT + '% of the account, half the kill switch.' +
+      (unstopped ? ' ' + unstopped + ' position' + (unstopped > 1 ? 's sit' : ' sits') +
+        ' outside it entirely, with no stop order.' : '') + '</div>'
+    : '<div class="hd-sub">No account size yet, so the risk budget cannot be drawn. Open tonight’s push link.</div>';
+
+  return '<div class="hd">' +
+    '<div class="hd-head">' + head + '</div>' + bar +
+    '<div class="hd-grid">' + tiles + '</div>' +
+    '<div class="hd-foot">R is how far a trade has come from its entry, in units of what it risked. ' +
+    '−1R is the stop, +2R is a good trade. Colour is that number and nothing else. ' +
+    'A bright border is a thing to act on, which is not the same as being down.</div>' +
+    '</div>';
+}

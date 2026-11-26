@@ -24,11 +24,41 @@ html.tron .ht-foot{
     grid-template-areas:
       "hud   race"
       "picks race"
+      "book  book"
       "heat  heat"
       "meter inst"
       "sig   inst";
   }
+  .z-book{grid-area:book;margin-top:22px}
   .z-heat{grid-area:heat;display:block;margin-top:22px}
   .z-picks [data-act="heat"]{display:none}
 }
 @media (max-width:1279px){ .z-heat{display:none} }
+
+/* ---- the held book ---- */
+html.tron .hd{
+  margin:0 18px; background:linear-gradient(180deg,#0a0d13,#05070b 70%);
+  border:1px solid #243044; border-radius:14px; padding:12px 14px 14px;
+  box-shadow:inset 0 1px 0 #ffffff0d, 0 0 26px #5b8cff10;
+}
+html.tron .hd-head{font-size:var(--t2);line-height:1.45;color:var(--txt)}
+html.tron .hd-head b{color:var(--warn);font-weight:800}
+html.tron .hd-sub,html.tron .hd-foot{font-size:var(--t1);color:var(--dim);letter-spacing:.04em;line-height:1.5}
+html.tron .hd-foot{margin-top:10px;border-top:1px solid #16202d;padding-top:9px}
+html.tron .hd-bar{height:5px;background:#131b26;border-radius:3px;overflow:hidden;margin:9px 0 6px}
+html.tron .hd-bar i{display:block;height:100%;background:linear-gradient(90deg,#5b8cff,#ff3b3b)}
+html.tron .hd-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;margin:10px 0 2px}
+@media (max-width:560px){ html.tron .hd-grid{grid-template-columns:repeat(2,minmax(0,1fr))} }
+html.tron .hd-t{
+  border-radius:9px;padding:9px 8px;min-height:84px;display:flex;flex-direction:column;gap:2px;
+  border:1px solid #05070b;
+}
+html.tron .hd-e{background:none;border:1px dashed #243044}
+html.tron .hd-e .hd-s{color:#3a4658}
+html.tron .hd-al{border-color:#ff3b3b;box-shadow:0 0 0 1px #ff3b3b, 0 0 14px #ff3b3b55}
+html.tron .hd-s{font-size:12px;font-weight:800;letter-spacing:.1em;color:#f2f7fc}
+html.tron .hd-r{font-size:19px;font-weight:800;color:#f2f7fc;line-height:1.1}
+html.tron .hd-m{font-size:9.5px;color:#f2f7fcb0;letter-spacing:.03em;margin-top:auto}
+html.tron .hd-a{font-size:9px;font-weight:800;letter-spacing:.09em;color:#ff8a8a}
+
+html.tron .z-book .hd2{display:flex;align-items:baseline;justify-content:space-between;padding:0 18px 8px}
