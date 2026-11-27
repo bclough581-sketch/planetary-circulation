@@ -655,6 +655,89 @@ html.tron .top .wm{
 }
 html.tron .chiprow{position:relative;z-index:3}
 
+/* ================= grid.css ================= */
+/* ================= grid.css =================
+   The Grid. Three rules taken from the reference, ported 2026-11-26.
+
+   1. One hue owns the screen, and the state picks it. Blue when nothing needs
+      him, red when something does. The mood carries information before a word
+      is read.
+   2. A lit thing has a white core and a coloured halo. Colouring the glyph
+      itself reads as tinted; colouring only the bloom reads as lit.
+   3. The field is almost black, so a little light travels a long way.
+
+   Brent's rule, 2026-11-26: pretty never replaces function. So the hue drives
+   chrome only. It never touches a data encoding. The market map keeps red and
+   green for down and up, the scoreboard keeps red and blue for behind and
+   ahead, and an alert keeps its own border. Those are meaning, not decoration,
+   and nothing below may override them. */
+
+html.tron{
+  --h:203; --s:100%; --l:62%;
+  --c:hsl(var(--h) var(--s) var(--l));
+  --c-dim:hsl(var(--h) 70% 42%);
+  --c-ghost:hsl(var(--h) 60% 26%);
+  --ink:#01040a;
+}
+html.tron[data-state="attention"]{ --h:356; --s:100%; --l:60%; }
+
+html.tron body{
+  background:
+    radial-gradient(130% 62% at 50% 0%, hsl(var(--h) 90% 11%) 0%, transparent 60%),
+    var(--ink);
+  background-attachment:fixed;
+  transition:background .8s ease;
+}
+
+/* the lit treatment: white core, coloured halo */
+html.tron .wm,
+html.tron .vs-head b,
+html.tron .gv{
+  color:#fff !important;
+  text-shadow:
+    0 0 3px #fff,
+    0 0 10px var(--c),
+    0 0 26px var(--c),
+    0 0 58px hsl(var(--h) 100% 50% / .5);
+  transition:text-shadow .8s ease;
+}
+/* the scoreboard headline says ahead or behind in its own colours, which are
+   data. Keep the glow, take the hue from the element rather than the screen. */
+html.tron .vs-head b{ text-shadow:0 0 3px currentColor, 0 0 14px currentColor, 0 0 40px currentColor; }
+
+html.tron .sec{
+  color:var(--c);
+  text-shadow:0 0 8px hsl(var(--h) 100% 55% / .55);
+  transition:color .8s ease, text-shadow .8s ease;
+}
+html.tron .st{ color:var(--c-ghost); transition:color .8s ease }
+
+/* panels sit in the field rather than on a card */
+html.tron .vs, html.tron .bk, html.tron .ht{
+  border-radius:14px;
+  box-shadow:
+    inset 0 1px 0 hsl(var(--h) 100% 80% / .16),
+    0 0 22px hsl(var(--h) 100% 45% / .13);
+  transition:box-shadow .8s ease;
+}
+html.tron .bk{ border-color:hsl(var(--h) 90% 55% / .28) }
+
+/* a hairline that glows, used wherever a divider already existed */
+html.tron .vs-foot, html.tron .hd-foot, html.tron .ht-foot{
+  border-top-color:hsl(var(--h) 80% 45% / .22);
+  transition:border-top-color .8s ease;
+}
+
+/* the scoreboard's own bars stay red and blue, because that is the reading.
+   Only the track and the centre line follow the screen. */
+html.tron .vs-b{ border-color:hsl(var(--h) 80% 45% / .3); transition:border-color .8s }
+html.tron .vs-z{ background:hsl(var(--h) 70% 45% / .7); transition:background .8s }
+
+@media (prefers-reduced-motion: reduce){
+  html.tron body, html.tron .sec, html.tron .wm, html.tron .vs, html.tron .bk,
+  html.tron .ht, html.tron .gv, html.tron .st{ transition:none }
+}
+
 /* A section header holds its label and up to three buttons on one line with no wrapping,
    which overflows the right edge of a 390px phone and clips the last button. Unscoped,
    because it is a fault in the app rather than in the neon layer. */
@@ -1153,6 +1236,24 @@ function vsInline(vs, asof){
     'Blue is ahead of SPY and red is behind, which is not the same as up or down: ' +
     'in a falling market you can be blue and still be down money.</div>' +
     '</div>';
+}
+
+/* ---- which hue owns the screen -----------------------------------------
+   State, not decoration. Red means something needs him, and the reasons are
+   the same ones the book already prints on a tile. Everything else is blue.
+   Returns 'attention' or 'clear'. */
+function gridState(){
+  var held = (typeof S !== 'undefined' && S.held) ? S.held : [];
+  for(var i = 0; i < held.length; i++){
+    try{ if(heldAlert(held[i], heldR(held[i]))) return 'attention'; }catch(e){}
+  }
+  var A = (typeof S !== 'undefined' && S.acct && !S.acct.sample) ? S.acct : null;
+  if(A && A.netLiq > 0 && held.length){
+    var risk = 0;
+    held.forEach(function(h){ if(h.stop) risk += h.qty * (h.price - h.stop); });
+    if(risk > HELD_CAP_PCT / 100 * A.netLiq) return 'attention';
+  }
+  return 'clear';
 }
 
 
@@ -2220,6 +2321,8 @@ function render(){
       (S.errors.length?'<div class="banner" style="margin-top:12px;border-color:#3a4658;color:#9aa6b6">'+S.errors.slice(-3).map(esc).join('<br>')+'</div>':'');
   }
   h+=sheetHtml(P);
+  /* the hue follows the state, so the screen says it before a word is read */
+  try{ document.documentElement.setAttribute('data-state', gridState()); }catch(e){}
   $('app').innerHTML=h; if(S.phase==='ready') S.dialsDone=true;
   if(keep){ var el=$(keep); if(el && val!==undefined){ el.value=val; el.focus(); try{ el.setSelectionRange(selStart,selStart); }catch(e){} } }
 }

@@ -19,6 +19,7 @@ css = ("\n/* ================= tron.css ================= */\n" + rd("tron.css")
      + "\n/* ================= wide.css ================= */\n" + rd("wide.css")
      + "\n/* ================= hud.css  ================= */\n" + rd("hud.css")
      + "\n/* ================= heat.css ================= */\n" + rd("heat.css")
+     + "\n/* ================= grid.css ================= */\n" + rd("grid.css")
      + """
 /* A section header holds its label and up to three buttons on one line with no wrapping,
    which overflows the right edge of a 390px phone and clips the last button. Unscoped,

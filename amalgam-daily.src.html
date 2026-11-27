@@ -1161,6 +1161,8 @@ function render(){
       (S.errors.length?'<div class="banner" style="margin-top:12px;border-color:#3a4658;color:#9aa6b6">'+S.errors.slice(-3).map(esc).join('<br>')+'</div>':'');
   }
   h+=sheetHtml(P);
+  /* the hue follows the state, so the screen says it before a word is read */
+  try{ document.documentElement.setAttribute('data-state', gridState()); }catch(e){}
   $('app').innerHTML=h; if(S.phase==='ready') S.dialsDone=true;
   if(keep){ var el=$(keep); if(el && val!==undefined){ el.value=val; el.focus(); try{ el.setSelectionRange(selStart,selStart); }catch(e){} } }
 }

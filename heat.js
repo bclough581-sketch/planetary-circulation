@@ -327,3 +327,21 @@ function vsInline(vs, asof){
     'in a falling market you can be blue and still be down money.</div>' +
     '</div>';
 }
+
+/* ---- which hue owns the screen -----------------------------------------
+   State, not decoration. Red means something needs him, and the reasons are
+   the same ones the book already prints on a tile. Everything else is blue.
+   Returns 'attention' or 'clear'. */
+function gridState(){
+  var held = (typeof S !== 'undefined' && S.held) ? S.held : [];
+  for(var i = 0; i < held.length; i++){
+    try{ if(heldAlert(held[i], heldR(held[i]))) return 'attention'; }catch(e){}
+  }
+  var A = (typeof S !== 'undefined' && S.acct && !S.acct.sample) ? S.acct : null;
+  if(A && A.netLiq > 0 && held.length){
+    var risk = 0;
+    held.forEach(function(h){ if(h.stop) risk += h.qty * (h.price - h.stop); });
+    if(risk > HELD_CAP_PCT / 100 * A.netLiq) return 'attention';
+  }
+  return 'clear';
+}
