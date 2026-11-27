@@ -1,5 +1,5 @@
 {
- "generated_utc": "2026-11-26T19:38:25Z",
+ "generated_utc": "2026-11-27T04:07:05Z",
  "hubs": {
   "GRU": {
    "price": 6.3272,
@@ -6372,23 +6372,23 @@
   },
   "ecb": {
    "ok": true,
-   "ran_utc": "2026-11-26T19:38:25Z",
-   "last_ok_utc": "2026-11-26T19:38:25Z"
+   "ran_utc": "2026-11-27T04:07:05Z",
+   "last_ok_utc": "2026-11-27T04:07:05Z"
   },
   "ust": {
    "ok": true,
-   "ran_utc": "2026-11-26T19:38:25Z",
-   "last_ok_utc": "2026-11-26T19:38:25Z"
+   "ran_utc": "2026-11-27T04:07:05Z",
+   "last_ok_utc": "2026-11-27T04:07:05Z"
   },
   "eia": {
-   "ok": true,
-   "ran_utc": "2026-11-26T19:38:25Z",
+   "ok": false,
+   "error": "HTTP Error 504: Gateway Timeout",
    "last_ok_utc": "2026-11-26T19:38:25Z"
   },
   "tic": {
    "ok": true,
-   "ran_utc": "2026-11-26T19:38:25Z",
-   "last_ok_utc": "2026-11-26T19:38:25Z"
+   "ran_utc": "2026-11-27T04:07:05Z",
+   "last_ok_utc": "2026-11-27T04:07:05Z"
   }
  }
 }
